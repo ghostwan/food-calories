@@ -9,4 +9,8 @@ class AnalyzeFoodUseCase(
     suspend operator fun invoke(imageData: ByteArray, language: String): FoodAnalysis {
         return repository.analyzeFood(imageData, language)
     }
+
+    suspend fun fromText(description: String, language: String): FoodAnalysis {
+        return repository.analyzeFoodFromText(description, language)
+    }
 }

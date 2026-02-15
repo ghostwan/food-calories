@@ -58,7 +58,8 @@ class FoodAnalysisMapper {
             totalCalories = result.getInt("totalCalories"),
             ingredients = ingredients,
             macros = macros,
-            notes = if (result.has("notes") && !result.isNull("notes")) result.getString("notes") else null
+            notes = if (result.has("notes") && !result.isNull("notes")) result.getString("notes") else null,
+            emoji = if (result.has("emoji") && !result.isNull("emoji")) result.getString("emoji") else null
         )
     }
 }

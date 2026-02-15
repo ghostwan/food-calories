@@ -23,6 +23,15 @@ class FoodAnalysisRepositoryImpl(
         return mapper.mapFromApiResponse(rawResponse)
     }
 
+    override suspend fun analyzeFoodFromText(description: String, language: String): FoodAnalysis {
+        val apiKey = settingsRepository.getApiKey()
+        if (apiKey.isBlank()) {
+            throw IllegalStateException("Clé API Gemini non configurée")
+        }
+        val rawResponse = apiService.analyzeText(description, apiKey, language)
+        return mapper.mapFromApiResponse(rawResponse)
+    }
+
     override suspend fun correctAnalysis(
         originalAnalysis: FoodAnalysis,
         userFeedback: String,
@@ -40,6 +49,7 @@ class FoodAnalysisRepositoryImpl(
 
     private fun serializeAnalysis(analysis: FoodAnalysis): String {
         return JSONObject().apply {
+            if (analysis.emoji != null) put("emoji", analysis.emoji)
             put("dishName", analysis.dishName)
             put("totalCalories", analysis.totalCalories)
             put("ingredients", JSONArray().apply {

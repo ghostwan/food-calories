@@ -20,7 +20,8 @@ class SaveMealUseCase(
             fats = parseGrams(analysis.macros?.fats),
             fiber = parseGrams(analysis.macros?.fiber),
             date = date,
-            ingredientsJson = ingredientsJson
+            ingredientsJson = ingredientsJson,
+            emoji = analysis.emoji
         )
         mealRepository.saveMeal(meal)
     }

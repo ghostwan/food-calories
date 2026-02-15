@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
+import com.ghostwan.snapcal.domain.model.Ingredient
+import com.ghostwan.snapcal.domain.model.Macros
+import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UsageRepository
 import com.ghostwan.snapcal.domain.usecase.AnalyzeFoodUseCase
@@ -17,6 +20,7 @@ import com.ghostwan.snapcal.presentation.model.AnalysisUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import java.io.ByteArrayOutputStream
 import java.util.Locale
 
@@ -33,6 +37,9 @@ class FoodAnalysisViewModel(
 
     private val _mealSaved = MutableStateFlow(false)
     val mealSaved: StateFlow<Boolean> = _mealSaved
+
+    private val _readOnly = MutableStateFlow(false)
+    val readOnly: StateFlow<Boolean> = _readOnly
 
     private var lastImageData: ByteArray? = null
 
@@ -54,6 +61,22 @@ class FoodAnalysisViewModel(
                 lastImageData = imageData
                 val language = Locale.getDefault().displayLanguage
                 val result = analyzeFoodUseCase(imageData, language)
+                usageRepository.recordRequest()
+                _uiState.value = AnalysisUiState.Success(result)
+            } catch (e: Exception) {
+                _uiState.value = AnalysisUiState.Error(
+                    e.message ?: "Erreur inconnue lors de l'analyse"
+                )
+            }
+        }
+    }
+
+    fun analyzeFoodFromText(description: String) {
+        viewModelScope.launch {
+            _uiState.value = AnalysisUiState.Loading
+            try {
+                val language = Locale.getDefault().displayLanguage
+                val result = analyzeFoodUseCase.fromText(description, language)
                 usageRepository.recordRequest()
                 _uiState.value = AnalysisUiState.Success(result)
             } catch (e: Exception) {
@@ -92,6 +115,42 @@ class FoodAnalysisViewModel(
         }
     }
 
+    fun viewMealDetail(meal: MealEntry) {
+        val ingredients = try {
+            val array = JSONArray(meal.ingredientsJson)
+            buildList {
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    add(Ingredient(
+                        name = obj.getString("name"),
+                        quantity = obj.getString("quantity"),
+                        calories = obj.getInt("calories")
+                    ))
+                }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+        val analysis = FoodAnalysis(
+            dishName = meal.dishName,
+            totalCalories = meal.calories,
+            ingredients = ingredients,
+            macros = Macros(
+                proteins = String.format("%.0fg", meal.proteins),
+                carbs = String.format("%.0fg", meal.carbs),
+                fats = String.format("%.0fg", meal.fats),
+                fiber = if (meal.fiber > 0) String.format("%.0fg", meal.fiber) else null
+            ),
+            notes = null,
+            emoji = meal.emoji
+        )
+        _uiState.value = AnalysisUiState.Success(analysis)
+        _mealSaved.value = false
+        _readOnly.value = true
+        lastImageData = null
+    }
+
     fun resetMealSaved() {
         _mealSaved.value = false
     }
@@ -99,6 +158,7 @@ class FoodAnalysisViewModel(
     fun resetState() {
         _uiState.value = AnalysisUiState.Idle
         _mealSaved.value = false
+        _readOnly.value = false
         lastImageData = null
     }
 

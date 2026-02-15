@@ -121,6 +121,10 @@ fun SnapCalNavGraph() {
                     },
                     onHistory = {
                         navController.navigate("history")
+                    },
+                    onMealClick = { meal ->
+                        foodAnalysisViewModel.viewMealDetail(meal)
+                        navController.navigate("result")
                     }
                 )
             }
@@ -182,6 +186,10 @@ fun SnapCalNavGraph() {
                     viewModel = historyViewModel,
                     onBack = {
                         navController.popBackStack()
+                    },
+                    onMealClick = { meal ->
+                        foodAnalysisViewModel.viewMealDetail(meal)
+                        navController.navigate("result")
                     }
                 )
             }

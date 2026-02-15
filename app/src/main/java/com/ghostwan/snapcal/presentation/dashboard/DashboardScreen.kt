@@ -56,7 +56,8 @@ import com.ghostwan.snapcal.domain.model.NutritionGoal
 fun DashboardScreen(
     viewModel: DashboardViewModel,
     onScanMeal: () -> Unit,
-    onHistory: () -> Unit
+    onHistory: () -> Unit,
+    onMealClick: (MealEntry) -> Unit = {}
 ) {
     val nutrition by viewModel.nutrition.collectAsState()
     val meals by viewModel.meals.collectAsState()
@@ -139,7 +140,11 @@ fun DashboardScreen(
                 }
             } else {
                 items(meals) { meal ->
-                    MealCard(meal, onDelete = { viewModel.deleteMeal(meal.id) })
+                    MealCard(
+                        meal = meal,
+                        onClick = { onMealClick(meal) },
+                        onDelete = { viewModel.deleteMeal(meal.id) }
+                    )
                 }
             }
 
@@ -313,8 +318,11 @@ private fun MacroProgressBar(label: String, current: Float, goal: Float, color: 
 }
 
 @Composable
-private fun MealCard(meal: MealEntry, onDelete: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun MealCard(meal: MealEntry, onClick: () -> Unit, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -322,6 +330,13 @@ private fun MealCard(meal: MealEntry, onDelete: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (meal.emoji != null) {
+                Text(
+                    text = meal.emoji,
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(end = 12.dp)
+                )
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = meal.dishName,

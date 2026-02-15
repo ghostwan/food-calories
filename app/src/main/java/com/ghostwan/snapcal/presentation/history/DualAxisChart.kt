@@ -57,6 +57,7 @@ fun DualAxisChart(
     data: List<ChartDataPoint>,
     caloriesGoal: Int?,
     targetWeight: Float?,
+    nextDateLabel: String? = null,
     modifier: Modifier = Modifier
 ) {
     if (data.isEmpty()) return
@@ -120,7 +121,7 @@ fun DualAxisChart(
                     calMinRaw = minOf(calMinRaw, caloriesGoal.toFloat())
                     calMaxRaw = maxOf(calMaxRaw, caloriesGoal.toFloat())
                 }
-                val calPadding = (calMaxRaw - calMinRaw).coerceAtLeast(100f) * 0.1f
+                val calPadding = (calMaxRaw - calMinRaw).coerceAtLeast(100f) * 0.15f
                 val calMin = calMinRaw - calPadding
                 val calMax = calMaxRaw + calPadding
                 val calRange = (calMax - calMin).coerceAtLeast(100f)
@@ -131,7 +132,7 @@ fun DualAxisChart(
                     wMinRaw = minOf(wMinRaw, targetWeight)
                     wMaxRaw = maxOf(wMaxRaw, targetWeight)
                 }
-                val wPadding = (wMaxRaw - wMinRaw).coerceAtLeast(2f) * 0.15f
+                val wPadding = (wMaxRaw - wMinRaw).coerceAtLeast(2f) * 0.2f
                 val wMin = wMinRaw - wPadding
                 val wMax = wMaxRaw + wPadding
                 val wRange = (wMax - wMin).coerceAtLeast(5f)
@@ -194,57 +195,109 @@ fun DualAxisChart(
                 }
 
                 // Draw axis labels (outside transform so they stay fixed)
+                val axisLabelStyle = TextStyle(fontSize = 9.sp)
                 val calMaxLabel = "${calMax.toInt()}"
+                val calMidLabel = "${((calMax + calMin) / 2).toInt()}"
                 val calMinLabel = "${calMin.toInt()}"
+                val midY = topPadding + chartHeight / 2 - 6.dp.toPx()
+
                 drawText(
                     textMeasurer = textMeasurer,
                     text = calMaxLabel,
                     topLeft = Offset(0f, topPadding - 6.dp.toPx()),
-                    style = TextStyle(color = CaloriesColor, fontSize = 9.sp)
+                    style = axisLabelStyle.copy(color = CaloriesColor)
+                )
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = calMidLabel,
+                    topLeft = Offset(0f, midY),
+                    style = axisLabelStyle.copy(color = CaloriesColor.copy(alpha = 0.6f))
                 )
                 drawText(
                     textMeasurer = textMeasurer,
                     text = calMinLabel,
                     topLeft = Offset(0f, topPadding + chartHeight - 6.dp.toPx()),
-                    style = TextStyle(color = CaloriesColor, fontSize = 9.sp)
+                    style = axisLabelStyle.copy(color = CaloriesColor)
                 )
 
                 val wMaxLabel = String.format("%.0f", wMax)
+                val wMidLabel = String.format("%.0f", (wMax + wMin) / 2)
                 val wMinLabel = String.format("%.0f", wMin)
-                val wMaxMeasured = textMeasurer.measure(wMaxLabel, TextStyle(fontSize = 9.sp))
-                val wMinMeasured = textMeasurer.measure(wMinLabel, TextStyle(fontSize = 9.sp))
+                val wMaxMeasured = textMeasurer.measure(wMaxLabel, axisLabelStyle)
+                val wMidMeasured = textMeasurer.measure(wMidLabel, axisLabelStyle)
+                val wMinMeasured = textMeasurer.measure(wMinLabel, axisLabelStyle)
                 drawText(
                     textMeasurer = textMeasurer,
                     text = wMaxLabel,
                     topLeft = Offset(size.width - wMaxMeasured.size.width, topPadding - 6.dp.toPx()),
-                    style = TextStyle(color = WeightColor, fontSize = 9.sp)
+                    style = axisLabelStyle.copy(color = WeightColor)
+                )
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = wMidLabel,
+                    topLeft = Offset(size.width - wMidMeasured.size.width, midY),
+                    style = axisLabelStyle.copy(color = WeightColor.copy(alpha = 0.6f))
                 )
                 drawText(
                     textMeasurer = textMeasurer,
                     text = wMinLabel,
                     topLeft = Offset(size.width - wMinMeasured.size.width, topPadding + chartHeight - 6.dp.toPx()),
-                    style = TextStyle(color = WeightColor, fontSize = 9.sp)
+                    style = axisLabelStyle.copy(color = WeightColor)
                 )
 
-                // Draw date labels
+                // Draw date labels (first, middle, last + next day)
                 if (data.size >= 2) {
+                    val dateLabelY = topPadding + chartHeight + 4.dp.toPx()
+                    val dateLabelStyle = TextStyle(color = labelColor, fontSize = 9.sp)
+
+                    // First date
                     drawText(
                         textMeasurer = textMeasurer,
                         text = data.first().label,
-                        topLeft = Offset(leftPadding, topPadding + chartHeight + 4.dp.toPx()),
-                        style = TextStyle(color = labelColor, fontSize = 9.sp)
+                        topLeft = Offset(leftPadding, dateLabelY),
+                        style = dateLabelStyle
                     )
+
+                    // Middle date
+                    if (data.size >= 5) {
+                        val midIndex = data.size / 2
+                        val midLabel = data[midIndex].label
+                        val midMeasured = textMeasurer.measure(midLabel, dateLabelStyle)
+                        val midX = leftPadding + midIndex * (chartWidth / (data.size - 1))
+                        drawText(
+                            textMeasurer = textMeasurer,
+                            text = midLabel,
+                            topLeft = Offset(midX - midMeasured.size.width / 2, dateLabelY),
+                            style = dateLabelStyle
+                        )
+                    }
+
+                    // Last date
                     val lastLabel = data.last().label
-                    val lastMeasured = textMeasurer.measure(lastLabel, TextStyle(fontSize = 9.sp))
+                    val lastMeasured = textMeasurer.measure(lastLabel, dateLabelStyle)
                     drawText(
                         textMeasurer = textMeasurer,
                         text = lastLabel,
                         topLeft = Offset(
                             leftPadding + chartWidth - lastMeasured.size.width,
-                            topPadding + chartHeight + 4.dp.toPx()
+                            dateLabelY
                         ),
-                        style = TextStyle(color = labelColor, fontSize = 9.sp)
+                        style = dateLabelStyle
                     )
+
+                    // Next day label (right edge, faded)
+                    if (nextDateLabel != null) {
+                        val nextMeasured = textMeasurer.measure(nextDateLabel, dateLabelStyle)
+                        drawText(
+                            textMeasurer = textMeasurer,
+                            text = nextDateLabel,
+                            topLeft = Offset(
+                                size.width - nextMeasured.size.width,
+                                dateLabelY
+                            ),
+                            style = TextStyle(color = labelColor.copy(alpha = 0.5f), fontSize = 9.sp)
+                        )
+                    }
                 }
 
                 // Zoom indicator

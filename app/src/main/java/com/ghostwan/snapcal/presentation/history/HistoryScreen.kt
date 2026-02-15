@@ -43,13 +43,15 @@ import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onMealClick: (MealEntry) -> Unit = {}
 ) {
     val history by viewModel.history.collectAsState()
     val weightHistory by viewModel.weightHistory.collectAsState()
@@ -107,6 +109,17 @@ fun HistoryScreen(
                 )
             }
 
+            // Compute next date label for chart right edge
+            val nextDateLabel = try {
+                val lastDate = allDates.lastOrNull()
+                if (lastDate != null) {
+                    val cal = Calendar.getInstance()
+                    cal.time = dateFormat.parse(lastDate)!!
+                    cal.add(Calendar.DAY_OF_YEAR, 1)
+                    shortFormat.format(cal.time)
+                } else null
+            } catch (_: Exception) { null }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -119,7 +132,8 @@ fun HistoryScreen(
                         DualAxisChart(
                             data = chartData,
                             caloriesGoal = goal.calories,
-                            targetWeight = profile.targetWeight.takeIf { it > 0f }
+                            targetWeight = profile.targetWeight.takeIf { it > 0f },
+                            nextDateLabel = nextDateLabel
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -132,7 +146,8 @@ fun HistoryScreen(
                         goal = goal,
                         isExpanded = isExpanded,
                         meals = if (isExpanded) selectedDayMeals else emptyList(),
-                        onClick = { viewModel.selectDay(day.date) }
+                        onClick = { viewModel.selectDay(day.date) },
+                        onMealClick = onMealClick
                     )
                 }
             }
@@ -146,7 +161,8 @@ private fun DayCard(
     goal: NutritionGoal,
     isExpanded: Boolean,
     meals: List<MealEntry>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onMealClick: (MealEntry) -> Unit = {}
 ) {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     val displayFormat = SimpleDateFormat("EEEE d MMMM", Locale.getDefault())
@@ -228,7 +244,7 @@ private fun DayCard(
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     meals.forEach { meal ->
-                        MealRow(meal)
+                        MealRow(meal, onClick = { onMealClick(meal) })
                         Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
@@ -238,12 +254,21 @@ private fun DayCard(
 }
 
 @Composable
-private fun MealRow(meal: MealEntry) {
+private fun MealRow(meal: MealEntry, onClick: () -> Unit = {}) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (meal.emoji != null) {
+            Text(
+                text = meal.emoji,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = meal.dishName,

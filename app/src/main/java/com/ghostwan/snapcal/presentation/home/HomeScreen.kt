@@ -1,7 +1,10 @@
 package com.ghostwan.snapcal.presentation.home
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
+import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,9 +18,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -49,6 +55,7 @@ import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel.Companion.FREE_DAILY_LIMIT
 import java.io.File
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,9 +65,11 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var foodDescription by remember { mutableStateOf("") }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showQuotaWarning by remember { mutableStateOf(false) }
     var apiKey by remember { mutableStateOf(viewModel.getApiKey()) }
+    var pendingTextAnalysis by remember { mutableStateOf(false) }
 
     val imageFile = remember {
         File(File(context.cacheDir, "images").apply { mkdirs() }, "food_photo.jpg")
@@ -98,6 +107,17 @@ fun HomeScreen(
         }
     }
 
+    val speechLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!matches.isNullOrEmpty()) {
+                foodDescription = matches[0]
+            }
+        }
+    }
+
     if (showQuotaWarning) {
         QuotaWarningDialog(
             dailyCount = viewModel.getDailyRequestCount(),
@@ -105,10 +125,18 @@ fun HomeScreen(
             onConfirm = {
                 showQuotaWarning = false
                 viewModel.resetState()
-                viewModel.analyzeFood(context, photoUri!!)
+                if (pendingTextAnalysis) {
+                    viewModel.analyzeFoodFromText(foodDescription)
+                    pendingTextAnalysis = false
+                } else {
+                    viewModel.analyzeFood(context, photoUri!!)
+                }
                 onAnalysisStarted()
             },
-            onDismiss = { showQuotaWarning = false }
+            onDismiss = {
+                showQuotaWarning = false
+                pendingTextAnalysis = false
+            }
         )
     }
 
@@ -152,7 +180,7 @@ fun HomeScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(200.dp)
             ) {
                 if (photoUri != null) {
                     Image(
@@ -229,14 +257,68 @@ fun HomeScreen(
                 ) {
                     Text(stringResource(R.string.home_button_analyze))
                 }
+            }
 
-                if (apiKey.isBlank()) {
-                    Text(
-                        text = stringResource(R.string.home_api_key_warning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+            // Text/voice input section
+            Text(
+                text = stringResource(R.string.home_or_describe),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedTextField(
+                value = foodDescription,
+                onValueChange = { foodDescription = it },
+                label = { Text(stringResource(R.string.home_text_hint)) },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3,
+                trailingIcon = {
+                    Row {
+                        IconButton(onClick = {
+                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                                putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.home_voice_prompt))
+                            }
+                            speechLauncher.launch(intent)
+                        }) {
+                            Icon(
+                                Icons.Default.Mic,
+                                contentDescription = stringResource(R.string.home_button_voice),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
+            )
+
+            if (foodDescription.isNotBlank()) {
+                Button(
+                    onClick = {
+                        if (viewModel.isQuotaExceeded()) {
+                            pendingTextAnalysis = true
+                            showQuotaWarning = true
+                        } else {
+                            viewModel.resetState()
+                            viewModel.analyzeFoodFromText(foodDescription)
+                            onAnalysisStarted()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = apiKey.isNotBlank()
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
+                    Spacer(modifier = Modifier.padding(4.dp))
+                    Text(stringResource(R.string.home_button_analyze_text))
+                }
+            }
+
+            if (apiKey.isBlank()) {
+                Text(
+                    text = stringResource(R.string.home_api_key_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }

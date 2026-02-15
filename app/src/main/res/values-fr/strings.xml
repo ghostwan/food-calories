@@ -3,13 +3,18 @@
     <string name="app_name">SnapCal</string>
 
     <!-- Home -->
-    <string name="home_description">Prenez en photo un plat pour analyser ses ingrédients et ses calories</string>
+    <string name="home_description">Prenez en photo ou décrivez un plat pour analyser ses calories</string>
     <string name="home_no_photo">Aucune photo</string>
     <string name="home_button_photo">Photo</string>
     <string name="home_button_gallery">Galerie</string>
     <string name="home_button_analyze">Analyser le plat</string>
     <string name="home_api_key_warning">Configurez votre clé API Gemini dans les paramètres</string>
     <string name="home_photo_description">Photo du plat</string>
+    <string name="home_or_describe">Ou décrivez ce que vous avez mangé</string>
+    <string name="home_text_hint">ex : "une salade de poulet avec du riz"</string>
+    <string name="home_button_voice">Saisie vocale</string>
+    <string name="home_voice_prompt">Décrivez ce que vous avez mangé…</string>
+    <string name="home_button_analyze_text">Analyser la description</string>
     <string name="settings_description">Paramètres</string>
 
     <!-- API Key Dialog -->

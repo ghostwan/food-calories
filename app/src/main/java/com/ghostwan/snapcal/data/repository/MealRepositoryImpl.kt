@@ -20,7 +20,8 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
                 fats = meal.fats,
                 fiber = meal.fiber,
                 date = meal.date,
-                ingredientsJson = meal.ingredientsJson
+                ingredientsJson = meal.ingredientsJson,
+                emoji = meal.emoji
             )
         )
     }
@@ -76,6 +77,7 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         fats = fats,
         fiber = fiber,
         date = date,
-        ingredientsJson = ingredientsJson
+        ingredientsJson = ingredientsJson,
+        emoji = emoji
     )
 }

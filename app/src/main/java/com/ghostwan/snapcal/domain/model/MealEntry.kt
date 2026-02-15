@@ -9,5 +9,6 @@ data class MealEntry(
     val fats: Float,
     val fiber: Float,
     val date: String, // yyyy-MM-dd
-    val ingredientsJson: String
+    val ingredientsJson: String,
+    val emoji: String? = null
 )

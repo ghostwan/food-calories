@@ -24,6 +24,40 @@ class GeminiApiService {
         return executeRequest(requestBody, apiKey)
     }
 
+    suspend fun analyzeText(description: String, apiKey: String, language: String): String {
+        val prompt = """
+            A user describes what they ate:
+            "$description"
+
+            Based on this description, provide a detailed nutritional estimation.
+            IMPORTANT: All text values in your response (dish name, ingredient names, notes, quantities) MUST be written in $language.
+
+            Estimate the quantity of each ingredient as precisely as possible (weight in grams, volume in ml/cl, or count for countable items like eggs).
+
+            Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
+            {
+                "emoji": "🍝",
+                "dishName": "Name of the dish",
+                "totalCalories": 500,
+                "ingredients": [
+                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200},
+                    {"name": "Ingredient 2", "quantity": "2 cuillères à soupe (30ml)", "calories": 100}
+                ],
+                "macros": {
+                    "proteins": "25g",
+                    "carbs": "60g",
+                    "fats": "15g",
+                    "fiber": "5g"
+                },
+                "notes": "Additional remarks about the dish"
+            }
+
+            The "emoji" field must be a single emoji that best represents the dish (e.g. 🍕 for pizza, 🥗 for salad, 🍣 for sushi).
+        """.trimIndent()
+
+        return executeRequest(buildTextRequestBody(prompt), apiKey)
+    }
+
     suspend fun correctAnalysis(
         originalAnalysisJson: String,
         userFeedback: String,
@@ -43,6 +77,7 @@ class GeminiApiService {
 
             Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
             {
+                "emoji": "🍝",
                 "dishName": "Name of the dish",
                 "totalCalories": 500,
                 "ingredients": [
@@ -56,6 +91,8 @@ class GeminiApiService {
                 },
                 "notes": "Additional remarks"
             }
+
+            The "emoji" field must be a single emoji that best represents the dish.
         """.trimIndent()
 
         val requestBody = if (imageData != null) {
@@ -165,6 +202,7 @@ class GeminiApiService {
 
             Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
             {
+                "emoji": "🍝",
                 "dishName": "Name of the dish",
                 "totalCalories": 500,
                 "ingredients": [
@@ -180,8 +218,10 @@ class GeminiApiService {
                 "notes": "Additional remarks about the dish"
             }
 
+            The "emoji" field must be a single emoji that best represents the dish (e.g. 🍕 for pizza, 🥗 for salad, 🍣 for sushi).
+
             If the image does not contain food, respond with:
-            {"dishName": "Not recognized", "totalCalories": 0, "ingredients": [], "macros": null, "notes": "The image does not appear to contain food."}
+            {"emoji": "❓", "dishName": "Not recognized", "totalCalories": 0, "ingredients": [], "macros": null, "notes": "The image does not appear to contain food."}
         """.trimIndent()
     }
 }

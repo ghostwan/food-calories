@@ -56,6 +56,7 @@ fun ResultScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val mealSaved by viewModel.mealSaved.collectAsState()
+    val readOnly by viewModel.readOnly.collectAsState()
 
     androidx.compose.runtime.LaunchedEffect(mealSaved) {
         if (mealSaved) {
@@ -89,6 +90,7 @@ fun ResultScreen(
                 is AnalysisUiState.Success -> SuccessContent(
                     result = state.result,
                     mealSaved = mealSaved,
+                    readOnly = readOnly,
                     onSave = { viewModel.saveMeal(state.result) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) }
                 )
@@ -122,6 +124,7 @@ private fun LoadingContent() {
 private fun SuccessContent(
     result: FoodAnalysis,
     mealSaved: Boolean,
+    readOnly: Boolean = false,
     onSave: () -> Unit,
     onCorrect: (String) -> Unit
 ) {
@@ -132,11 +135,20 @@ private fun SuccessContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text(
-                text = result.dishName,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (result.emoji != null) {
+                    Text(
+                        text = result.emoji,
+                        style = MaterialTheme.typography.headlineLarge,
+                        modifier = Modifier.padding(end = 12.dp)
+                    )
+                }
+                Text(
+                    text = result.dishName,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         item { CaloriesCard(result.totalCalories) }
@@ -189,7 +201,7 @@ private fun SuccessContent(
         }
 
         // Correction UI
-        if (!mealSaved) {
+        if (!mealSaved && !readOnly) {
             item {
                 var showCorrectionField by remember { mutableStateOf(false) }
                 var feedbackText by remember { mutableStateOf("") }
@@ -226,22 +238,24 @@ private fun SuccessContent(
             }
         }
 
-        // Save meal button
-        item {
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(
-                onClick = onSave,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !mealSaved
-            ) {
-                if (mealSaved) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.result_meal_saved))
-                } else {
-                    Icon(Icons.Default.Save, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.result_save_meal))
+        // Save meal button (hidden in read-only mode)
+        if (!readOnly) {
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = onSave,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !mealSaved
+                ) {
+                    if (mealSaved) {
+                        Icon(Icons.Default.Check, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.result_meal_saved))
+                    } else {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.result_save_meal))
+                    }
                 }
             }
         }

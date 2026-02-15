@@ -5,7 +5,8 @@ data class FoodAnalysis(
     val totalCalories: Int,
     val ingredients: List<Ingredient>,
     val macros: Macros?,
-    val notes: String?
+    val notes: String?,
+    val emoji: String? = null
 )
 
 data class Ingredient(
