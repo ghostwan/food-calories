@@ -26,7 +26,7 @@ interface MealDao {
         "SUM(carbs) as totalCarbs, SUM(fats) as totalFats, SUM(fiber) as totalFiber " +
         "FROM meals GROUP BY date ORDER BY date DESC LIMIT :days"
     )
-    suspend fun getDailyNutritionHistory(days: Int): List<DailyNutritionTuple>
+    fun getDailyNutritionHistory(days: Int): Flow<List<DailyNutritionTuple>>
 
     @Query("SELECT * FROM meals ORDER BY date DESC, id DESC")
     suspend fun getAll(): List<MealEntity>

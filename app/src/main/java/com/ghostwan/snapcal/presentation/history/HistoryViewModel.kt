@@ -48,7 +48,11 @@ class HistoryViewModel(
         _goal.value = userProfileRepository.getGoal()
         _profile.value = userProfileRepository.getProfile()
         viewModelScope.launch {
-            _history.value = historyUseCase(30)
+            historyUseCase(30).collect {
+                _history.value = it
+            }
+        }
+        viewModelScope.launch {
             _weightHistory.value = userProfileRepository.getWeightHistory(30)
         }
     }

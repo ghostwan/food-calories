@@ -45,6 +45,7 @@
     <string name="result_error">Erreur</string>
     <string name="result_button_back">Retour</string>
     <string name="result_save_meal">Sauvegarder ce repas</string>
+    <string name="result_update_meal">Mettre à jour ce repas</string>
     <string name="result_meal_saved">Repas sauvegardé !</string>
     <string name="result_not_right">Pas tout à fait exact ? Corriger</string>
     <string name="result_correction_hint">Décrivez la différence (ex : "c\'est des pâtes pas du riz")</string>

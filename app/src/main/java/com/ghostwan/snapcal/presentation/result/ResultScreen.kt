@@ -99,6 +99,7 @@ fun ResultScreen(
                     result = state.result,
                     mealSaved = mealSaved,
                     readOnly = readOnly,
+                    isEditing = viewModel.isEditing(),
                     onSave = { viewModel.saveMeal(state.result) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) }
                 )
@@ -133,6 +134,7 @@ private fun SuccessContent(
     result: FoodAnalysis,
     mealSaved: Boolean,
     readOnly: Boolean = false,
+    isEditing: Boolean = false,
     onSave: () -> Unit,
     onCorrect: (String) -> Unit
 ) {
@@ -206,14 +208,14 @@ private fun SuccessContent(
             item { NotesCard(result.notes) }
         }
 
-        // Correction UI
-        if (!mealSaved && !readOnly) {
+        // Correction UI (always shown unless meal was just saved)
+        if (!mealSaved) {
             item {
                 CorrectionSection(onCorrect = onCorrect)
             }
         }
 
-        // Save meal button (hidden in read-only mode)
+        // Save meal button (hidden in read-only mode, shows after correction)
         if (!readOnly) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -229,7 +231,10 @@ private fun SuccessContent(
                     } else {
                         Icon(Icons.Default.Save, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.result_save_meal))
+                        Text(stringResource(
+                            if (isEditing) R.string.result_update_meal
+                            else R.string.result_save_meal
+                        ))
                     }
                 }
             }

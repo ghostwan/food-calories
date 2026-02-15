@@ -45,6 +45,7 @@
     <string name="result_error">Error</string>
     <string name="result_button_back">Back</string>
     <string name="result_save_meal">Save this meal</string>
+    <string name="result_update_meal">Update this meal</string>
     <string name="result_meal_saved">Meal saved!</string>
     <string name="result_not_right">Not quite right? Correct it</string>
     <string name="result_correction_hint">Describe what\'s different (e.g. "this is pasta not rice")</string>

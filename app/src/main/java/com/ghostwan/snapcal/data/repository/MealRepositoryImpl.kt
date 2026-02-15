@@ -47,16 +47,18 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         }
     }
 
-    override suspend fun getDailyNutritionHistory(days: Int): List<DailyNutrition> {
-        return mealDao.getDailyNutritionHistory(days).map {
-            DailyNutrition(
-                date = it.date,
-                totalCalories = it.totalCalories,
-                totalProteins = it.totalProteins,
-                totalCarbs = it.totalCarbs,
-                totalFats = it.totalFats,
-                totalFiber = it.totalFiber
-            )
+    override fun getDailyNutritionHistory(days: Int): Flow<List<DailyNutrition>> {
+        return mealDao.getDailyNutritionHistory(days).map { list ->
+            list.map {
+                DailyNutrition(
+                    date = it.date,
+                    totalCalories = it.totalCalories,
+                    totalProteins = it.totalProteins,
+                    totalCarbs = it.totalCarbs,
+                    totalFats = it.totalFats,
+                    totalFiber = it.totalFiber
+                )
+            }
         }
     }
 

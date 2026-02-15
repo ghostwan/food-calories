@@ -11,6 +11,15 @@ class SaveMealUseCase(
 ) {
     suspend operator fun invoke(analysis: FoodAnalysis) {
         val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        saveMeal(analysis, date)
+    }
+
+    suspend fun replaceAndSave(oldMealId: Long, analysis: FoodAnalysis, date: String) {
+        mealRepository.deleteMeal(oldMealId)
+        saveMeal(analysis, date)
+    }
+
+    private suspend fun saveMeal(analysis: FoodAnalysis, date: String) {
         val ingredientsJson = buildIngredientsJson(analysis)
         val meal = MealEntry(
             dishName = analysis.dishName,

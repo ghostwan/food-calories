@@ -42,6 +42,8 @@ class FoodAnalysisViewModel(
     val readOnly: StateFlow<Boolean> = _readOnly
 
     private var lastImageData: ByteArray? = null
+    private var editingMealId: Long? = null
+    private var editingMealDate: String? = null
 
     fun getApiKey(): String = settingsRepository.getApiKey()
 
@@ -105,6 +107,7 @@ class FoodAnalysisViewModel(
         viewModelScope.launch {
             _uiState.value = AnalysisUiState.Loading
             _mealSaved.value = false
+            _readOnly.value = false
             try {
                 val language = Locale.getDefault().displayLanguage
                 val corrected = correctAnalysisUseCase(
@@ -121,7 +124,13 @@ class FoodAnalysisViewModel(
     fun saveMeal(analysis: FoodAnalysis) {
         viewModelScope.launch {
             try {
-                saveMealUseCase(analysis)
+                val mealId = editingMealId
+                val mealDate = editingMealDate
+                if (mealId != null && mealDate != null) {
+                    saveMealUseCase.replaceAndSave(mealId, analysis, mealDate)
+                } else {
+                    saveMealUseCase(analysis)
+                }
                 _mealSaved.value = true
             } catch (_: Exception) {
                 // silently fail
@@ -162,8 +171,12 @@ class FoodAnalysisViewModel(
         _uiState.value = AnalysisUiState.Success(analysis)
         _mealSaved.value = false
         _readOnly.value = true
+        editingMealId = meal.id
+        editingMealDate = meal.date
         lastImageData = null
     }
+
+    fun isEditing(): Boolean = editingMealId != null
 
     fun resetMealSaved() {
         _mealSaved.value = false
@@ -173,6 +186,8 @@ class FoodAnalysisViewModel(
         _uiState.value = AnalysisUiState.Idle
         _mealSaved.value = false
         _readOnly.value = false
+        editingMealId = null
+        editingMealDate = null
         lastImageData = null
     }
 
