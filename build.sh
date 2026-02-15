@@ -2,7 +2,7 @@
 set -euo pipefail
 
 GRADLE_VERSION="8.7"
-APP_ID="com.foodcalories.app"
+APP_ID="com.ghostwan.snapcal"
 MAIN_ACTIVITY=".MainActivity"
 
 # --- Helpers ---

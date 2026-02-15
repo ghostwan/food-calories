@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Food Calories</string>
+    <string name="app_name">SnapCal</string>
 
     <!-- Home -->
     <string name="home_description">Take a photo of a dish to analyze its ingredients and calories</string>

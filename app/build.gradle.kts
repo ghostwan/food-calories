@@ -15,11 +15,11 @@ if (localPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.foodcalories.app"
+    namespace = "com.ghostwan.snapcal"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.foodcalories.app"
+        applicationId = "com.ghostwan.snapcal"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
