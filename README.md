@@ -8,6 +8,7 @@ A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take 
   <img src="screenshots/dashboard.png" width="200" alt="Dashboard" />
   <img src="screenshots/scanner.png" width="200" alt="Scanner" />
   <img src="screenshots/history.png" width="200" alt="History" />
+  <img src="screenshots/profile.png" width="200" alt="Profile" />
   <img src="screenshots/reminders.png" width="200" alt="Meal Reminders" />
 </p>
 

@@ -1,5 +1,7 @@
 package com.ghostwan.snapcal.presentation.navigation
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
@@ -15,7 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -67,6 +71,7 @@ fun SnapCalNavGraph() {
         )
     )
 
+    val layoutDirection = LocalLayoutDirection.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute !in noBottomBarRoutes
@@ -98,7 +103,14 @@ fun SnapCalNavGraph() {
         NavHost(
             navController = navController,
             startDestination = "dashboard",
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(
+                    start = innerPadding.calculateLeftPadding(layoutDirection),
+                    top = innerPadding.calculateTopPadding(),
+                    end = innerPadding.calculateRightPadding(layoutDirection),
+                    bottom = 5.dp
+                )
+                .consumeWindowInsets(innerPadding)
         ) {
             composable("dashboard") {
                 val dashboardViewModel: DashboardViewModel = viewModel(
