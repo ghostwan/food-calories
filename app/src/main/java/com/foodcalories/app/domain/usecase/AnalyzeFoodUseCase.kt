@@ -6,7 +6,7 @@ import com.foodcalories.app.domain.repository.FoodAnalysisRepository
 class AnalyzeFoodUseCase(
     private val repository: FoodAnalysisRepository
 ) {
-    suspend operator fun invoke(imageData: ByteArray): FoodAnalysis {
-        return repository.analyzeFood(imageData)
+    suspend operator fun invoke(imageData: ByteArray, language: String): FoodAnalysis {
+        return repository.analyzeFood(imageData, language)
     }
 }

@@ -12,12 +12,12 @@ class FoodAnalysisRepositoryImpl(
     private val mapper: FoodAnalysisMapper
 ) : FoodAnalysisRepository {
 
-    override suspend fun analyzeFood(imageData: ByteArray): FoodAnalysis {
+    override suspend fun analyzeFood(imageData: ByteArray, language: String): FoodAnalysis {
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")
         }
-        val rawResponse = apiService.analyzeImage(imageData, apiKey)
+        val rawResponse = apiService.analyzeImage(imageData, apiKey, language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 }

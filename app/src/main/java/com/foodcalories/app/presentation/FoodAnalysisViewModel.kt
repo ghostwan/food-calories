@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.util.Locale
 
 class FoodAnalysisViewModel(
     private val analyzeFoodUseCase: AnalyzeFoodUseCase,
@@ -32,7 +33,8 @@ class FoodAnalysisViewModel(
             _uiState.value = AnalysisUiState.Loading
             try {
                 val imageData = readAndCompressImage(context, imageUri)
-                val result = analyzeFoodUseCase(imageData)
+                val language = Locale.getDefault().displayLanguage
+                val result = analyzeFoodUseCase(imageData, language)
                 _uiState.value = AnalysisUiState.Success(result)
             } catch (e: Exception) {
                 _uiState.value = AnalysisUiState.Error(

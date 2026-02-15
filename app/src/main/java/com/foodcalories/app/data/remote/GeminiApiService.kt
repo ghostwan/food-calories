@@ -17,10 +17,10 @@ class GeminiApiService {
         private val RETRY_DELAYS_MS = longArrayOf(2_000, 5_000, 10_000)
     }
 
-    suspend fun analyzeImage(imageData: ByteArray, apiKey: String): String {
+    suspend fun analyzeImage(imageData: ByteArray, apiKey: String, language: String): String {
         return withContext(Dispatchers.IO) {
             val base64Image = Base64.encodeToString(imageData, Base64.NO_WRAP)
-            val requestBody = buildRequestBody(base64Image)
+            val requestBody = buildRequestBody(base64Image, language)
 
             var lastException: Exception? = null
 
@@ -61,17 +61,20 @@ class GeminiApiService {
         }
     }
 
-    private fun buildRequestBody(base64Image: String): String {
+    private fun buildRequestBody(base64Image: String, language: String): String {
         val prompt = """
-            Analyse cette photo de nourriture/plat et fournis une estimation détaillée.
+            Analyze this food photo and provide a detailed estimation.
+            IMPORTANT: All text values in your response (dish name, ingredient names, notes, quantities) MUST be written in $language.
 
-            Réponds UNIQUEMENT avec un JSON valide (sans markdown, sans backticks) au format suivant:
+            Estimate the quantity of each ingredient as precisely as possible (weight in grams, volume in ml/cl, or count for countable items like eggs).
+
+            Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
             {
-                "dishName": "Nom du plat",
+                "dishName": "Name of the dish",
                 "totalCalories": 500,
                 "ingredients": [
-                    {"name": "Ingrédient 1", "quantity": "150g", "calories": 200},
-                    {"name": "Ingrédient 2", "quantity": "50g", "calories": 100}
+                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200},
+                    {"name": "Ingredient 2", "quantity": "2 cuillères à soupe (30ml)", "calories": 100}
                 ],
                 "macros": {
                     "proteins": "25g",
@@ -79,11 +82,11 @@ class GeminiApiService {
                     "fats": "15g",
                     "fiber": "5g"
                 },
-                "notes": "Remarques supplémentaires sur le plat"
+                "notes": "Additional remarks about the dish"
             }
 
-            Si l'image ne contient pas de nourriture, réponds avec:
-            {"dishName": "Non reconnu", "totalCalories": 0, "ingredients": [], "macros": null, "notes": "L'image ne semble pas contenir de nourriture."}
+            If the image does not contain food, respond with:
+            {"dishName": "Not recognized", "totalCalories": 0, "ingredients": [], "macros": null, "notes": "The image does not appear to contain food."}
         """.trimIndent()
 
         return JSONObject().apply {
