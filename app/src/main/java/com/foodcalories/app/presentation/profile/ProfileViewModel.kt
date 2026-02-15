@@ -48,6 +48,7 @@ class ProfileViewModel(
     fun saveProfile() {
         userProfileRepository.saveProfile(_profile.value)
         _saved.value = true
+        computeGoals()
     }
 
     fun updateGoalCalories(calories: Int) {
