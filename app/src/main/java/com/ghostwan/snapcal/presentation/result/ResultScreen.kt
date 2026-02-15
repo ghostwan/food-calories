@@ -1,5 +1,10 @@
 package com.ghostwan.snapcal.presentation.result
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -39,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,6 +53,7 @@ import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.model.AnalysisUiState
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,38 +209,7 @@ private fun SuccessContent(
         // Correction UI
         if (!mealSaved && !readOnly) {
             item {
-                var showCorrectionField by remember { mutableStateOf(false) }
-                var feedbackText by remember { mutableStateOf("") }
-
-                if (showCorrectionField) {
-                    OutlinedTextField(
-                        value = feedbackText,
-                        onValueChange = { feedbackText = it },
-                        label = { Text(stringResource(R.string.result_correction_hint)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 3
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = {
-                            if (feedbackText.isNotBlank()) {
-                                onCorrect(feedbackText)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.result_correct))
-                    }
-                } else {
-                    TextButton(
-                        onClick = { showCorrectionField = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(R.string.result_not_right))
-                    }
-                }
+                CorrectionSection(onCorrect = onCorrect)
             }
         }
 
@@ -256,6 +233,71 @@ private fun SuccessContent(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CorrectionSection(onCorrect: (String) -> Unit) {
+    val context = LocalContext.current
+    var showCorrectionField by remember { mutableStateOf(false) }
+    var feedbackText by remember { mutableStateOf("") }
+
+    val speechLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!matches.isNullOrEmpty()) {
+                feedbackText = matches[0]
+                showCorrectionField = true
+            }
+        }
+    }
+
+    if (showCorrectionField) {
+        OutlinedTextField(
+            value = feedbackText,
+            onValueChange = { feedbackText = it },
+            label = { Text(stringResource(R.string.result_correction_hint)) },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 3,
+            trailingIcon = {
+                IconButton(onClick = {
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                        putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.result_correction_hint))
+                    }
+                    speechLauncher.launch(intent)
+                }) {
+                    Icon(
+                        Icons.Default.Mic,
+                        contentDescription = stringResource(R.string.home_button_voice),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = {
+                if (feedbackText.isNotBlank()) {
+                    onCorrect(feedbackText)
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Edit, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.result_correct))
+        }
+    } else {
+        TextButton(
+            onClick = { showCorrectionField = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.result_not_right))
         }
     }
 }

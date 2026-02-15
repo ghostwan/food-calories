@@ -146,12 +146,11 @@ fun SnapCalNavGraph() {
                     },
                     onMealSaved = {
                         foodAnalysisViewModel.resetState()
-                        navController.navigate("home") {
+                        navController.navigate("dashboard") {
                             popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                                inclusive = true
                             }
                             launchSingleTop = true
-                            restoreState = true
                         }
                     }
                 )
