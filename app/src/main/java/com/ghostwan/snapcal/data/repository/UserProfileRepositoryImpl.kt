@@ -9,6 +9,9 @@ import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class UserProfileRepositoryImpl(
     context: Context,
@@ -81,8 +84,15 @@ class UserProfileRepositoryImpl(
     }
 
     override suspend fun getWeightHistory(days: Int): List<WeightRecord> {
-        return weightDao.getHistory(days).map {
+        val startDate = daysAgoDate(days)
+        return weightDao.getHistory(startDate).map {
             WeightRecord(id = it.id, weight = it.weight, date = it.date)
         }
+    }
+
+    private fun daysAgoDate(days: Int): String {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -days)
+        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
     }
 }

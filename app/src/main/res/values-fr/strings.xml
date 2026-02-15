@@ -65,7 +65,10 @@
     <string name="dashboard_title">Tableau de bord</string>
     <string name="dashboard_today">Aujourd\'hui</string>
     <string name="dashboard_calories">Calories</string>
-    <string name="dashboard_of_goal">%1$d / %2$d</string>
+    <string name="dashboard_of_goal">%1$d / %2$d kcal</string>
+    <string name="dashboard_remaining">%d kcal restantes</string>
+    <string name="dashboard_exceeded">%d kcal dépassées</string>
+    <string name="dashboard_burned">%d kcal dépensées</string>
     <string name="dashboard_meals_today">Repas du jour</string>
     <string name="dashboard_no_meals">Aucun repas enregistré aujourd\'hui</string>
     <string name="dashboard_scan_meal">Scanner un repas</string>

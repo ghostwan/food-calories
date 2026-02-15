@@ -14,8 +14,8 @@ interface WeightDao {
     @Query("SELECT * FROM weight_records ORDER BY date DESC LIMIT 1")
     suspend fun getLatest(): WeightEntity?
 
-    @Query("SELECT * FROM weight_records ORDER BY date DESC LIMIT :days")
-    suspend fun getHistory(days: Int): List<WeightEntity>
+    @Query("SELECT * FROM weight_records WHERE date >= :startDate ORDER BY date DESC")
+    suspend fun getHistory(startDate: String): List<WeightEntity>
 
     @Query("SELECT * FROM weight_records ORDER BY date ASC")
     suspend fun getAll(): List<WeightEntity>

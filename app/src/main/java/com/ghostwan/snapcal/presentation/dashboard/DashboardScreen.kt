@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -66,6 +67,7 @@ fun DashboardScreen(
     val meals by viewModel.meals.collectAsState()
     val goal by viewModel.goal.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
+    val caloriesBurned by viewModel.caloriesBurned.collectAsState()
 
     SideEffect { viewModel.refresh() }
 
@@ -91,7 +93,8 @@ fun DashboardScreen(
             item {
                 CaloriesRingCard(
                     current = nutrition?.totalCalories ?: 0,
-                    goal = goal.calories
+                    goal = goal.calories,
+                    burned = caloriesBurned
                 )
             }
 
@@ -188,7 +191,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun CaloriesRingCard(current: Int, goal: Int) {
+private fun CaloriesRingCard(current: Int, goal: Int, burned: Int) {
     val progress = if (goal > 0) (current.toFloat() / goal).coerceIn(0f, 1.5f) else 0f
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -260,6 +263,40 @@ private fun CaloriesRingCard(current: Int, goal: Int) {
                         text = stringResource(R.string.dashboard_of_goal, current, goal),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val remaining = goal - current
+            Text(
+                text = if (remaining >= 0)
+                    stringResource(R.string.dashboard_remaining, remaining)
+                else
+                    stringResource(R.string.dashboard_exceeded, -remaining),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = if (remaining >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+            )
+
+            if (burned > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.LocalFireDepartment,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = Color(0xFFFF9800)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.dashboard_burned, burned),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFFF9800)
                     )
                 }
             }

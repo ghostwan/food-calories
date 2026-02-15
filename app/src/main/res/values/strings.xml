@@ -65,7 +65,10 @@
     <string name="dashboard_title">Dashboard</string>
     <string name="dashboard_today">Today</string>
     <string name="dashboard_calories">Calories</string>
-    <string name="dashboard_of_goal">%1$d / %2$d</string>
+    <string name="dashboard_of_goal">%1$d / %2$d kcal</string>
+    <string name="dashboard_remaining">%d kcal remaining</string>
+    <string name="dashboard_exceeded">%d kcal exceeded</string>
+    <string name="dashboard_burned">%d kcal burned</string>
     <string name="dashboard_meals_today">Today\'s meals</string>
     <string name="dashboard_no_meals">No meals recorded today</string>
     <string name="dashboard_scan_meal">Scan a meal</string>

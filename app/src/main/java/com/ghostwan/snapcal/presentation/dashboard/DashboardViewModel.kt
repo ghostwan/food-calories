@@ -3,6 +3,7 @@ package com.ghostwan.snapcal.presentation.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -19,7 +20,8 @@ import java.util.Locale
 class DashboardViewModel(
     private val getDailyNutritionUseCase: GetDailyNutritionUseCase,
     private val userProfileRepository: UserProfileRepository,
-    private val mealRepository: MealRepository
+    private val mealRepository: MealRepository,
+    private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
     private val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
@@ -36,11 +38,15 @@ class DashboardViewModel(
     private val _favorites = MutableStateFlow<List<MealEntry>>(emptyList())
     val favorites: StateFlow<List<MealEntry>> = _favorites
 
+    private val _caloriesBurned = MutableStateFlow(0)
+    val caloriesBurned: StateFlow<Int> = _caloriesBurned
+
     init {
         loadGoal()
         observeNutrition()
         observeMeals()
         observeFavorites()
+        loadCaloriesBurned()
     }
 
     private fun loadGoal() {
@@ -63,8 +69,20 @@ class DashboardViewModel(
         }
     }
 
+    private fun loadCaloriesBurned() {
+        if (!healthConnectManager.isAvailable()) return
+        viewModelScope.launch {
+            try {
+                if (healthConnectManager.hasPermissions()) {
+                    _caloriesBurned.value = healthConnectManager.readTodayCaloriesBurned().toInt()
+                }
+            } catch (_: Exception) { }
+        }
+    }
+
     fun refresh() {
         loadGoal()
+        loadCaloriesBurned()
     }
 
     private fun observeFavorites() {
@@ -102,11 +120,12 @@ class DashboardViewModel(
         fun provideFactory(
             getDailyNutritionUseCase: GetDailyNutritionUseCase,
             userProfileRepository: UserProfileRepository,
-            mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository
+            mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
+            healthConnectManager: HealthConnectManager
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository) as T
+                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager) as T
             }
         }
     }

@@ -7,6 +7,9 @@ import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
 
@@ -48,7 +51,8 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
     }
 
     override fun getDailyNutritionHistory(days: Int): Flow<List<DailyNutrition>> {
-        return mealDao.getDailyNutritionHistory(days).map { list ->
+        val startDate = daysAgoDate(days)
+        return mealDao.getDailyNutritionHistory(startDate).map { list ->
             list.map {
                 DailyNutrition(
                     date = it.date,
@@ -78,6 +82,12 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         return mealDao.getFavorites().map { entities ->
             entities.map { it.toDomain() }
         }
+    }
+
+    private fun daysAgoDate(days: Int): String {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -days)
+        return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
     }
 
     private fun MealEntity.toDomain() = MealEntry(

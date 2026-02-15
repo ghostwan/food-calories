@@ -105,7 +105,8 @@ fun SnapCalNavGraph() {
                     factory = DashboardViewModel.provideFactory(
                         getDailyNutritionUseCase = app.getDailyNutritionUseCase,
                         userProfileRepository = app.userProfileRepository,
-                        mealRepository = app.mealRepository
+                        mealRepository = app.mealRepository,
+                        healthConnectManager = app.healthConnectManager
                     )
                 )
                 DashboardScreen(
