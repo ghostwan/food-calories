@@ -36,9 +36,67 @@
     <string name="result_notes">Notes</string>
     <string name="result_error">Erreur</string>
     <string name="result_button_back">Retour</string>
+    <string name="result_save_meal">Sauvegarder ce repas</string>
+    <string name="result_meal_saved">Repas sauvegardé !</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Quota gratuit dépassé</string>
     <string name="quota_warning_message">Vous avez effectué %1$d requêtes aujourd\'hui (limite gratuite : %2$d/jour). Continuer pourrait engendrer des frais sur votre compte Google Cloud.</string>
     <string name="quota_warning_continue">Continuer quand même</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Tableau de bord</string>
+    <string name="nav_scanner">Scanner</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Tableau de bord</string>
+    <string name="dashboard_today">Aujourd\'hui</string>
+    <string name="dashboard_calories">Calories</string>
+    <string name="dashboard_of_goal">%1$d / %2$d</string>
+    <string name="dashboard_meals_today">Repas du jour</string>
+    <string name="dashboard_no_meals">Aucun repas enregistré aujourd\'hui</string>
+    <string name="dashboard_scan_meal">Scanner un repas</string>
+    <string name="dashboard_history">Historique</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profil</string>
+    <string name="profile_height">Taille (cm)</string>
+    <string name="profile_weight">Poids (kg)</string>
+    <string name="profile_target_weight">Poids cible (kg)</string>
+    <string name="profile_age">Âge</string>
+    <string name="profile_gender">Genre</string>
+    <string name="profile_gender_male">Homme</string>
+    <string name="profile_gender_female">Femme</string>
+    <string name="profile_activity_level">Niveau d\'activité</string>
+    <string name="profile_activity_sedentary">Sédentaire</string>
+    <string name="profile_activity_light">Légèrement actif</string>
+    <string name="profile_activity_moderate">Modérément actif</string>
+    <string name="profile_activity_active">Actif</string>
+    <string name="profile_activity_very_active">Très actif</string>
+    <string name="profile_save">Sauvegarder le profil</string>
+    <string name="profile_saved">Profil sauvegardé !</string>
+    <string name="profile_compute_goals">Calculer mes objectifs (IA)</string>
+    <string name="profile_computing">Calcul en cours…</string>
+    <string name="profile_goals_title">Objectifs nutritionnels</string>
+    <string name="profile_calories_goal">Objectif calories</string>
+    <string name="profile_kcal_day">%d kcal/jour</string>
+    <string name="profile_proteins_goal">Protéines : %.0f g</string>
+    <string name="profile_carbs_goal">Glucides : %.0f g</string>
+    <string name="profile_fats_goal">Lipides : %.0f g</string>
+    <string name="profile_fiber_goal">Fibres : %.0f g</string>
+    <string name="profile_ai_explanation">Recommandation IA</string>
+    <string name="profile_manual_calories">Objectif calories manuel</string>
+
+    <!-- History -->
+    <string name="history_title">Historique</string>
+    <string name="history_no_data">Aucun historique de repas</string>
+    <string name="history_calories_label">%1$d kcal</string>
+    <string name="history_proteins_short">P : %.0fg</string>
+    <string name="history_carbs_short">G : %.0fg</string>
+    <string name="history_fats_short">L : %.0fg</string>
+
+    <!-- Units -->
+    <string name="unit_grams">%.0f g</string>
+    <string name="unit_kcal">%d kcal</string>
 </resources>

@@ -36,9 +36,67 @@
     <string name="result_notes">Notes</string>
     <string name="result_error">Error</string>
     <string name="result_button_back">Back</string>
+    <string name="result_save_meal">Save this meal</string>
+    <string name="result_meal_saved">Meal saved!</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Free quota exceeded</string>
     <string name="quota_warning_message">You have made %1$d requests today (free limit: %2$d/day). Continuing may incur charges on your Google Cloud account.</string>
     <string name="quota_warning_continue">Continue anyway</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_scanner">Scanner</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_today">Today</string>
+    <string name="dashboard_calories">Calories</string>
+    <string name="dashboard_of_goal">%1$d / %2$d</string>
+    <string name="dashboard_meals_today">Today\'s meals</string>
+    <string name="dashboard_no_meals">No meals recorded today</string>
+    <string name="dashboard_scan_meal">Scan a meal</string>
+    <string name="dashboard_history">History</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_height">Height (cm)</string>
+    <string name="profile_weight">Weight (kg)</string>
+    <string name="profile_target_weight">Target weight (kg)</string>
+    <string name="profile_age">Age</string>
+    <string name="profile_gender">Gender</string>
+    <string name="profile_gender_male">Male</string>
+    <string name="profile_gender_female">Female</string>
+    <string name="profile_activity_level">Activity level</string>
+    <string name="profile_activity_sedentary">Sedentary</string>
+    <string name="profile_activity_light">Lightly active</string>
+    <string name="profile_activity_moderate">Moderately active</string>
+    <string name="profile_activity_active">Active</string>
+    <string name="profile_activity_very_active">Very active</string>
+    <string name="profile_save">Save profile</string>
+    <string name="profile_saved">Profile saved!</string>
+    <string name="profile_compute_goals">Calculate my goals (AI)</string>
+    <string name="profile_computing">Calculating…</string>
+    <string name="profile_goals_title">Nutritional goals</string>
+    <string name="profile_calories_goal">Calories goal</string>
+    <string name="profile_kcal_day">%d kcal/day</string>
+    <string name="profile_proteins_goal">Proteins: %.0f g</string>
+    <string name="profile_carbs_goal">Carbs: %.0f g</string>
+    <string name="profile_fats_goal">Fats: %.0f g</string>
+    <string name="profile_fiber_goal">Fiber: %.0f g</string>
+    <string name="profile_ai_explanation">AI recommendation</string>
+    <string name="profile_manual_calories">Manual calories goal</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="history_no_data">No meal history yet</string>
+    <string name="history_calories_label">%1$d kcal</string>
+    <string name="history_proteins_short">P: %.0fg</string>
+    <string name="history_carbs_short">C: %.0fg</string>
+    <string name="history_fats_short">F: %.0fg</string>
+
+    <!-- Units -->
+    <string name="unit_grams">%.0f g</string>
+    <string name="unit_kcal">%d kcal</string>
 </resources>

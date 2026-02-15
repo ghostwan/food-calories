@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,6 +47,7 @@ fun ResultScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val mealSaved by viewModel.mealSaved.collectAsState()
 
     Scaffold(
         topBar = {
@@ -52,7 +56,7 @@ fun ResultScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            Icons.Filled.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.result_back)
                         )
                     }
@@ -68,7 +72,11 @@ fun ResultScreen(
             when (val state = uiState) {
                 is AnalysisUiState.Idle -> IdleContent()
                 is AnalysisUiState.Loading -> LoadingContent()
-                is AnalysisUiState.Success -> SuccessContent(state.result)
+                is AnalysisUiState.Success -> SuccessContent(
+                    result = state.result,
+                    mealSaved = mealSaved,
+                    onSave = { viewModel.saveMeal(state.result) }
+                )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
         }
@@ -96,7 +104,11 @@ private fun LoadingContent() {
 }
 
 @Composable
-private fun SuccessContent(result: FoodAnalysis) {
+private fun SuccessContent(
+    result: FoodAnalysis,
+    mealSaved: Boolean,
+    onSave: () -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -158,6 +170,26 @@ private fun SuccessContent(result: FoodAnalysis) {
 
         if (result.notes != null) {
             item { NotesCard(result.notes) }
+        }
+
+        // Save meal button
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(
+                onClick = onSave,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !mealSaved
+            ) {
+                if (mealSaved) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.result_meal_saved))
+                } else {
+                    Icon(Icons.Default.Save, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.result_save_meal))
+                }
+            }
         }
     }
 }

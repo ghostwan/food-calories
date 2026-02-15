@@ -7,9 +7,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.foodcalories.app.domain.model.FoodAnalysis
 import com.foodcalories.app.domain.repository.SettingsRepository
 import com.foodcalories.app.domain.repository.UsageRepository
 import com.foodcalories.app.domain.usecase.AnalyzeFoodUseCase
+import com.foodcalories.app.domain.usecase.SaveMealUseCase
 import com.foodcalories.app.presentation.model.AnalysisUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,11 +22,15 @@ import java.util.Locale
 class FoodAnalysisViewModel(
     private val analyzeFoodUseCase: AnalyzeFoodUseCase,
     private val settingsRepository: SettingsRepository,
-    private val usageRepository: UsageRepository
+    private val usageRepository: UsageRepository,
+    private val saveMealUseCase: SaveMealUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Idle)
     val uiState: StateFlow<AnalysisUiState> = _uiState
+
+    private val _mealSaved = MutableStateFlow(false)
+    val mealSaved: StateFlow<Boolean> = _mealSaved
 
     fun getApiKey(): String = settingsRepository.getApiKey()
 
@@ -53,8 +59,24 @@ class FoodAnalysisViewModel(
         }
     }
 
+    fun saveMeal(analysis: FoodAnalysis) {
+        viewModelScope.launch {
+            try {
+                saveMealUseCase(analysis)
+                _mealSaved.value = true
+            } catch (_: Exception) {
+                // silently fail
+            }
+        }
+    }
+
+    fun resetMealSaved() {
+        _mealSaved.value = false
+    }
+
     fun resetState() {
         _uiState.value = AnalysisUiState.Idle
+        _mealSaved.value = false
     }
 
     private fun readAndCompressImage(context: Context, uri: Uri): ByteArray {
@@ -94,14 +116,16 @@ class FoodAnalysisViewModel(
         fun provideFactory(
             analyzeFoodUseCase: AnalyzeFoodUseCase,
             settingsRepository: SettingsRepository,
-            usageRepository: UsageRepository
+            usageRepository: UsageRepository,
+            saveMealUseCase: SaveMealUseCase
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return FoodAnalysisViewModel(
                     analyzeFoodUseCase,
                     settingsRepository,
-                    usageRepository
+                    usageRepository,
+                    saveMealUseCase
                 ) as T
             }
         }
