@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.foodcalories.app.domain.repository.SettingsRepository
+import com.foodcalories.app.domain.repository.UsageRepository
 import com.foodcalories.app.domain.usecase.AnalyzeFoodUseCase
 import com.foodcalories.app.presentation.model.AnalysisUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,8 @@ import java.util.Locale
 
 class FoodAnalysisViewModel(
     private val analyzeFoodUseCase: AnalyzeFoodUseCase,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val usageRepository: UsageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Idle)
@@ -28,6 +30,12 @@ class FoodAnalysisViewModel(
 
     fun setApiKey(key: String) = settingsRepository.setApiKey(key)
 
+    fun isQuotaExceeded(): Boolean =
+        usageRepository.getDailyRequestCount() >= FREE_DAILY_LIMIT
+
+    fun getDailyRequestCount(): Int =
+        usageRepository.getDailyRequestCount()
+
     fun analyzeFood(context: Context, imageUri: Uri) {
         viewModelScope.launch {
             _uiState.value = AnalysisUiState.Loading
@@ -35,6 +43,7 @@ class FoodAnalysisViewModel(
                 val imageData = readAndCompressImage(context, imageUri)
                 val language = Locale.getDefault().displayLanguage
                 val result = analyzeFoodUseCase(imageData, language)
+                usageRepository.recordRequest()
                 _uiState.value = AnalysisUiState.Success(result)
             } catch (e: Exception) {
                 _uiState.value = AnalysisUiState.Error(
@@ -80,13 +89,20 @@ class FoodAnalysisViewModel(
     }
 
     companion object {
+        const val FREE_DAILY_LIMIT = 1500
+
         fun provideFactory(
             analyzeFoodUseCase: AnalyzeFoodUseCase,
-            settingsRepository: SettingsRepository
+            settingsRepository: SettingsRepository,
+            usageRepository: UsageRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return FoodAnalysisViewModel(analyzeFoodUseCase, settingsRepository) as T
+                return FoodAnalysisViewModel(
+                    analyzeFoodUseCase,
+                    settingsRepository,
+                    usageRepository
+                ) as T
             }
         }
     }

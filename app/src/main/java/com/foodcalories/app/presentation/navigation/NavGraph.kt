@@ -20,7 +20,8 @@ fun FoodCaloriesNavGraph() {
     val viewModel: FoodAnalysisViewModel = viewModel(
         factory = FoodAnalysisViewModel.provideFactory(
             analyzeFoodUseCase = app.analyzeFoodUseCase,
-            settingsRepository = app.settingsRepository
+            settingsRepository = app.settingsRepository,
+            usageRepository = app.usageRepository
         )
     )
 

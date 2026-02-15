@@ -36,4 +36,9 @@
     <string name="result_notes">Notes</string>
     <string name="result_error">Error</string>
     <string name="result_button_back">Back</string>
+
+    <!-- Quota Warning -->
+    <string name="quota_warning_title">Free quota exceeded</string>
+    <string name="quota_warning_message">You have made %1$d requests today (free limit: %2$d/day). Continuing may incur charges on your Google Cloud account.</string>
+    <string name="quota_warning_continue">Continue anyway</string>
 </resources>

@@ -47,6 +47,7 @@ import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.foodcalories.app.R
 import com.foodcalories.app.presentation.FoodAnalysisViewModel
+import com.foodcalories.app.presentation.FoodAnalysisViewModel.Companion.FREE_DAILY_LIMIT
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,11 +59,11 @@ fun HomeScreen(
     val context = LocalContext.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
+    var showQuotaWarning by remember { mutableStateOf(false) }
     var apiKey by remember { mutableStateOf(viewModel.getApiKey()) }
 
     val imageFile = remember {
-        File(context.cacheDir, "images").apply { mkdirs() }
-            .let { File(it, "food_photo.jpg") }
+        File(File(context.cacheDir, "images").apply { mkdirs() }, "food_photo.jpg")
     }
 
     val fileProviderUri = remember {
@@ -95,6 +96,20 @@ fun HomeScreen(
         if (granted) {
             cameraLauncher.launch(fileProviderUri)
         }
+    }
+
+    if (showQuotaWarning) {
+        QuotaWarningDialog(
+            dailyCount = viewModel.getDailyRequestCount(),
+            dailyLimit = FREE_DAILY_LIMIT,
+            onConfirm = {
+                showQuotaWarning = false
+                viewModel.resetState()
+                viewModel.analyzeFood(context, photoUri!!)
+                onAnalysisStarted()
+            },
+            onDismiss = { showQuotaWarning = false }
+        )
     }
 
     if (showApiKeyDialog) {
@@ -201,9 +216,13 @@ fun HomeScreen(
             if (photoUri != null) {
                 Button(
                     onClick = {
-                        viewModel.resetState()
-                        viewModel.analyzeFood(context, photoUri!!)
-                        onAnalysisStarted()
+                        if (viewModel.isQuotaExceeded()) {
+                            showQuotaWarning = true
+                        } else {
+                            viewModel.resetState()
+                            viewModel.analyzeFood(context, photoUri!!)
+                            onAnalysisStarted()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = apiKey.isNotBlank()
@@ -253,6 +272,35 @@ private fun ApiKeyDialog(
         confirmButton = {
             TextButton(onClick = { onConfirm(key) }) {
                 Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun QuotaWarningDialog(
+    dailyCount: Int,
+    dailyLimit: Int,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.quota_warning_title)) },
+        text = {
+            Text(
+                stringResource(R.string.quota_warning_message, dailyCount, dailyLimit),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.quota_warning_continue))
             }
         },
         dismissButton = {
