@@ -1,15 +1,33 @@
-# Food Calories
+# SnapCal
 
 A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take a photo of your meal and instantly get a detailed breakdown of ingredients, quantities, macronutrients, and calorie count — powered by Google's Gemini AI.
+
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/dashboard.png" width="200" alt="Dashboard" />
+  <img src="screenshots/scanner.png" width="200" alt="Scanner" />
+  <img src="screenshots/history.png" width="200" alt="History" />
+  <img src="screenshots/reminders.png" width="200" alt="Meal Reminders" />
+</p>
 
 ## Features
 
 - **Snap or pick**: Take a photo with your camera or choose one from your gallery
 - **AI-powered analysis**: Uses Gemini 2.0 Flash to identify ingredients and estimate nutritional values
-- **Detailed breakdown**: Get per-ingredient calories, total calorie count, and macronutrients (proteins, carbs, fats, fiber)
+- **Text & voice input**: Describe what you ate by typing or using voice recognition
+- **Barcode scanning**: Scan product barcodes to get nutrition info from Open Food Facts
+- **Dashboard**: Track daily calories and macronutrients with a visual progress ring
+- **Meal history & trends**: View past meals and nutrition trends over 1 week, 1 month, 3 months or 1 year
+- **Favorites**: Star your frequent meals and re-add them with one tap
+- **Nutritional goals**: Set manual calorie goals or let AI compute personalized targets based on your profile
+- **Home screen widget**: Glanceable calories widget showing consumed / goal with a progress bar
+- **Meal reminders**: Configurable notifications for breakfast (08:00), lunch (12:30) and dinner (20:30) with adjustable times
+- **Health Connect**: Sync weight data and burned calories from Google Health Connect
+- **Google Drive backup**: Back up and restore all your data (meals, profile, weight history)
 - **Multilingual**: Supports English and French (adapts to your device language)
 - **No account required**: Just bring your own Gemini API key — no sign-up, no subscription, no tracking
-- **Fully offline-capable UI**: Only the analysis step requires an internet connection
+- **AI correction**: Not happy with the analysis? Describe what's different and let AI correct it
 
 ## Architecture
 
@@ -17,11 +35,11 @@ Built with **Clean Architecture** principles:
 
 ```
 domain/          Models, repository interfaces, use cases (no Android dependencies)
-data/            Gemini REST API client, repository implementations, JSON mapper
+data/            Gemini REST API client, Room database, repository implementations
 presentation/    Jetpack Compose UI, ViewModel, Material 3 theme, navigation
 ```
 
-**Tech stack**: Kotlin, Jetpack Compose, Material 3, CameraX contracts, Coil, Gemini REST API.
+**Tech stack**: Kotlin, Jetpack Compose, Material 3, Room, CameraX contracts, Coil, WorkManager, Gemini REST API.
 
 ## Getting Started
 
