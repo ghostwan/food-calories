@@ -84,6 +84,9 @@ dependencies {
     // Health Connect
     implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
 
+    // Google Code Scanner (barcode)
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+
     // Google Sign-In + Drive
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.api-client:google-api-client-android:2.2.0")

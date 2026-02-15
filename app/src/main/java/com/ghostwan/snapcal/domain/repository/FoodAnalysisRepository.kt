@@ -11,4 +11,5 @@ interface FoodAnalysisRepository {
         imageData: ByteArray?,
         language: String
     ): FoodAnalysis
+    suspend fun analyzeFoodFromBarcode(barcode: String): FoodAnalysis
 }

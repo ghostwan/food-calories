@@ -12,6 +12,7 @@ import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
+import com.ghostwan.snapcal.data.remote.OpenFoodFactsService
 import com.ghostwan.snapcal.data.repository.FoodAnalysisRepositoryImpl
 import com.ghostwan.snapcal.data.repository.MealRepositoryImpl
 import com.ghostwan.snapcal.data.repository.SettingsRepositoryImpl
@@ -81,7 +82,8 @@ class SnapCalApp : Application() {
         googleAuthManager = GoogleAuthManager(this)
         driveBackupManager = DriveBackupManager(this)
 
-        val foodAnalysisRepository = FoodAnalysisRepositoryImpl(apiService, settingsRepo, mapper)
+        val openFoodFactsService = OpenFoodFactsService()
+        val foodAnalysisRepository = FoodAnalysisRepositoryImpl(apiService, settingsRepo, mapper, openFoodFactsService)
         analyzeFoodUseCase = AnalyzeFoodUseCase(foodAnalysisRepository)
         correctAnalysisUseCase = CorrectAnalysisUseCase(foodAnalysisRepository)
         saveMealUseCase = SaveMealUseCase(mealRepo)

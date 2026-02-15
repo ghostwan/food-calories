@@ -87,6 +87,20 @@ class FoodAnalysisViewModel(
         }
     }
 
+    fun analyzeFoodFromBarcode(barcode: String) {
+        viewModelScope.launch {
+            _uiState.value = AnalysisUiState.Loading
+            try {
+                val result = analyzeFoodUseCase.fromBarcode(barcode)
+                _uiState.value = AnalysisUiState.Success(result)
+            } catch (e: Exception) {
+                _uiState.value = AnalysisUiState.Error(
+                    e.message ?: "Product not found"
+                )
+            }
+        }
+    }
+
     fun correctAnalysis(originalAnalysis: FoodAnalysis, feedback: String) {
         viewModelScope.launch {
             _uiState.value = AnalysisUiState.Loading

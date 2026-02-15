@@ -15,6 +15,9 @@
     <string name="home_button_voice">Voice input</string>
     <string name="home_voice_prompt">Describe what you ate…</string>
     <string name="home_button_analyze_text">Analyze description</string>
+    <string name="home_or_scan_barcode">Or scan a barcode</string>
+    <string name="home_button_barcode">Scan barcode</string>
+    <string name="home_barcode_searching">Searching product…</string>
     <string name="settings_description">Settings</string>
 
     <!-- API Key Dialog -->

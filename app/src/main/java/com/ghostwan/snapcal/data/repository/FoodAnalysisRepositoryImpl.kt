@@ -2,6 +2,7 @@ package com.ghostwan.snapcal.data.repository
 
 import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
 import com.ghostwan.snapcal.data.remote.GeminiApiService
+import com.ghostwan.snapcal.data.remote.OpenFoodFactsService
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.repository.FoodAnalysisRepository
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
@@ -11,7 +12,8 @@ import org.json.JSONObject
 class FoodAnalysisRepositoryImpl(
     private val apiService: GeminiApiService,
     private val settingsRepository: SettingsRepository,
-    private val mapper: FoodAnalysisMapper
+    private val mapper: FoodAnalysisMapper,
+    private val openFoodFactsService: OpenFoodFactsService
 ) : FoodAnalysisRepository {
 
     override suspend fun analyzeFood(imageData: ByteArray, language: String): FoodAnalysis {
@@ -45,6 +47,10 @@ class FoodAnalysisRepositoryImpl(
         val originalJson = serializeAnalysis(originalAnalysis)
         val rawResponse = apiService.correctAnalysis(originalJson, userFeedback, imageData, apiKey, language)
         return mapper.mapFromApiResponse(rawResponse)
+    }
+
+    override suspend fun analyzeFoodFromBarcode(barcode: String): FoodAnalysis {
+        return openFoodFactsService.lookupProduct(barcode)
     }
 
     private fun serializeAnalysis(analysis: FoodAnalysis): String {

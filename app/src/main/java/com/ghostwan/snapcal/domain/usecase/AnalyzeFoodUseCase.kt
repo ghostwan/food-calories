@@ -13,4 +13,8 @@ class AnalyzeFoodUseCase(
     suspend fun fromText(description: String, language: String): FoodAnalysis {
         return repository.analyzeFoodFromText(description, language)
     }
+
+    suspend fun fromBarcode(barcode: String): FoodAnalysis {
+        return repository.analyzeFoodFromBarcode(barcode)
+    }
 }

@@ -15,6 +15,9 @@
     <string name="home_button_voice">Saisie vocale</string>
     <string name="home_voice_prompt">Décrivez ce que vous avez mangé…</string>
     <string name="home_button_analyze_text">Analyser la description</string>
+    <string name="home_or_scan_barcode">Ou scannez un code-barres</string>
+    <string name="home_button_barcode">Scanner code-barres</string>
+    <string name="home_barcode_searching">Recherche du produit…</string>
     <string name="settings_description">Paramètres</string>
 
     <!-- API Key Dialog -->

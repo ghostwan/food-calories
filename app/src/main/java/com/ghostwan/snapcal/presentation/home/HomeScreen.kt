@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -54,6 +55,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel.Companion.FREE_DAILY_LIMIT
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import java.io.File
 import java.util.Locale
 
@@ -311,6 +315,40 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.padding(4.dp))
                     Text(stringResource(R.string.home_button_analyze_text))
                 }
+            }
+
+            // Barcode scanner section
+            Text(
+                text = stringResource(R.string.home_or_scan_barcode),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedButton(
+                onClick = {
+                    val options = GmsBarcodeScannerOptions.Builder()
+                        .setBarcodeFormats(
+                            Barcode.FORMAT_EAN_13,
+                            Barcode.FORMAT_EAN_8,
+                            Barcode.FORMAT_UPC_A,
+                            Barcode.FORMAT_UPC_E
+                        )
+                        .build()
+                    val scanner = GmsBarcodeScanning.getClient(context, options)
+                    scanner.startScan()
+                        .addOnSuccessListener { barcode ->
+                            barcode.rawValue?.let { value ->
+                                viewModel.resetState()
+                                viewModel.analyzeFoodFromBarcode(value)
+                                onAnalysisStarted()
+                            }
+                        }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+                Spacer(modifier = Modifier.padding(4.dp))
+                Text(stringResource(R.string.home_button_barcode))
             }
 
             if (apiKey.isBlank()) {
