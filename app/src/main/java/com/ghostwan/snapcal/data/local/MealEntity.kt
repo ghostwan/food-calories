@@ -14,5 +14,6 @@ data class MealEntity(
     val fiber: Float,
     val date: String, // yyyy-MM-dd
     val ingredientsJson: String,
-    val emoji: String? = null
+    val emoji: String? = null,
+    val isFavorite: Boolean = false
 )

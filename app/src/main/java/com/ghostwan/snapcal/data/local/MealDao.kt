@@ -33,6 +33,12 @@ interface MealDao {
 
     @Query("DELETE FROM meals WHERE id = :id")
     suspend fun delete(id: Long)
+
+    @Query("UPDATE meals SET isFavorite = :isFavorite WHERE id = :id")
+    suspend fun setFavorite(id: Long, isFavorite: Boolean)
+
+    @Query("SELECT * FROM meals WHERE isFavorite = 1 ORDER BY id DESC")
+    fun getFavorites(): Flow<List<MealEntity>>
 }
 
 data class DailyNutritionTuple(

@@ -68,6 +68,16 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         mealDao.delete(id)
     }
 
+    override suspend fun setFavorite(id: Long, isFavorite: Boolean) {
+        mealDao.setFavorite(id, isFavorite)
+    }
+
+    override fun getFavorites(): Flow<List<MealEntry>> {
+        return mealDao.getFavorites().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     private fun MealEntity.toDomain() = MealEntry(
         id = id,
         dishName = dishName,
@@ -78,6 +88,7 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         fiber = fiber,
         date = date,
         ingredientsJson = ingredientsJson,
-        emoji = emoji
+        emoji = emoji,
+        isFavorite = isFavorite
     )
 }

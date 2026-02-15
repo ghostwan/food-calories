@@ -69,6 +69,9 @@
     <string name="dashboard_no_meals">No meals recorded today</string>
     <string name="dashboard_scan_meal">Scan a meal</string>
     <string name="dashboard_history">History</string>
+    <string name="dashboard_favorites">Favorites</string>
+    <string name="dashboard_toggle_favorite">Toggle favorite</string>
+    <string name="dashboard_add_favorite">Add to today</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>

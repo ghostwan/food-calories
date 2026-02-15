@@ -11,4 +11,6 @@ interface MealRepository {
     suspend fun getDailyNutritionHistory(days: Int): List<DailyNutrition>
     suspend fun getAllMeals(): List<MealEntry>
     suspend fun deleteMeal(id: Long)
+    suspend fun setFavorite(id: Long, isFavorite: Boolean)
+    fun getFavorites(): Flow<List<MealEntry>>
 }

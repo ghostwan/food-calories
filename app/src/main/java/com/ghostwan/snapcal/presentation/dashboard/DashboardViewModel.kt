@@ -33,10 +33,14 @@ class DashboardViewModel(
     private val _goal = MutableStateFlow(NutritionGoal())
     val goal: StateFlow<NutritionGoal> = _goal
 
+    private val _favorites = MutableStateFlow<List<MealEntry>>(emptyList())
+    val favorites: StateFlow<List<MealEntry>> = _favorites
+
     init {
         loadGoal()
         observeNutrition()
         observeMeals()
+        observeFavorites()
     }
 
     private fun loadGoal() {
@@ -63,9 +67,34 @@ class DashboardViewModel(
         loadGoal()
     }
 
+    private fun observeFavorites() {
+        viewModelScope.launch {
+            mealRepository.getFavorites().collect {
+                _favorites.value = it
+            }
+        }
+    }
+
     fun deleteMeal(id: Long) {
         viewModelScope.launch {
             mealRepository.deleteMeal(id)
+        }
+    }
+
+    fun toggleFavorite(meal: MealEntry) {
+        viewModelScope.launch {
+            mealRepository.setFavorite(meal.id, !meal.isFavorite)
+        }
+    }
+
+    fun quickAddFavorite(meal: MealEntry) {
+        viewModelScope.launch {
+            val todayMeal = meal.copy(
+                id = 0,
+                date = today,
+                isFavorite = false
+            )
+            mealRepository.saveMeal(todayMeal)
         }
     }
 
