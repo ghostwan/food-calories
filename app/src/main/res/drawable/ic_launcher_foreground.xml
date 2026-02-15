@@ -1,0 +1,64 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Plate outer rim -->
+    <path
+        android:fillAlpha="0.25"
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30C67.25,30 78,40.75 78,54C78,67.25 67.25,78 54,78C40.75,78 30,67.25 30,54C30,40.75 40.75,30 54,30Z" />
+
+    <!-- Plate inner -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,35C64.49,35 73,43.51 73,54C73,64.49 64.49,73 54,73C43.51,73 35,64.49 35,54C35,43.51 43.51,35 54,35Z" />
+
+    <!-- Viewfinder corner: top-left -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19,35L19,19L35,19"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="4" />
+
+    <!-- Viewfinder corner: top-right -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M73,19L89,19L89,35"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="4" />
+
+    <!-- Viewfinder corner: bottom-right -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M89,73L89,89L73,89"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="4" />
+
+    <!-- Viewfinder corner: bottom-left -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M35,89L19,89L19,73"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="4" />
+
+    <!-- Flame (calories) - outer -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M54,42C54,42 45,52.5 45,57C45,62 49,66 54,66C59,66 63,62 63,57C63,52.5 54,42 54,42Z" />
+
+    <!-- Flame - inner -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M54,50C54,50 49.5,55 49.5,57.5C49.5,60 51.5,62 54,62C56.5,62 58.5,60 58.5,57.5C58.5,55 54,50 54,50Z" />
+
+</vector>

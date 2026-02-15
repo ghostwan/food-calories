@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Food Calories</string>
+
+    <!-- Home -->
+    <string name="home_description">Take a photo of a dish to analyze its ingredients and calories</string>
+    <string name="home_no_photo">No photo</string>
+    <string name="home_button_photo">Photo</string>
+    <string name="home_button_gallery">Gallery</string>
+    <string name="home_button_analyze">Analyze dish</string>
+    <string name="home_api_key_warning">Configure your Gemini API key in settings</string>
+    <string name="home_photo_description">Photo of the dish</string>
+    <string name="settings_description">Settings</string>
+
+    <!-- API Key Dialog -->
+    <string name="dialog_api_key_title">Gemini API Key</string>
+    <string name="dialog_api_key_message">Enter your Google Gemini API key to enable analysis.</string>
+    <string name="dialog_api_key_label">API Key</string>
+    <string name="dialog_button_save">Save</string>
+    <string name="dialog_button_cancel">Cancel</string>
+
+    <!-- Result -->
+    <string name="result_title">Results</string>
+    <string name="result_back">Back</string>
+    <string name="result_idle">Take a photo to start the analysis</string>
+    <string name="result_loading">Analyzing…</string>
+    <string name="result_total_calories">Total calories</string>
+    <string name="result_kcal">%d kcal</string>
+    <string name="result_kcal_text">%s kcal</string>
+    <string name="result_macros">Macronutrients</string>
+    <string name="result_proteins">Proteins</string>
+    <string name="result_carbs">Carbs</string>
+    <string name="result_fats">Fats</string>
+    <string name="result_fiber">Fiber</string>
+    <string name="result_ingredients">Ingredients</string>
+    <string name="result_notes">Notes</string>
+    <string name="result_error">Error</string>
+    <string name="result_button_back">Back</string>
+</resources>
