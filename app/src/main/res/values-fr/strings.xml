@@ -123,6 +123,10 @@
     <string name="history_proteins_short">P : %.0fg</string>
     <string name="history_carbs_short">G : %.0fg</string>
     <string name="history_fats_short">L : %.0fg</string>
+    <string name="history_range_week">1S</string>
+    <string name="history_range_month">1M</string>
+    <string name="history_range_quarter">3M</string>
+    <string name="history_range_year">1A</string>
     <string name="history_chart_title">Tendances</string>
     <string name="history_legend_calories">Calories</string>
     <string name="history_legend_weight">Poids</string>

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,6 +60,14 @@ fun HistoryScreen(
     val profile by viewModel.profile.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val selectedDayMeals by viewModel.selectedDayMeals.collectAsState()
+    val selectedRange by viewModel.selectedRange.collectAsState()
+
+    val rangeLabels = mapOf(
+        7 to stringResource(R.string.history_range_week),
+        30 to stringResource(R.string.history_range_month),
+        90 to stringResource(R.string.history_range_quarter),
+        365 to stringResource(R.string.history_range_year)
+    )
 
     Scaffold(
         topBar = {
@@ -127,6 +136,22 @@ fun HistoryScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HistoryViewModel.RANGE_OPTIONS.forEach { days ->
+                            FilterChip(
+                                selected = selectedRange == days,
+                                onClick = { viewModel.setRange(days) },
+                                label = { Text(rangeLabels[days] ?: "$days") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
                 if (chartData.isNotEmpty()) {
                     item {
                         DualAxisChart(

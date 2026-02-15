@@ -11,6 +11,7 @@ import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.GetNutritionHistoryUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -40,20 +41,31 @@ class HistoryViewModel(
     private val _selectedDate = MutableStateFlow<String?>(null)
     val selectedDate: StateFlow<String?> = _selectedDate
 
-    init {
-        loadData()
-    }
+    private val _selectedRange = MutableStateFlow(30)
+    val selectedRange: StateFlow<Int> = _selectedRange
 
-    private fun loadData() {
+    private var historyJob: Job? = null
+
+    init {
         _goal.value = userProfileRepository.getGoal()
         _profile.value = userProfileRepository.getProfile()
-        viewModelScope.launch {
-            historyUseCase(30).collect {
+        loadForRange(30)
+    }
+
+    fun setRange(days: Int) {
+        _selectedRange.value = days
+        loadForRange(days)
+    }
+
+    private fun loadForRange(days: Int) {
+        historyJob?.cancel()
+        historyJob = viewModelScope.launch {
+            historyUseCase(days).collect {
                 _history.value = it
             }
         }
         viewModelScope.launch {
-            _weightHistory.value = userProfileRepository.getWeightHistory(30)
+            _weightHistory.value = userProfileRepository.getWeightHistory(days)
         }
     }
 
@@ -70,6 +82,8 @@ class HistoryViewModel(
     }
 
     companion object {
+        val RANGE_OPTIONS = listOf(7, 30, 90, 365)
+
         fun provideFactory(
             historyUseCase: GetNutritionHistoryUseCase,
             userProfileRepository: UserProfileRepository,
