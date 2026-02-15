@@ -138,6 +138,20 @@
     <string name="history_legend_weight_goal">Target weight</string>
     <string name="history_meal_macros">P: %.0fg · C: %.0fg · F: %.0fg</string>
 
+    <!-- Widget -->
+    <string name="widget_name">SnapCal Calories</string>
+    <string name="widget_remaining">%d kcal remaining</string>
+
+    <!-- Meal Reminders -->
+    <string name="profile_reminders_title">Meal reminders</string>
+    <string name="profile_reminders_enable">Enable reminders</string>
+    <string name="profile_reminder_breakfast">Breakfast</string>
+    <string name="profile_reminder_lunch">Lunch</string>
+    <string name="profile_reminder_dinner">Dinner</string>
+    <string name="reminder_breakfast_message">Don\'t forget to log your breakfast!</string>
+    <string name="reminder_lunch_message">Don\'t forget to log your lunch!</string>
+    <string name="reminder_dinner_message">Don\'t forget to log your dinner!</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>

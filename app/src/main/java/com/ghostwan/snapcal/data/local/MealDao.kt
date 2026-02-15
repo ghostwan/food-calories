@@ -39,6 +39,9 @@ interface MealDao {
 
     @Query("SELECT * FROM meals WHERE isFavorite = 1 ORDER BY id DESC")
     fun getFavorites(): Flow<List<MealEntity>>
+
+    @Query("SELECT SUM(calories) FROM meals WHERE date = :date")
+    suspend fun getDailyCalories(date: String): Int?
 }
 
 data class DailyNutritionTuple(

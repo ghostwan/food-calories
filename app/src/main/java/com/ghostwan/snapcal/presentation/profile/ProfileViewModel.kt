@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.data.local.MealReminderManager
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -26,7 +27,8 @@ class ProfileViewModel(
     private val healthConnectManager: HealthConnectManager,
     private val googleAuthManager: GoogleAuthManager,
     private val driveBackupManager: DriveBackupManager,
-    private val mealRepository: MealRepository
+    private val mealRepository: MealRepository,
+    private val mealReminderManager: MealReminderManager
 ) : ViewModel() {
 
     private val _profile = MutableStateFlow(UserProfile())
@@ -71,10 +73,23 @@ class ProfileViewModel(
     private val _restoreDone = MutableStateFlow(false)
     val restoreDone: StateFlow<Boolean> = _restoreDone
 
+    private val _remindersEnabled = MutableStateFlow(false)
+    val remindersEnabled: StateFlow<Boolean> = _remindersEnabled
+
+    private val _breakfastTime = MutableStateFlow(Pair(8, 0))
+    val breakfastTime: StateFlow<Pair<Int, Int>> = _breakfastTime
+
+    private val _lunchTime = MutableStateFlow(Pair(12, 30))
+    val lunchTime: StateFlow<Pair<Int, Int>> = _lunchTime
+
+    private val _dinnerTime = MutableStateFlow(Pair(20, 30))
+    val dinnerTime: StateFlow<Pair<Int, Int>> = _dinnerTime
+
     init {
         loadProfile()
         checkHealthConnect()
         checkGoogleSignIn()
+        loadReminderSettings()
     }
 
     private fun loadProfile() {
@@ -237,6 +252,36 @@ class ProfileViewModel(
         }
     }
 
+    private fun loadReminderSettings() {
+        _remindersEnabled.value = mealReminderManager.enabled
+        _breakfastTime.value = Pair(
+            mealReminderManager.getHour(MealReminderManager.MealType.BREAKFAST),
+            mealReminderManager.getMinute(MealReminderManager.MealType.BREAKFAST)
+        )
+        _lunchTime.value = Pair(
+            mealReminderManager.getHour(MealReminderManager.MealType.LUNCH),
+            mealReminderManager.getMinute(MealReminderManager.MealType.LUNCH)
+        )
+        _dinnerTime.value = Pair(
+            mealReminderManager.getHour(MealReminderManager.MealType.DINNER),
+            mealReminderManager.getMinute(MealReminderManager.MealType.DINNER)
+        )
+    }
+
+    fun toggleReminders(enabled: Boolean) {
+        _remindersEnabled.value = enabled
+        mealReminderManager.enabled = enabled
+    }
+
+    fun updateReminderTime(meal: MealReminderManager.MealType, hour: Int, minute: Int) {
+        mealReminderManager.setTime(meal, hour, minute)
+        when (meal) {
+            MealReminderManager.MealType.BREAKFAST -> _breakfastTime.value = Pair(hour, minute)
+            MealReminderManager.MealType.LUNCH -> _lunchTime.value = Pair(hour, minute)
+            MealReminderManager.MealType.DINNER -> _dinnerTime.value = Pair(hour, minute)
+        }
+    }
+
     fun clearSaved() { _saved.value = false }
     fun clearError() { _error.value = null }
     fun clearWeightSynced() { _weightSynced.value = false }
@@ -250,7 +295,8 @@ class ProfileViewModel(
             healthConnectManager: HealthConnectManager,
             googleAuthManager: GoogleAuthManager,
             driveBackupManager: DriveBackupManager,
-            mealRepository: MealRepository
+            mealRepository: MealRepository,
+            mealReminderManager: MealReminderManager
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -260,7 +306,8 @@ class ProfileViewModel(
                     healthConnectManager,
                     googleAuthManager,
                     driveBackupManager,
-                    mealRepository
+                    mealRepository,
+                    mealReminderManager
                 ) as T
             }
         }

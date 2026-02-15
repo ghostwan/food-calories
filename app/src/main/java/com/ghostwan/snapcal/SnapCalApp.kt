@@ -8,6 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.ghostwan.snapcal.data.local.AppDatabase
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.data.local.MealReminderManager
 import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GeminiApiService
@@ -59,6 +60,8 @@ class SnapCalApp : Application() {
         private set
     lateinit var driveBackupManager: DriveBackupManager
         private set
+    lateinit var mealReminderManager: MealReminderManager
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -86,10 +89,13 @@ class SnapCalApp : Application() {
         val foodAnalysisRepository = FoodAnalysisRepositoryImpl(apiService, settingsRepo, mapper, openFoodFactsService)
         analyzeFoodUseCase = AnalyzeFoodUseCase(foodAnalysisRepository)
         correctAnalysisUseCase = CorrectAnalysisUseCase(foodAnalysisRepository)
-        saveMealUseCase = SaveMealUseCase(mealRepo)
+        saveMealUseCase = SaveMealUseCase(mealRepo, this)
         getDailyNutritionUseCase = GetDailyNutritionUseCase(mealRepo)
         getNutritionHistoryUseCase = GetNutritionHistoryUseCase(mealRepo)
         computeNutritionGoalUseCase = ComputeNutritionGoalUseCase(apiService, settingsRepo)
+
+        mealReminderManager = MealReminderManager(this)
+        mealReminderManager.createNotificationChannel()
 
         scheduleDailyBackup()
     }

@@ -1,22 +1,38 @@
 package com.ghostwan.snapcal.domain.usecase
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.MealEntry
+import com.ghostwan.snapcal.widget.CaloriesWidgetProvider
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class SaveMealUseCase(
-    private val mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository
+    private val mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
+    private val appContext: Context
 ) {
     suspend operator fun invoke(analysis: FoodAnalysis) {
         val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         saveMeal(analysis, date)
+        refreshWidget()
     }
 
     suspend fun replaceAndSave(oldMealId: Long, analysis: FoodAnalysis, date: String) {
         mealRepository.deleteMeal(oldMealId)
         saveMeal(analysis, date)
+        refreshWidget()
+    }
+
+    private fun refreshWidget() {
+        val manager = AppWidgetManager.getInstance(appContext)
+        val component = ComponentName(appContext, CaloriesWidgetProvider::class.java)
+        val ids = manager.getAppWidgetIds(component)
+        for (id in ids) {
+            CaloriesWidgetProvider.updateWidget(appContext, manager, id)
+        }
     }
 
     private suspend fun saveMeal(analysis: FoodAnalysis, date: String) {

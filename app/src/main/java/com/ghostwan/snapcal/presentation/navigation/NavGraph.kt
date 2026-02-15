@@ -165,7 +165,8 @@ fun SnapCalNavGraph() {
                         healthConnectManager = app.healthConnectManager,
                         googleAuthManager = app.googleAuthManager,
                         driveBackupManager = app.driveBackupManager,
-                        mealRepository = app.mealRepository
+                        mealRepository = app.mealRepository,
+                        mealReminderManager = app.mealReminderManager
                     )
                 )
                 ProfileScreen(

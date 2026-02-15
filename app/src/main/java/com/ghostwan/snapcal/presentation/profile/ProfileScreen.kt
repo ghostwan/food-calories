@@ -1,9 +1,13 @@
 package com.ghostwan.snapcal.presentation.profile
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,9 +39,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.PermissionController
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.data.local.MealReminderManager
 import com.ghostwan.snapcal.domain.model.ActivityLevel
 import com.ghostwan.snapcal.domain.model.Gender
 
@@ -76,6 +85,19 @@ fun ProfileScreen(
     val isRestoring by viewModel.isRestoring.collectAsState()
     val backupDone by viewModel.backupDone.collectAsState()
     val restoreDone by viewModel.restoreDone.collectAsState()
+
+    val remindersEnabled by viewModel.remindersEnabled.collectAsState()
+    val breakfastTime by viewModel.breakfastTime.collectAsState()
+    val lunchTime by viewModel.lunchTime.collectAsState()
+    val dinnerTime by viewModel.dinnerTime.collectAsState()
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.toggleReminders(true)
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val savedMessage = stringResource(R.string.profile_saved)
@@ -366,8 +388,134 @@ fun ProfileScreen(
                 }
             }
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Meal Reminders section
+            Text(
+                text = stringResource(R.string.profile_reminders_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_reminders_enable),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Switch(
+                    checked = remindersEnabled,
+                    onCheckedChange = { enabled ->
+                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            viewModel.toggleReminders(enabled)
+                        }
+                    }
+                )
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    ReminderTimeRow(
+                        label = stringResource(R.string.profile_reminder_breakfast),
+                        hour = breakfastTime.first,
+                        minute = breakfastTime.second,
+                        enabled = remindersEnabled,
+                        onTimeSelected = { h, m ->
+                            viewModel.updateReminderTime(MealReminderManager.MealType.BREAKFAST, h, m)
+                        }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    ReminderTimeRow(
+                        label = stringResource(R.string.profile_reminder_lunch),
+                        hour = lunchTime.first,
+                        minute = lunchTime.second,
+                        enabled = remindersEnabled,
+                        onTimeSelected = { h, m ->
+                            viewModel.updateReminderTime(MealReminderManager.MealType.LUNCH, h, m)
+                        }
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    ReminderTimeRow(
+                        label = stringResource(R.string.profile_reminder_dinner),
+                        hour = dinnerTime.first,
+                        minute = dinnerTime.second,
+                        enabled = remindersEnabled,
+                        onTimeSelected = { h, m ->
+                            viewModel.updateReminderTime(MealReminderManager.MealType.DINNER, h, m)
+                        }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderTimeRow(
+    label: String,
+    hour: Int,
+    minute: Int,
+    enabled: Boolean,
+    onTimeSelected: (Int, Int) -> Unit
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val timeText = String.format("%02d:%02d", hour, minute)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled) { showPicker = true },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (enabled) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        )
+        Text(
+            text = timeText,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = if (enabled) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        )
+    }
+
+    if (showPicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = hour,
+            initialMinute = minute,
+            is24Hour = true
+        )
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    onTimeSelected(timePickerState.hour, timePickerState.minute)
+                    showPicker = false
+                }) {
+                    Text(stringResource(R.string.dialog_button_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) {
+                    Text(stringResource(R.string.dialog_button_cancel))
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
     }
 }
 
