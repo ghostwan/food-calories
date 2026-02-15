@@ -1,20 +1,32 @@
 package com.foodcalories.app.presentation.profile
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.foodcalories.app.data.local.HealthConnectManager
+import com.foodcalories.app.data.remote.DriveBackupManager
+import com.foodcalories.app.data.remote.GoogleAuthManager
 import com.foodcalories.app.domain.model.NutritionGoal
 import com.foodcalories.app.domain.model.UserProfile
+import com.foodcalories.app.domain.model.WeightRecord
+import com.foodcalories.app.domain.repository.MealRepository
 import com.foodcalories.app.domain.repository.UserProfileRepository
 import com.foodcalories.app.domain.usecase.ComputeNutritionGoalUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class ProfileViewModel(
     private val userProfileRepository: UserProfileRepository,
-    private val computeNutritionGoalUseCase: ComputeNutritionGoalUseCase
+    private val computeNutritionGoalUseCase: ComputeNutritionGoalUseCase,
+    private val healthConnectManager: HealthConnectManager,
+    private val googleAuthManager: GoogleAuthManager,
+    private val driveBackupManager: DriveBackupManager,
+    private val mealRepository: MealRepository
 ) : ViewModel() {
 
     private val _profile = MutableStateFlow(UserProfile())
@@ -32,13 +44,67 @@ class ProfileViewModel(
     private val _saved = MutableStateFlow(false)
     val saved: StateFlow<Boolean> = _saved
 
+    private val _healthConnectAvailable = MutableStateFlow(false)
+    val healthConnectAvailable: StateFlow<Boolean> = _healthConnectAvailable
+
+    private val _isSyncingWeight = MutableStateFlow(false)
+    val isSyncingWeight: StateFlow<Boolean> = _isSyncingWeight
+
+    private val _weightSynced = MutableStateFlow(false)
+    val weightSynced: StateFlow<Boolean> = _weightSynced
+
+    private val _isSignedIn = MutableStateFlow(false)
+    val isSignedIn: StateFlow<Boolean> = _isSignedIn
+
+    private val _signedInEmail = MutableStateFlow<String?>(null)
+    val signedInEmail: StateFlow<String?> = _signedInEmail
+
+    private val _isBackingUp = MutableStateFlow(false)
+    val isBackingUp: StateFlow<Boolean> = _isBackingUp
+
+    private val _isRestoring = MutableStateFlow(false)
+    val isRestoring: StateFlow<Boolean> = _isRestoring
+
+    private val _backupDone = MutableStateFlow(false)
+    val backupDone: StateFlow<Boolean> = _backupDone
+
+    private val _restoreDone = MutableStateFlow(false)
+    val restoreDone: StateFlow<Boolean> = _restoreDone
+
     init {
         loadProfile()
+        checkHealthConnect()
+        checkGoogleSignIn()
     }
 
     private fun loadProfile() {
         _profile.value = userProfileRepository.getProfile()
         _goal.value = userProfileRepository.getGoal()
+    }
+
+    private fun checkHealthConnect() {
+        _healthConnectAvailable.value = healthConnectManager.isAvailable()
+    }
+
+    private fun checkGoogleSignIn() {
+        _isSignedIn.value = googleAuthManager.isSignedIn()
+        _signedInEmail.value = googleAuthManager.getSignedInEmail()
+    }
+
+    fun getSignInIntent(): Intent = googleAuthManager.getSignInIntent()
+
+    fun handleSignInResult(data: Intent?) {
+        val account = googleAuthManager.handleSignInResult(data)
+        _isSignedIn.value = account != null
+        _signedInEmail.value = account?.email
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            googleAuthManager.signOut()
+            _isSignedIn.value = false
+            _signedInEmail.value = null
+        }
     }
 
     fun updateProfile(profile: UserProfile) {
@@ -77,22 +143,120 @@ class ProfileViewModel(
         }
     }
 
-    fun clearSaved() {
-        _saved.value = false
+    fun syncWeightFromHealthConnect() {
+        viewModelScope.launch {
+            _isSyncingWeight.value = true
+            _error.value = null
+            try {
+                val records = healthConnectManager.readWeightRecords(90)
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+
+                for (record in records) {
+                    val date = dateFormat.format(Date.from(record.time))
+                    userProfileRepository.saveWeightRecord(
+                        WeightRecord(weight = record.weightKg, date = date)
+                    )
+                }
+
+                if (records.isNotEmpty()) {
+                    val latest = records.maxByOrNull { it.time }!!
+                    val currentProfile = _profile.value
+                    val updated = currentProfile.copy(weight = latest.weightKg)
+                    _profile.value = updated
+                    userProfileRepository.saveProfile(updated)
+                }
+
+                _weightSynced.value = true
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isSyncingWeight.value = false
+            }
+        }
     }
 
-    fun clearError() {
-        _error.value = null
+    fun backupToDrive() {
+        viewModelScope.launch {
+            _isBackingUp.value = true
+            _error.value = null
+            try {
+                val meals = mealRepository.getAllMeals()
+                val weightRecords = userProfileRepository.getWeightHistory(9999)
+                val success = driveBackupManager.backup(
+                    profile = _profile.value,
+                    goal = _goal.value,
+                    meals = meals,
+                    weightRecords = weightRecords
+                )
+                if (success) {
+                    _backupDone.value = true
+                } else {
+                    _error.value = "Backup failed"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isBackingUp.value = false
+            }
+        }
     }
+
+    fun restoreFromDrive() {
+        viewModelScope.launch {
+            _isRestoring.value = true
+            _error.value = null
+            try {
+                val data = driveBackupManager.restore()
+                if (data != null) {
+                    userProfileRepository.saveProfile(data.profile)
+                    userProfileRepository.saveGoal(data.goal)
+                    _profile.value = data.profile
+                    _goal.value = data.goal
+
+                    for (meal in data.meals) {
+                        mealRepository.saveMeal(meal)
+                    }
+                    for (record in data.weightRecords) {
+                        userProfileRepository.saveWeightRecord(record)
+                    }
+
+                    _restoreDone.value = true
+                } else {
+                    _error.value = "No backup found"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isRestoring.value = false
+            }
+        }
+    }
+
+    fun clearSaved() { _saved.value = false }
+    fun clearError() { _error.value = null }
+    fun clearWeightSynced() { _weightSynced.value = false }
+    fun clearBackupDone() { _backupDone.value = false }
+    fun clearRestoreDone() { _restoreDone.value = false }
 
     companion object {
         fun provideFactory(
             userProfileRepository: UserProfileRepository,
-            computeNutritionGoalUseCase: ComputeNutritionGoalUseCase
+            computeNutritionGoalUseCase: ComputeNutritionGoalUseCase,
+            healthConnectManager: HealthConnectManager,
+            googleAuthManager: GoogleAuthManager,
+            driveBackupManager: DriveBackupManager,
+            mealRepository: MealRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ProfileViewModel(userProfileRepository, computeNutritionGoalUseCase) as T
+                return ProfileViewModel(
+                    userProfileRepository,
+                    computeNutritionGoalUseCase,
+                    healthConnectManager,
+                    googleAuthManager,
+                    driveBackupManager,
+                    mealRepository
+                ) as T
             }
         }
     }

@@ -1,8 +1,9 @@
 package com.foodcalories.app.presentation.profile
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +27,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -30,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,26 +50,78 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import com.foodcalories.app.R
+import com.foodcalories.app.data.local.HealthConnectManager
 import com.foodcalories.app.domain.model.ActivityLevel
 import com.foodcalories.app.domain.model.Gender
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel) {
+fun ProfileScreen(
+    viewModel: ProfileViewModel,
+    healthConnectManager: HealthConnectManager
+) {
     val profile by viewModel.profile.collectAsState()
     val goal by viewModel.goal.collectAsState()
     val isComputing by viewModel.isComputing.collectAsState()
     val error by viewModel.error.collectAsState()
     val saved by viewModel.saved.collectAsState()
+    val healthConnectAvailable by viewModel.healthConnectAvailable.collectAsState()
+    val isSyncingWeight by viewModel.isSyncingWeight.collectAsState()
+    val weightSynced by viewModel.weightSynced.collectAsState()
+    val isSignedIn by viewModel.isSignedIn.collectAsState()
+    val signedInEmail by viewModel.signedInEmail.collectAsState()
+    val isBackingUp by viewModel.isBackingUp.collectAsState()
+    val isRestoring by viewModel.isRestoring.collectAsState()
+    val backupDone by viewModel.backupDone.collectAsState()
+    val restoreDone by viewModel.restoreDone.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val savedMessage = stringResource(R.string.profile_saved)
+    val weightSyncedMessage = stringResource(R.string.profile_weight_synced)
+    val backupDoneMessage = stringResource(R.string.profile_backup_done)
+    val restoreDoneMessage = stringResource(R.string.profile_restore_done)
+
+    val hcPermissionLauncher = rememberLauncherForActivityResult(
+        contract = PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        if (granted.containsAll(healthConnectManager.requiredPermissions)) {
+            viewModel.syncWeightFromHealthConnect()
+        }
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        viewModel.handleSignInResult(result.data)
+    }
 
     LaunchedEffect(saved) {
         if (saved) {
             snackbarHostState.showSnackbar(savedMessage)
             viewModel.clearSaved()
+        }
+    }
+
+    LaunchedEffect(weightSynced) {
+        if (weightSynced) {
+            snackbarHostState.showSnackbar(weightSyncedMessage)
+            viewModel.clearWeightSynced()
+        }
+    }
+
+    LaunchedEffect(backupDone) {
+        if (backupDone) {
+            snackbarHostState.showSnackbar(backupDoneMessage)
+            viewModel.clearBackupDone()
+        }
+    }
+
+    LaunchedEffect(restoreDone) {
+        if (restoreDone) {
+            snackbarHostState.showSnackbar(restoreDoneMessage)
+            viewModel.clearRestoreDone()
         }
     }
 
@@ -155,6 +214,28 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 Text(stringResource(R.string.profile_save))
             }
 
+            // Health Connect section
+            if (healthConnectAvailable) {
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(
+                    onClick = {
+                        hcPermissionLauncher.launch(healthConnectManager.requiredPermissions)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isSyncingWeight
+                ) {
+                    if (isSyncingWeight) {
+                        CircularProgressIndicator(modifier = Modifier.height(20.dp).width(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_syncing_weight))
+                    } else {
+                        Icon(Icons.Default.MonitorWeight, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_sync_weight))
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Goals section
@@ -217,6 +298,71 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Data & Backup section
+            Text(
+                text = stringResource(R.string.profile_data_backup),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (isSignedIn) {
+                Text(
+                    text = stringResource(R.string.profile_signed_in_as, signedInEmail ?: ""),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                OutlinedButton(
+                    onClick = { viewModel.backupToDrive() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isBackingUp && !isRestoring
+                ) {
+                    if (isBackingUp) {
+                        CircularProgressIndicator(modifier = Modifier.height(20.dp).width(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_backing_up))
+                    } else {
+                        Icon(Icons.Default.Backup, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_backup))
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = { viewModel.restoreFromDrive() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isBackingUp && !isRestoring
+                ) {
+                    if (isRestoring) {
+                        CircularProgressIndicator(modifier = Modifier.height(20.dp).width(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_restoring))
+                    } else {
+                        Icon(Icons.Default.CloudDownload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.profile_restore))
+                    }
+                }
+
+                TextButton(
+                    onClick = { viewModel.signOut() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.profile_sign_out))
+                }
+            } else {
+                Button(
+                    onClick = { googleSignInLauncher.launch(viewModel.getSignInIntent()) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.profile_sign_in_google))
                 }
             }
 

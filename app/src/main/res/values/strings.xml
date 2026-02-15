@@ -38,6 +38,9 @@
     <string name="result_button_back">Back</string>
     <string name="result_save_meal">Save this meal</string>
     <string name="result_meal_saved">Meal saved!</string>
+    <string name="result_not_right">Not quite right? Correct it</string>
+    <string name="result_correction_hint">Describe what\'s different (e.g. "this is pasta not rice")</string>
+    <string name="result_correct">Correct with AI</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Free quota exceeded</string>
@@ -87,6 +90,19 @@
     <string name="profile_fiber_goal">Fiber: %.0f g</string>
     <string name="profile_ai_explanation">AI recommendation</string>
     <string name="profile_manual_calories">Manual calories goal</string>
+    <string name="profile_sync_weight">Sync weight from Health Connect</string>
+    <string name="profile_syncing_weight">Syncing weight…</string>
+    <string name="profile_weight_synced">Weight synced from Health Connect!</string>
+    <string name="profile_data_backup">Data &amp; Backup</string>
+    <string name="profile_sign_in_google">Sign in with Google</string>
+    <string name="profile_signed_in_as">Signed in as %s</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_backup">Backup to Google Drive</string>
+    <string name="profile_backing_up">Backing up…</string>
+    <string name="profile_backup_done">Backup complete!</string>
+    <string name="profile_restore">Restore from Google Drive</string>
+    <string name="profile_restoring">Restoring…</string>
+    <string name="profile_restore_done">Data restored!</string>
 
     <!-- History -->
     <string name="history_title">History</string>
@@ -95,6 +111,10 @@
     <string name="history_proteins_short">P: %.0fg</string>
     <string name="history_carbs_short">C: %.0fg</string>
     <string name="history_fats_short">F: %.0fg</string>
+    <string name="history_chart_title">Trends</string>
+    <string name="history_legend_calories">Calories</string>
+    <string name="history_legend_weight">Weight</string>
+    <string name="history_legend_goal">Goal</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

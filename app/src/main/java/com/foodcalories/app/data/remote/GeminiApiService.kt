@@ -19,76 +19,83 @@ class GeminiApiService {
     }
 
     suspend fun analyzeImage(imageData: ByteArray, apiKey: String, language: String): String {
-        return withContext(Dispatchers.IO) {
-            val base64Image = Base64.encodeToString(imageData, Base64.NO_WRAP)
-            val requestBody = buildRequestBody(base64Image, language)
+        val base64Image = Base64.encodeToString(imageData, Base64.NO_WRAP)
+        val requestBody = buildImageRequestBody(buildAnalysisPrompt(language), base64Image)
+        return executeRequest(requestBody, apiKey)
+    }
 
-            var lastException: Exception? = null
+    suspend fun correctAnalysis(
+        originalAnalysisJson: String,
+        userFeedback: String,
+        imageData: ByteArray?,
+        apiKey: String,
+        language: String
+    ): String {
+        val prompt = """
+            You previously analyzed a food photo and gave this result:
+            $originalAnalysisJson
 
-            for (attempt in 0..MAX_RETRIES) {
-                if (attempt > 0) {
-                    Thread.sleep(RETRY_DELAYS_MS[attempt - 1])
-                }
+            The user says this is incorrect and provides this feedback:
+            "$userFeedback"
 
-                val url = URL("$BASE_URL/$MODEL:generateContent?key=$apiKey")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-                connection.connectTimeout = 30_000
-                connection.readTimeout = 60_000
+            Please re-analyze and provide a corrected estimation based on the user's feedback.
+            IMPORTANT: All text values in your response MUST be written in $language.
 
-                connection.outputStream.use { os ->
-                    os.write(requestBody.toByteArray())
-                }
-
-                val responseCode = connection.responseCode
-
-                if (responseCode == 200) {
-                    return@withContext connection.inputStream.bufferedReader().readText()
-                }
-
-                val error = connection.errorStream?.bufferedReader()?.readText() ?: "Erreur inconnue"
-
-                if (responseCode == 429 && attempt < MAX_RETRIES) {
-                    lastException = GeminiApiException("Quota dépassé, nouvelle tentative (${attempt + 1}/$MAX_RETRIES)...")
-                    continue
-                }
-
-                throw GeminiApiException("Erreur API (code $responseCode): $error")
+            Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
+            {
+                "dishName": "Name of the dish",
+                "totalCalories": 500,
+                "ingredients": [
+                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200}
+                ],
+                "macros": {
+                    "proteins": "25g",
+                    "carbs": "60g",
+                    "fats": "15g",
+                    "fiber": "5g"
+                },
+                "notes": "Additional remarks"
             }
+        """.trimIndent()
 
-            throw lastException ?: GeminiApiException("Échec après $MAX_RETRIES tentatives")
+        val requestBody = if (imageData != null) {
+            val base64Image = Base64.encodeToString(imageData, Base64.NO_WRAP)
+            buildImageRequestBody(prompt, base64Image)
+        } else {
+            buildTextRequestBody(prompt)
         }
+        return executeRequest(requestBody, apiKey)
     }
 
     suspend fun computeNutritionGoal(profile: UserProfile, apiKey: String, language: String): String {
+        val prompt = """
+            Given a person with the following characteristics:
+            - Height: ${profile.height} cm
+            - Weight: ${profile.weight} kg
+            - Target weight: ${profile.targetWeight} kg
+            - Age: ${profile.age}
+            - Gender: ${profile.gender.name.lowercase()}
+            - Activity level: ${profile.activityLevel.name.lowercase().replace("_", " ")}
+
+            Calculate recommended daily nutritional goals to help them reach their target weight in a healthy way.
+            IMPORTANT: Write the explanation in $language.
+
+            Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
+            {
+                "calories": 2000,
+                "proteins_g": 120.0,
+                "carbs_g": 200.0,
+                "fats_g": 65.0,
+                "fiber_g": 30.0,
+                "explanation": "Brief explanation of the recommendation"
+            }
+        """.trimIndent()
+
+        return executeRequest(buildTextRequestBody(prompt), apiKey)
+    }
+
+    private suspend fun executeRequest(requestBody: String, apiKey: String): String {
         return withContext(Dispatchers.IO) {
-            val prompt = """
-                Given a person with the following characteristics:
-                - Height: ${profile.height} cm
-                - Weight: ${profile.weight} kg
-                - Target weight: ${profile.targetWeight} kg
-                - Age: ${profile.age}
-                - Gender: ${profile.gender.name.lowercase()}
-                - Activity level: ${profile.activityLevel.name.lowercase().replace("_", " ")}
-
-                Calculate recommended daily nutritional goals to help them reach their target weight in a healthy way.
-                IMPORTANT: Write the explanation in $language.
-
-                Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
-                {
-                    "calories": 2000,
-                    "proteins_g": 120.0,
-                    "carbs_g": 200.0,
-                    "fats_g": 65.0,
-                    "fiber_g": 30.0,
-                    "explanation": "Brief explanation of the recommendation"
-                }
-            """.trimIndent()
-
-            val requestBody = buildTextRequestBody(prompt)
-
             var lastException: Exception? = null
             for (attempt in 0..MAX_RETRIES) {
                 if (attempt > 0) Thread.sleep(RETRY_DELAYS_MS[attempt - 1])
@@ -124,8 +131,24 @@ class GeminiApiService {
             put("contents", JSONArray().apply {
                 put(JSONObject().apply {
                     put("parts", JSONArray().apply {
+                        put(JSONObject().apply { put("text", prompt) })
+                    })
+                })
+            })
+        }.toString()
+    }
+
+    private fun buildImageRequestBody(prompt: String, base64Image: String): String {
+        return JSONObject().apply {
+            put("contents", JSONArray().apply {
+                put(JSONObject().apply {
+                    put("parts", JSONArray().apply {
+                        put(JSONObject().apply { put("text", prompt) })
                         put(JSONObject().apply {
-                            put("text", prompt)
+                            put("inlineData", JSONObject().apply {
+                                put("mimeType", "image/jpeg")
+                                put("data", base64Image)
+                            })
                         })
                     })
                 })
@@ -133,8 +156,8 @@ class GeminiApiService {
         }.toString()
     }
 
-    private fun buildRequestBody(base64Image: String, language: String): String {
-        val prompt = """
+    private fun buildAnalysisPrompt(language: String): String {
+        return """
             Analyze this food photo and provide a detailed estimation.
             IMPORTANT: All text values in your response (dish name, ingredient names, notes, quantities) MUST be written in $language.
 
@@ -160,24 +183,6 @@ class GeminiApiService {
             If the image does not contain food, respond with:
             {"dishName": "Not recognized", "totalCalories": 0, "ingredients": [], "macros": null, "notes": "The image does not appear to contain food."}
         """.trimIndent()
-
-        return JSONObject().apply {
-            put("contents", JSONArray().apply {
-                put(JSONObject().apply {
-                    put("parts", JSONArray().apply {
-                        put(JSONObject().apply {
-                            put("text", prompt)
-                        })
-                        put(JSONObject().apply {
-                            put("inlineData", JSONObject().apply {
-                                put("mimeType", "image/jpeg")
-                                put("data", base64Image)
-                            })
-                        })
-                    })
-                })
-            })
-        }.toString()
     }
 }
 

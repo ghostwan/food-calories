@@ -11,6 +11,7 @@ import com.foodcalories.app.domain.model.FoodAnalysis
 import com.foodcalories.app.domain.repository.SettingsRepository
 import com.foodcalories.app.domain.repository.UsageRepository
 import com.foodcalories.app.domain.usecase.AnalyzeFoodUseCase
+import com.foodcalories.app.domain.usecase.CorrectAnalysisUseCase
 import com.foodcalories.app.domain.usecase.SaveMealUseCase
 import com.foodcalories.app.presentation.model.AnalysisUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ import java.util.Locale
 
 class FoodAnalysisViewModel(
     private val analyzeFoodUseCase: AnalyzeFoodUseCase,
+    private val correctAnalysisUseCase: CorrectAnalysisUseCase,
     private val settingsRepository: SettingsRepository,
     private val usageRepository: UsageRepository,
     private val saveMealUseCase: SaveMealUseCase
@@ -31,6 +33,8 @@ class FoodAnalysisViewModel(
 
     private val _mealSaved = MutableStateFlow(false)
     val mealSaved: StateFlow<Boolean> = _mealSaved
+
+    private var lastImageData: ByteArray? = null
 
     fun getApiKey(): String = settingsRepository.getApiKey()
 
@@ -47,6 +51,7 @@ class FoodAnalysisViewModel(
             _uiState.value = AnalysisUiState.Loading
             try {
                 val imageData = readAndCompressImage(context, imageUri)
+                lastImageData = imageData
                 val language = Locale.getDefault().displayLanguage
                 val result = analyzeFoodUseCase(imageData, language)
                 usageRepository.recordRequest()
@@ -55,6 +60,23 @@ class FoodAnalysisViewModel(
                 _uiState.value = AnalysisUiState.Error(
                     e.message ?: "Erreur inconnue lors de l'analyse"
                 )
+            }
+        }
+    }
+
+    fun correctAnalysis(originalAnalysis: FoodAnalysis, feedback: String) {
+        viewModelScope.launch {
+            _uiState.value = AnalysisUiState.Loading
+            _mealSaved.value = false
+            try {
+                val language = Locale.getDefault().displayLanguage
+                val corrected = correctAnalysisUseCase(
+                    originalAnalysis, feedback, lastImageData, language
+                )
+                usageRepository.recordRequest()
+                _uiState.value = AnalysisUiState.Success(corrected)
+            } catch (e: Exception) {
+                _uiState.value = AnalysisUiState.Success(originalAnalysis)
             }
         }
     }
@@ -77,6 +99,7 @@ class FoodAnalysisViewModel(
     fun resetState() {
         _uiState.value = AnalysisUiState.Idle
         _mealSaved.value = false
+        lastImageData = null
     }
 
     private fun readAndCompressImage(context: Context, uri: Uri): ByteArray {
@@ -115,6 +138,7 @@ class FoodAnalysisViewModel(
 
         fun provideFactory(
             analyzeFoodUseCase: AnalyzeFoodUseCase,
+            correctAnalysisUseCase: CorrectAnalysisUseCase,
             settingsRepository: SettingsRepository,
             usageRepository: UsageRepository,
             saveMealUseCase: SaveMealUseCase
@@ -123,6 +147,7 @@ class FoodAnalysisViewModel(
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return FoodAnalysisViewModel(
                     analyzeFoodUseCase,
+                    correctAnalysisUseCase,
                     settingsRepository,
                     usageRepository,
                     saveMealUseCase

@@ -59,6 +59,10 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         }
     }
 
+    override suspend fun getAllMeals(): List<MealEntry> {
+        return mealDao.getAll().map { it.toDomain() }
+    }
+
     override suspend fun deleteMeal(id: Long) {
         mealDao.delete(id)
     }

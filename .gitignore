@@ -9,3 +9,6 @@
 .cxx
 local.properties
 .gradle-dist/
+.vscode/
+*.log
+app/build/

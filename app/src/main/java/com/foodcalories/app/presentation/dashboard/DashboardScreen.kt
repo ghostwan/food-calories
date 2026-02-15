@@ -254,7 +254,7 @@ private fun MacrosProgressCard(nutrition: DailyNutrition?, goal: NutritionGoal) 
                 label = stringResource(R.string.result_proteins),
                 current = nutrition?.totalProteins ?: 0f,
                 goal = goal.proteins,
-                color = Color(0xFF4CAF50)
+                color = Color(0xFFF44336)
             )
             MacroProgressBar(
                 label = stringResource(R.string.result_carbs),
@@ -272,7 +272,7 @@ private fun MacrosProgressCard(nutrition: DailyNutrition?, goal: NutritionGoal) 
                 label = stringResource(R.string.result_fiber),
                 current = nutrition?.totalFiber ?: 0f,
                 goal = goal.fiber,
-                color = Color(0xFF9C27B0)
+                color = Color(0xFF4CAF50)
             )
         }
     }
@@ -286,12 +286,6 @@ private fun MacroProgressBar(label: String, current: Float, goal: Float, color: 
         animationSpec = tween(800),
         label = "macro_progress"
     )
-
-    val barColor = when {
-        current / goal.coerceAtLeast(1f) <= 0.75f -> color
-        current / goal.coerceAtLeast(1f) <= 1.0f -> Color(0xFFFF9800)
-        else -> Color(0xFFF44336)
-    }
 
     Column {
         Row(
@@ -311,8 +305,8 @@ private fun MacroProgressBar(label: String, current: Float, goal: Float, color: 
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
-            color = barColor,
-            trackColor = barColor.copy(alpha = 0.15f),
+            color = color,
+            trackColor = color.copy(alpha = 0.15f),
             strokeCap = StrokeCap.Round
         )
     }

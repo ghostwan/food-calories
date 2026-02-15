@@ -38,6 +38,9 @@
     <string name="result_button_back">Retour</string>
     <string name="result_save_meal">Sauvegarder ce repas</string>
     <string name="result_meal_saved">Repas sauvegardé !</string>
+    <string name="result_not_right">Pas tout à fait exact ? Corriger</string>
+    <string name="result_correction_hint">Décrivez la différence (ex : "c\'est des pâtes pas du riz")</string>
+    <string name="result_correct">Corriger avec l\'IA</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Quota gratuit dépassé</string>
@@ -87,6 +90,19 @@
     <string name="profile_fiber_goal">Fibres : %.0f g</string>
     <string name="profile_ai_explanation">Recommandation IA</string>
     <string name="profile_manual_calories">Objectif calories manuel</string>
+    <string name="profile_sync_weight">Synchroniser le poids depuis Santé Connectée</string>
+    <string name="profile_syncing_weight">Synchronisation…</string>
+    <string name="profile_weight_synced">Poids synchronisé depuis Santé Connectée !</string>
+    <string name="profile_data_backup">Données &amp; Sauvegarde</string>
+    <string name="profile_sign_in_google">Se connecter avec Google</string>
+    <string name="profile_signed_in_as">Connecté en tant que %s</string>
+    <string name="profile_sign_out">Se déconnecter</string>
+    <string name="profile_backup">Sauvegarder sur Google Drive</string>
+    <string name="profile_backing_up">Sauvegarde en cours…</string>
+    <string name="profile_backup_done">Sauvegarde terminée !</string>
+    <string name="profile_restore">Restaurer depuis Google Drive</string>
+    <string name="profile_restoring">Restauration en cours…</string>
+    <string name="profile_restore_done">Données restaurées !</string>
 
     <!-- History -->
     <string name="history_title">Historique</string>
@@ -95,6 +111,10 @@
     <string name="history_proteins_short">P : %.0fg</string>
     <string name="history_carbs_short">G : %.0fg</string>
     <string name="history_fats_short">L : %.0fg</string>
+    <string name="history_chart_title">Tendances</string>
+    <string name="history_legend_calories">Calories</string>
+    <string name="history_legend_weight">Poids</string>
+    <string name="history_legend_goal">Objectif</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

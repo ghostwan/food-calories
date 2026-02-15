@@ -1,13 +1,19 @@
 package com.foodcalories.app.data.repository
 
 import android.content.Context
+import com.foodcalories.app.data.local.WeightDao
+import com.foodcalories.app.data.local.WeightEntity
 import com.foodcalories.app.domain.model.ActivityLevel
 import com.foodcalories.app.domain.model.Gender
 import com.foodcalories.app.domain.model.NutritionGoal
 import com.foodcalories.app.domain.model.UserProfile
+import com.foodcalories.app.domain.model.WeightRecord
 import com.foodcalories.app.domain.repository.UserProfileRepository
 
-class UserProfileRepositoryImpl(context: Context) : UserProfileRepository {
+class UserProfileRepositoryImpl(
+    context: Context,
+    private val weightDao: WeightDao
+) : UserProfileRepository {
 
     private val prefs = context.getSharedPreferences("user_profile", Context.MODE_PRIVATE)
 
@@ -55,5 +61,28 @@ class UserProfileRepositoryImpl(context: Context) : UserProfileRepository {
             .putFloat("goal_fiber", goal.fiber)
             .putString("goal_explanation", goal.explanation)
             .apply()
+    }
+
+    override suspend fun saveWeightRecord(record: WeightRecord) {
+        val existing = weightDao.getByDate(record.date)
+        weightDao.insert(
+            WeightEntity(
+                id = existing?.id ?: 0,
+                weight = record.weight,
+                date = record.date
+            )
+        )
+    }
+
+    override suspend fun getLatestWeight(): WeightRecord? {
+        return weightDao.getLatest()?.let {
+            WeightRecord(id = it.id, weight = it.weight, date = it.date)
+        }
+    }
+
+    override suspend fun getWeightHistory(days: Int): List<WeightRecord> {
+        return weightDao.getHistory(days).map {
+            WeightRecord(id = it.id, weight = it.weight, date = it.date)
+        }
     }
 }

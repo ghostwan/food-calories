@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -24,12 +25,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,10 +51,17 @@ import com.foodcalories.app.presentation.model.AnalysisUiState
 @Composable
 fun ResultScreen(
     viewModel: FoodAnalysisViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onMealSaved: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val mealSaved by viewModel.mealSaved.collectAsState()
+
+    androidx.compose.runtime.LaunchedEffect(mealSaved) {
+        if (mealSaved) {
+            onMealSaved()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -75,7 +89,8 @@ fun ResultScreen(
                 is AnalysisUiState.Success -> SuccessContent(
                     result = state.result,
                     mealSaved = mealSaved,
-                    onSave = { viewModel.saveMeal(state.result) }
+                    onSave = { viewModel.saveMeal(state.result) },
+                    onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) }
                 )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
@@ -107,7 +122,8 @@ private fun LoadingContent() {
 private fun SuccessContent(
     result: FoodAnalysis,
     mealSaved: Boolean,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onCorrect: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -170,6 +186,44 @@ private fun SuccessContent(
 
         if (result.notes != null) {
             item { NotesCard(result.notes) }
+        }
+
+        // Correction UI
+        if (!mealSaved) {
+            item {
+                var showCorrectionField by remember { mutableStateOf(false) }
+                var feedbackText by remember { mutableStateOf("") }
+
+                if (showCorrectionField) {
+                    OutlinedTextField(
+                        value = feedbackText,
+                        onValueChange = { feedbackText = it },
+                        label = { Text(stringResource(R.string.result_correction_hint)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 3
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            if (feedbackText.isNotBlank()) {
+                                onCorrect(feedbackText)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.result_correct))
+                    }
+                } else {
+                    TextButton(
+                        onClick = { showCorrectionField = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.result_not_right))
+                    }
+                }
+            }
         }
 
         // Save meal button

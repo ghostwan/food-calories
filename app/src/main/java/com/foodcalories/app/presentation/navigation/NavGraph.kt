@@ -29,6 +29,7 @@ import com.foodcalories.app.presentation.FoodAnalysisViewModel
 import com.foodcalories.app.presentation.dashboard.DashboardScreen
 import com.foodcalories.app.presentation.dashboard.DashboardViewModel
 import com.foodcalories.app.presentation.history.HistoryScreen
+import com.foodcalories.app.presentation.history.HistoryViewModel
 import com.foodcalories.app.presentation.home.HomeScreen
 import com.foodcalories.app.presentation.profile.ProfileScreen
 import com.foodcalories.app.presentation.profile.ProfileViewModel
@@ -59,6 +60,7 @@ fun FoodCaloriesNavGraph() {
     val foodAnalysisViewModel: FoodAnalysisViewModel = viewModel(
         factory = FoodAnalysisViewModel.provideFactory(
             analyzeFoodUseCase = app.analyzeFoodUseCase,
+            correctAnalysisUseCase = app.correctAnalysisUseCase,
             settingsRepository = app.settingsRepository,
             usageRepository = app.usageRepository,
             saveMealUseCase = app.saveMealUseCase
@@ -137,6 +139,16 @@ fun FoodCaloriesNavGraph() {
                     viewModel = foodAnalysisViewModel,
                     onBack = {
                         navController.popBackStack()
+                    },
+                    onMealSaved = {
+                        foodAnalysisViewModel.resetState()
+                        navController.navigate("home") {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -145,16 +157,28 @@ fun FoodCaloriesNavGraph() {
                 val profileViewModel: ProfileViewModel = viewModel(
                     factory = ProfileViewModel.provideFactory(
                         userProfileRepository = app.userProfileRepository,
-                        computeNutritionGoalUseCase = app.computeNutritionGoalUseCase
+                        computeNutritionGoalUseCase = app.computeNutritionGoalUseCase,
+                        healthConnectManager = app.healthConnectManager,
+                        googleAuthManager = app.googleAuthManager,
+                        driveBackupManager = app.driveBackupManager,
+                        mealRepository = app.mealRepository
                     )
                 )
-                ProfileScreen(viewModel = profileViewModel)
+                ProfileScreen(
+                    viewModel = profileViewModel,
+                    healthConnectManager = app.healthConnectManager
+                )
             }
 
             composable("history") {
+                val historyViewModel: HistoryViewModel = viewModel(
+                    factory = HistoryViewModel.provideFactory(
+                        historyUseCase = app.getNutritionHistoryUseCase,
+                        userProfileRepository = app.userProfileRepository
+                    )
+                )
                 HistoryScreen(
-                    historyUseCase = app.getNutritionHistoryUseCase,
-                    userProfileRepository = app.userProfileRepository,
+                    viewModel = historyViewModel,
                     onBack = {
                         navController.popBackStack()
                     }

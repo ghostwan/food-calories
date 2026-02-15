@@ -28,6 +28,9 @@ interface MealDao {
     )
     suspend fun getDailyNutritionHistory(days: Int): List<DailyNutritionTuple>
 
+    @Query("SELECT * FROM meals ORDER BY date DESC, id DESC")
+    suspend fun getAll(): List<MealEntity>
+
     @Query("DELETE FROM meals WHERE id = :id")
     suspend fun delete(id: Long)
 }

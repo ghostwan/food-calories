@@ -5,6 +5,8 @@ import com.foodcalories.app.data.remote.GeminiApiService
 import com.foodcalories.app.domain.model.FoodAnalysis
 import com.foodcalories.app.domain.repository.FoodAnalysisRepository
 import com.foodcalories.app.domain.repository.SettingsRepository
+import org.json.JSONArray
+import org.json.JSONObject
 
 class FoodAnalysisRepositoryImpl(
     private val apiService: GeminiApiService,
@@ -19,5 +21,45 @@ class FoodAnalysisRepositoryImpl(
         }
         val rawResponse = apiService.analyzeImage(imageData, apiKey, language)
         return mapper.mapFromApiResponse(rawResponse)
+    }
+
+    override suspend fun correctAnalysis(
+        originalAnalysis: FoodAnalysis,
+        userFeedback: String,
+        imageData: ByteArray?,
+        language: String
+    ): FoodAnalysis {
+        val apiKey = settingsRepository.getApiKey()
+        if (apiKey.isBlank()) {
+            throw IllegalStateException("Clé API Gemini non configurée")
+        }
+        val originalJson = serializeAnalysis(originalAnalysis)
+        val rawResponse = apiService.correctAnalysis(originalJson, userFeedback, imageData, apiKey, language)
+        return mapper.mapFromApiResponse(rawResponse)
+    }
+
+    private fun serializeAnalysis(analysis: FoodAnalysis): String {
+        return JSONObject().apply {
+            put("dishName", analysis.dishName)
+            put("totalCalories", analysis.totalCalories)
+            put("ingredients", JSONArray().apply {
+                analysis.ingredients.forEach { ing ->
+                    put(JSONObject().apply {
+                        put("name", ing.name)
+                        put("quantity", ing.quantity)
+                        put("calories", ing.calories)
+                    })
+                }
+            })
+            if (analysis.macros != null) {
+                put("macros", JSONObject().apply {
+                    put("proteins", analysis.macros.proteins)
+                    put("carbs", analysis.macros.carbs)
+                    put("fats", analysis.macros.fats)
+                    if (analysis.macros.fiber != null) put("fiber", analysis.macros.fiber)
+                })
+            }
+            if (analysis.notes != null) put("notes", analysis.notes)
+        }.toString()
     }
 }

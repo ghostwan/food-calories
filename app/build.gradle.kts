@@ -16,7 +16,7 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "com.foodcalories.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.foodcalories.app"
@@ -45,6 +45,12 @@ android {
     kotlinOptions {
         jvmTarget = "21"
     }
+
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
 }
 
 dependencies {
@@ -71,4 +77,13 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+
+    // Health Connect
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
+
+    // Google Sign-In + Drive
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.api-client:google-api-client-android:2.2.0")
+    implementation("com.google.apis:google-api-services-drive:v3-rev20231128-2.0.0")
+    implementation("com.google.http-client:google-http-client-gson:1.43.3")
 }
