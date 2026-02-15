@@ -115,6 +115,9 @@
     <string name="history_legend_calories">Calories</string>
     <string name="history_legend_weight">Weight</string>
     <string name="history_legend_goal">Goal</string>
+    <string name="history_legend_cal_goal">Cal. goal</string>
+    <string name="history_legend_weight_goal">Target weight</string>
+    <string name="history_meal_macros">P: %.0fg · C: %.0fg · F: %.0fg</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

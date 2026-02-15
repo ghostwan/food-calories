@@ -174,7 +174,8 @@ fun SnapCalNavGraph() {
                 val historyViewModel: HistoryViewModel = viewModel(
                     factory = HistoryViewModel.provideFactory(
                         historyUseCase = app.getNutritionHistoryUseCase,
-                        userProfileRepository = app.userProfileRepository
+                        userProfileRepository = app.userProfileRepository,
+                        mealRepository = app.mealRepository
                     )
                 )
                 HistoryScreen(

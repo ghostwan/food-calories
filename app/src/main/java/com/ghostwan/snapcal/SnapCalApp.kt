@@ -1,6 +1,11 @@
 package com.ghostwan.snapcal
 
 import android.app.Application
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.ghostwan.snapcal.data.local.AppDatabase
 import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
@@ -21,7 +26,9 @@ import com.ghostwan.snapcal.domain.usecase.ComputeNutritionGoalUseCase
 import com.ghostwan.snapcal.domain.usecase.CorrectAnalysisUseCase
 import com.ghostwan.snapcal.domain.usecase.GetDailyNutritionUseCase
 import com.ghostwan.snapcal.domain.usecase.GetNutritionHistoryUseCase
+import com.ghostwan.snapcal.data.remote.DailyBackupWorker
 import com.ghostwan.snapcal.domain.usecase.SaveMealUseCase
+import java.util.concurrent.TimeUnit
 
 class SnapCalApp : Application() {
 
@@ -81,5 +88,25 @@ class SnapCalApp : Application() {
         getDailyNutritionUseCase = GetDailyNutritionUseCase(mealRepo)
         getNutritionHistoryUseCase = GetNutritionHistoryUseCase(mealRepo)
         computeNutritionGoalUseCase = ComputeNutritionGoalUseCase(apiService, settingsRepo)
+
+        scheduleDailyBackup()
+    }
+
+    private fun scheduleDailyBackup() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val backupRequest = PeriodicWorkRequestBuilder<DailyBackupWorker>(
+            1, TimeUnit.DAYS
+        )
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "daily_drive_backup",
+            ExistingPeriodicWorkPolicy.KEEP,
+            backupRequest
+        )
     }
 }

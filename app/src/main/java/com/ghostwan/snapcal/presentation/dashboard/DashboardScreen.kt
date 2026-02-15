@@ -272,7 +272,7 @@ private fun MacrosProgressCard(nutrition: DailyNutrition?, goal: NutritionGoal) 
                 label = stringResource(R.string.result_fiber),
                 current = nutrition?.totalFiber ?: 0f,
                 goal = goal.fiber,
-                color = Color(0xFF4CAF50)
+                color = Color(0xFF6B8E23)
             )
         }
     }
