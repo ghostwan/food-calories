@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.widget.RemoteViews
 import com.ghostwan.snapcal.MainActivity
 import com.ghostwan.snapcal.R
@@ -42,9 +43,17 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
             val remaining = (goal - consumed).coerceAtLeast(0)
             val progress = if (goal > 0) ((consumed * 100) / goal).coerceIn(0, 100) else 0
 
+            val progressFraction = if (goal > 0) consumed.toFloat() / goal else 0f
+            val progressColor = when {
+                progressFraction <= 0.75f -> 0xFF4CAF50.toInt() // green
+                progressFraction <= 1.0f  -> 0xFFFF9800.toInt() // orange
+                else                      -> 0xFFF44336.toInt() // red
+            }
+
             val views = RemoteViews(context.packageName, R.layout.widget_calories)
             views.setTextViewText(R.id.widget_calories_text, "$consumed / $goal kcal")
             views.setProgressBar(R.id.widget_progress, 100, progress, false)
+            views.setColorStateList(R.id.widget_progress, "setProgressTintList", ColorStateList.valueOf(progressColor))
             views.setTextViewText(
                 R.id.widget_remaining_text,
                 context.getString(R.string.widget_remaining, remaining)
