@@ -4,6 +4,7 @@ set -euo pipefail
 GRADLE_VERSION="8.7"
 APP_ID="com.ghostwan.snapcal"
 MAIN_ACTIVITY=".MainActivity"
+BUILD_TYPE="debug"
 
 # --- Helpers ---
 
@@ -13,10 +14,13 @@ info()  { printf '=> %s\n' "$*"; }
 
 usage() {
     cat <<EOF
-Usage: $0 <command>
+Usage: $0 [-r] <command>
+
+Options:
+  -r        Use release build type instead of debug
 
 Commands:
-  build     Build the debug APK
+  build     Build the APK
   install   Build and install on connected device
   run       Build, install and launch on connected device
   clean     Clean build artifacts
@@ -106,9 +110,10 @@ find_adb() {
 # --- Commands ---
 
 do_build() {
-    info "Building debug APK..."
-    ./gradlew assembleDebug --warning-mode=all
-    APK="app/build/outputs/apk/debug/app-debug.apk"
+    local task="assemble${BUILD_TYPE^}"
+    info "Building $BUILD_TYPE APK..."
+    ./gradlew "$task" --warning-mode=all
+    APK="app/build/outputs/apk/$BUILD_TYPE/app-$BUILD_TYPE.apk"
     if [ -f "$APK" ]; then
         green "Build successful: $APK"
     else
@@ -121,7 +126,7 @@ do_install() {
     find_adb
     do_build
     info "Installing on device..."
-    "$ADB" install -r "app/build/outputs/apk/debug/app-debug.apk"
+    "$ADB" install -r "app/build/outputs/apk/$BUILD_TYPE/app-$BUILD_TYPE.apk"
     green "Installed successfully."
 }
 
@@ -141,6 +146,14 @@ do_clean() {
 # --- Main ---
 
 cd "$(dirname "$0")"
+
+while getopts "r" opt; do
+    case "$opt" in
+        r) BUILD_TYPE="release" ;;
+        *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
 
 CMD="${1:-}"
 [ -z "$CMD" ] && usage

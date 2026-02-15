@@ -13,7 +13,9 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -55,7 +57,7 @@ private val bottomNavItems = listOf(
 private val noBottomBarRoutes = setOf("result", "history")
 
 @Composable
-fun SnapCalNavGraph() {
+fun SnapCalNavGraph(startRoute: String = "dashboard") {
     val context = LocalContext.current
     val app = context.applicationContext as SnapCalApp
 
@@ -102,7 +104,7 @@ fun SnapCalNavGraph() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "dashboard",
+            startDestination = startRoute,
             modifier = Modifier
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
@@ -138,9 +140,23 @@ fun SnapCalNavGraph() {
             }
 
             composable("home") {
+                val favorites by app.mealRepository.getFavorites().collectAsState(initial = emptyList())
                 HomeScreen(
                     viewModel = foodAnalysisViewModel,
                     onAnalysisStarted = {
+                        navController.navigate("result")
+                    },
+                    favorites = favorites,
+                    onQuickAddFavorite = { meal ->
+                        kotlinx.coroutines.MainScope().launch {
+                            val today = java.time.LocalDate.now().toString()
+                            app.mealRepository.saveMeal(
+                                meal.copy(id = 0, date = today, isFavorite = false)
+                            )
+                        }
+                    },
+                    onMealClick = { meal ->
+                        foodAnalysisViewModel.viewMealDetail(meal)
                         navController.navigate("result")
                     }
                 )

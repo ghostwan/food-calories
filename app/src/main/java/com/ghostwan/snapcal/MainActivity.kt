@@ -11,9 +11,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val startRoute = intent?.getStringExtra("navigate_to") ?: "dashboard"
         setContent {
             SnapCalTheme {
-                SnapCalNavGraph()
+                SnapCalNavGraph(startRoute = startRoute)
             }
         }
     }

@@ -66,7 +66,6 @@ fun DashboardScreen(
     val nutrition by viewModel.nutrition.collectAsState()
     val meals by viewModel.meals.collectAsState()
     val goal by viewModel.goal.collectAsState()
-    val favorites by viewModel.favorites.collectAsState()
     val caloriesBurned by viewModel.caloriesBurned.collectAsState()
 
     SideEffect { viewModel.refresh() }
@@ -152,26 +151,6 @@ fun DashboardScreen(
                         onClick = { onMealClick(meal) },
                         onDelete = { viewModel.deleteMeal(meal.id) },
                         onToggleFavorite = { viewModel.toggleFavorite(meal) }
-                    )
-                }
-            }
-
-            // Favorites section
-            if (favorites.isNotEmpty()) {
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.dashboard_favorites),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                items(favorites) { meal ->
-                    FavoriteCard(
-                        meal = meal,
-                        onQuickAdd = { viewModel.quickAddFavorite(meal) },
-                        onClick = { onMealClick(meal) }
                     )
                 }
             }
@@ -432,43 +411,3 @@ private fun MealCard(
     }
 }
 
-@Composable
-private fun FavoriteCard(meal: MealEntry, onQuickAdd: () -> Unit, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = meal.emoji ?: "🍽️",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(end = 12.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = meal.dishName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = stringResource(R.string.result_kcal, meal.calories),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            IconButton(onClick = onQuickAdd) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.dashboard_add_favorite),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
