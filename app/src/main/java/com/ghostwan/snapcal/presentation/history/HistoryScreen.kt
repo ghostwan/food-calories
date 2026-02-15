@@ -262,13 +262,11 @@ private fun MealRow(meal: MealEntry, onClick: () -> Unit = {}) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (meal.emoji != null) {
-            Text(
-                text = meal.emoji,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-        }
+        Text(
+            text = meal.emoji ?: "🍽️",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(end = 8.dp)
+        )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = meal.dishName,

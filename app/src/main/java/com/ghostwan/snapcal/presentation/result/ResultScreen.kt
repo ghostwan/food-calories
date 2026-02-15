@@ -136,13 +136,11 @@ private fun SuccessContent(
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (result.emoji != null) {
-                    Text(
-                        text = result.emoji,
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.padding(end = 12.dp)
-                    )
-                }
+                Text(
+                    text = result.emoji ?: "🍽️",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(end = 12.dp)
+                )
                 Text(
                     text = result.dishName,
                     style = MaterialTheme.typography.headlineMedium,

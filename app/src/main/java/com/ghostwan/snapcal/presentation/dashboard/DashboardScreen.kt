@@ -330,13 +330,11 @@ private fun MealCard(meal: MealEntry, onClick: () -> Unit, onDelete: () -> Unit)
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (meal.emoji != null) {
-                Text(
-                    text = meal.emoji,
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(end = 12.dp)
-                )
-            }
+            Text(
+                text = meal.emoji ?: "🍽️",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(end = 12.dp)
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = meal.dishName,
