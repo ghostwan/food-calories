@@ -9,9 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./build.sh install   # Build + install on connected device
 ./build.sh run       # Build + install + launch on device
 ./build.sh clean     # Clean build artifacts
+./gradlew assembleRelease  # Build release APK (signed with debug keystore)
 ```
 
-Prerequisites: JDK 17+, Android SDK (auto-detected from ANDROID_HOME or standard paths). No Android Studio required.
+Prerequisites: JDK 21+, Android SDK (auto-detected from ANDROID_HOME or standard paths). No Android Studio required.
+
+Release APK is signed with the debug keystore (configured in `build.gradle.kts`). Output: `app/build/outputs/apk/release/app-release.apk`.
 
 The Gemini API key is read from `local.properties` as `GEMINI_API_KEY` and injected via BuildConfig. There are no tests in this project.
 
@@ -37,7 +40,7 @@ Jetpack Compose + Material 3 with MVVM pattern (ViewModels + StateFlow). ViewMod
 **Key ViewModels**:
 - `FoodAnalysisViewModel`: Shared across home/result screens. Manages `AnalysisUiState` (Idle/Loading/Success/Error), image compression, quota tracking (1500/day free limit), `readOnly` mode for viewing saved meals
 - `DashboardViewModel`: Daily nutrition + meals + goals
-- `HistoryViewModel`: 30-day history + weight + chart data
+- `HistoryViewModel`: History + weight + chart data with configurable time ranges (1W/1M/3M/1Y)
 - `ProfileViewModel`: Profile, goals, Health Connect sync, Google Sign-In, Drive backup/restore
 
 ## Key Patterns

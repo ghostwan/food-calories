@@ -69,6 +69,7 @@ presentation/    Jetpack Compose UI, ViewModel, Material 3 theme, navigation
    ./build.sh install   # Build + install on connected device
    ./build.sh run       # Build + install + launch
    ./build.sh clean     # Clean build artifacts
+   ./gradlew assembleRelease  # Build release APK
    ```
 
 The build script automatically downloads Gradle if needed and generates the wrapper.

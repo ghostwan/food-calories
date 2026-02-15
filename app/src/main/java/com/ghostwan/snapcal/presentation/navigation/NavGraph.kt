@@ -104,12 +104,7 @@ fun SnapCalNavGraph() {
             navController = navController,
             startDestination = "dashboard",
             modifier = Modifier
-                .padding(
-                    start = innerPadding.calculateLeftPadding(layoutDirection),
-                    top = innerPadding.calculateTopPadding(),
-                    end = innerPadding.calculateRightPadding(layoutDirection),
-                    bottom = 5.dp
-                )
+                .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ) {
             composable("dashboard") {

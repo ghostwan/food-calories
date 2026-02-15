@@ -37,6 +37,18 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        getByName("debug") {
+            // uses default debug keystore
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
