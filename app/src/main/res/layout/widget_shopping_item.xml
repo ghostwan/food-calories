@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:id="@+id/widget_shopping_item_root">
+
+    <CheckBox
+        android:id="@+id/widget_shopping_item_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false" />
+
+    <TextView
+        android:id="@+id/widget_shopping_item_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+</LinearLayout>

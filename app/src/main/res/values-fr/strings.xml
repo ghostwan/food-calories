@@ -143,6 +143,7 @@
     <string name="history_burned">Dépensées</string>
     <string name="history_meal_macros">P : %.0fg · G : %.0fg · L : %.0fg</string>
     <string name="history_chart_origin">Origine :</string>
+	<string name="history_calories">Calories</string>
 
     <!-- Widget -->
     <string name="widget_name">SnapCal Calories</string>
@@ -176,6 +177,11 @@
     <string name="shopping_list_add">Ajouter à la liste de courses</string>
     <string name="shopping_list_added">Ajouté à la liste de courses !</string>
     <string name="shopping_list_item_added">Ajouté !</string>
+    <string name="shopping_list_input_hint">Ajouter un article…</string>
+    <string name="shopping_list_voice_prompt">Qu\'est-ce que vous voulez ajouter ?</string>
+
+    <!-- Widget -->
+    <string name="widget_shopping_name">SnapCal Liste de courses</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

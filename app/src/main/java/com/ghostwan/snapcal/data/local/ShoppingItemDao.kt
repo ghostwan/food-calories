@@ -14,6 +14,9 @@ interface ShoppingItemDao {
     @Query("SELECT * FROM shopping_items ORDER BY isChecked ASC, id DESC")
     fun getAll(): Flow<List<ShoppingItemEntity>>
 
+    @Query("SELECT * FROM shopping_items ORDER BY isChecked ASC, id DESC")
+    fun getAllSync(): List<ShoppingItemEntity>
+
     @Query("UPDATE shopping_items SET isChecked = :checked WHERE id = :id")
     suspend fun setChecked(id: Long, checked: Boolean)
 

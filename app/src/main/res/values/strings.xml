@@ -143,7 +143,7 @@
     <string name="history_legend_weight_goal">Target weight</string>
     <string name="history_meal_macros">P: %.0fg · C: %.0fg · F: %.0fg</string>
     <string name="history_chart_origin">Origin:</string>
-
+	<string name="history_calories">Calories</string>
     <!-- Widget -->
     <string name="widget_name">SnapCal Calories</string>
     <string name="widget_remaining">%d kcal remaining</string>
@@ -176,6 +176,11 @@
     <string name="shopping_list_add">Add to shopping list</string>
     <string name="shopping_list_added">Added to shopping list!</string>
     <string name="shopping_list_item_added">Added!</string>
+    <string name="shopping_list_input_hint">Add an item…</string>
+    <string name="shopping_list_voice_prompt">What do you want to add?</string>
+
+    <!-- Widget -->
+    <string name="widget_shopping_name">SnapCal Shopping List</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

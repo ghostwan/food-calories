@@ -44,6 +44,7 @@ import com.ghostwan.snapcal.presentation.result.ResultScreen
 import com.ghostwan.snapcal.presentation.shopping.ShoppingListScreen
 import com.ghostwan.snapcal.presentation.shopping.ShoppingListViewModel
 import com.ghostwan.snapcal.domain.model.ShoppingItem
+import com.ghostwan.snapcal.widget.ShoppingWidgetProvider
 
 private sealed class BottomNavItem(val route: String, val labelRes: Int, val icon: ImageVector) {
     data object Dashboard : BottomNavItem("dashboard", R.string.nav_dashboard, Icons.Default.Dashboard)
@@ -201,6 +202,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                                     addedDate = today
                                 )
                             )
+                            ShoppingWidgetProvider.updateAllWidgets(context.applicationContext)
                         }
                     } else null
                 )
@@ -249,7 +251,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             composable("shopping") {
                 val shoppingViewModel: ShoppingListViewModel = viewModel(
                     factory = ShoppingListViewModel.provideFactory(
-                        shoppingRepository = app.shoppingRepository
+                        shoppingRepository = app.shoppingRepository,
+                        appContext = context.applicationContext
                     )
                 )
                 ShoppingListScreen(

@@ -213,7 +213,7 @@ fun HistoryScreen(
                             OutlinedTextField(
                                 value = if (chartCaloriesOrigin == 0) "" else chartCaloriesOrigin.toString(),
                                 onValueChange = { viewModel.setChartCaloriesOrigin(it.toIntOrNull() ?: 0) },
-                                label = { Text(stringResource(R.string.history_consumed)) },
+                                label = { Text(stringResource(R.string.history_calories)) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
