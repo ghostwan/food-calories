@@ -6,6 +6,7 @@ import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -107,7 +109,8 @@ fun ResultScreen(
                     readOnly = readOnly,
                     isEditing = viewModel.isEditing(),
                     onSave = { viewModel.saveMeal(state.result) },
-                    onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) }
+                    onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
+                    onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) }
                 )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
@@ -142,8 +145,23 @@ private fun SuccessContent(
     readOnly: Boolean = false,
     isEditing: Boolean = false,
     onSave: () -> Unit,
-    onCorrect: (String) -> Unit
+    onCorrect: (String) -> Unit,
+    onEmojiChange: (String) -> Unit = {}
 ) {
+    var showEmojiPicker by remember { mutableStateOf(false) }
+
+    if (showEmojiPicker) {
+        EmojiPickerDialog(
+            dishName = result.dishName,
+            currentEmoji = result.emoji ?: "🍽️",
+            onEmojiSelected = { emoji ->
+                onEmojiChange(emoji)
+                showEmojiPicker = false
+            },
+            onDismiss = { showEmojiPicker = false }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -155,7 +173,9 @@ private fun SuccessContent(
                 Text(
                     text = result.emoji ?: "🍽️",
                     style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(end = 12.dp)
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .clickable { showEmojiPicker = true }
                 )
                 Text(
                     text = result.dishName,
@@ -465,6 +485,92 @@ private fun IngredientCard(ingredient: Ingredient) {
             }
         }
     }
+}
+
+@Composable
+private fun EmojiPickerDialog(
+    dishName: String,
+    currentEmoji: String,
+    onEmojiSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var emojiText by remember { mutableStateOf(currentEmoji) }
+    val suggestions = listOf("🍕", "🥗", "🍣", "🍔", "🥩", "🍝", "🍲", "🥘", "🍜", "🍱", "🍛", "🥐", "🍰", "🍎", "🥤")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.emoji_picker_title)) },
+        text = {
+            Column {
+                Text(
+                    text = dishName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = emojiText,
+                    onValueChange = { newValue ->
+                        if (newValue.length <= 12) emojiText = newValue
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.headlineMedium
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    suggestions.take(5).forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.clickable { emojiText = emoji }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    suggestions.drop(5).take(5).forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.clickable { emojiText = emoji }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    suggestions.drop(10).forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.clickable { emojiText = emoji }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (emojiText.isNotBlank()) onEmojiSelected(emojiText) }
+            ) {
+                Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
 }
 
 @Composable

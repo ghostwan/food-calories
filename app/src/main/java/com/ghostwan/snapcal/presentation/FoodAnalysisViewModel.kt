@@ -176,6 +176,13 @@ class FoodAnalysisViewModel(
         lastImageData = null
     }
 
+    fun updateEmoji(emoji: String) {
+        val current = _uiState.value
+        if (current is AnalysisUiState.Success) {
+            _uiState.value = AnalysisUiState.Success(current.result.copy(emoji = emoji))
+        }
+    }
+
     fun isEditing(): Boolean = editingMealId != null
 
     fun resetMealSaved() {
