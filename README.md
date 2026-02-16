@@ -11,6 +11,10 @@ A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take 
   <img src="screenshots/profile.png" width="200" alt="Profile" />
   <img src="screenshots/reminders.png" width="200" alt="Meal Reminders" />
   <img src="screenshots/merge.png" width="200" alt="Meal Merge" />
+  <img src="screenshots/03_dashboard_shopping_cart_icon.png" width="200" alt="Shopping Cart on Dashboard" />
+  <img src="screenshots/04_result_add_to_shopping_list_button.png" width="200" alt="Add to Shopping List" />
+  <img src="screenshots/05_shopping_list_with_items.png" width="200" alt="Shopping List" />
+  <img src="screenshots/06_shopping_list_checked_items.png" width="200" alt="Shopping List Checked Items" />
 </p>
 
 ## Features
@@ -25,6 +29,7 @@ A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take 
 - **Favorites**: Star your frequent meals and re-add them with one tap
 - **Nutritional goals**: Set manual calorie goals or let AI compute personalized targets based on your profile
 - **Home screen widget**: Glanceable calories widget showing consumed / goal with a progress bar
+- **Shopping list**: Add meal ingredients to a persistent shopping list — check off, delete or clear items as you shop (opt-in via Profile)
 - **Meal reminders**: Configurable notifications for breakfast (08:00), lunch (12:30) and dinner (20:30) with adjustable times
 - **Health Connect**: Sync weight data and burned calories from Google Health Connect
 - **Google Drive backup**: Back up and restore all your data (meals, profile, weight history)
