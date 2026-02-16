@@ -165,7 +165,7 @@ private fun SuccessContent(
             }
         }
 
-        item { CaloriesCard(result.totalCalories) }
+        item { CaloriesCard(result.totalCalories, result.ingredients) }
 
         if (result.macros != null) {
             item { MacrosCard(result.macros) }
@@ -287,7 +287,25 @@ private fun CorrectionSection(onCorrect: (String) -> Unit) {
 }
 
 @Composable
-private fun CaloriesCard(totalCalories: Int) {
+private fun CaloriesCard(totalCalories: Int, ingredients: List<Ingredient> = emptyList()) {
+    val ratings = ingredients.mapNotNull { it.healthRating }
+    val overallRating = if (ratings.isNotEmpty()) {
+        val scores = ratings.map { when (it) { "healthy" -> 2; "moderate" -> 1; else -> 0 } }
+        val avg = scores.average()
+        when {
+            avg >= 1.5 -> "healthy"
+            avg >= 0.75 -> "moderate"
+            else -> "unhealthy"
+        }
+    } else null
+
+    val healthEmoji = when (overallRating) {
+        "healthy" -> "\uD83D\uDE0A"
+        "moderate" -> "\uD83D\uDE10"
+        "unhealthy" -> "\uD83D\uDE1F"
+        else -> null
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -295,10 +313,22 @@ private fun CaloriesCard(totalCalories: Int) {
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.result_total_calories),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.result_total_calories),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (healthEmoji != null) {
+                    Text(
+                        text = healthEmoji,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+            }
             Text(
                 text = stringResource(R.string.result_kcal, totalCalories),
                 style = MaterialTheme.typography.headlineLarge,
