@@ -41,14 +41,16 @@ class ShoppingWidgetFactory(
         views.setTextViewText(R.id.widget_shopping_item_name, item.name)
 
         if (item.isChecked) {
-            views.setBoolean(R.id.widget_shopping_item_checkbox, "setChecked", true)
+            views.setImageViewResource(R.id.widget_shopping_item_icon,
+                android.R.drawable.checkbox_on_background)
             views.setInt(R.id.widget_shopping_item_name, "setPaintFlags",
                 Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG)
             views.setTextColor(R.id.widget_shopping_item_name, 0xFF999999.toInt())
         } else {
-            views.setBoolean(R.id.widget_shopping_item_checkbox, "setChecked", false)
+            views.setImageViewResource(R.id.widget_shopping_item_icon,
+                android.R.drawable.checkbox_off_background)
             views.setInt(R.id.widget_shopping_item_name, "setPaintFlags", Paint.ANTI_ALIAS_FLAG)
-            views.setTextColor(R.id.widget_shopping_item_name, 0xDE000000.toInt())
+            views.setTextColor(R.id.widget_shopping_item_name, 0xFF000000.toInt())
         }
 
         val fillInIntent = Intent().apply {
