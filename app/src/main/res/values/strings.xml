@@ -50,6 +50,7 @@
     <string name="result_not_right">Not quite right? Correct it</string>
     <string name="result_correction_hint">Describe what\'s different (e.g. "this is pasta not rice")</string>
     <string name="result_correct">Correct with AI</string>
+    <string name="result_edit_name_title">Edit dish name</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Free quota exceeded</string>

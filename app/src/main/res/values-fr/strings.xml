@@ -50,6 +50,7 @@
     <string name="result_not_right">Pas tout à fait exact ? Corriger</string>
     <string name="result_correction_hint">Décrivez la différence (ex : "c\'est des pâtes pas du riz")</string>
     <string name="result_correct">Corriger avec l\'IA</string>
+    <string name="result_edit_name_title">Modifier le nom du plat</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Quota gratuit dépassé</string>

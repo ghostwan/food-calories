@@ -209,6 +209,13 @@ class FoodAnalysisViewModel(
         }
     }
 
+    fun updateDishName(name: String) {
+        val current = _uiState.value
+        if (current is AnalysisUiState.Success) {
+            _uiState.value = AnalysisUiState.Success(current.result.copy(dishName = name))
+        }
+    }
+
     fun updateEmoji(emoji: String) {
         val current = _uiState.value
         if (current is AnalysisUiState.Success) {

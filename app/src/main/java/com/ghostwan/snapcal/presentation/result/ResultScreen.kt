@@ -132,6 +132,7 @@ fun ResultScreen(
                     onSave = { viewModel.saveMeal(state.result) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
                     onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) },
+                    onDishNameChange = { name -> viewModel.updateDishName(name) },
                     onRemoveIngredient = { index -> viewModel.removeIngredient(index) },
                     onUpdateIngredient = { index, qty, cal -> viewModel.updateIngredient(index, qty, cal) }
                 )
@@ -170,10 +171,12 @@ private fun SuccessContent(
     onSave: () -> Unit,
     onCorrect: (String) -> Unit,
     onEmojiChange: (String) -> Unit = {},
+    onDishNameChange: (String) -> Unit = {},
     onRemoveIngredient: (Int) -> Unit = {},
     onUpdateIngredient: (Int, String, Int) -> Unit = { _, _, _ -> }
 ) {
     var showEmojiPicker by remember { mutableStateOf(false) }
+    var showDishNameEditor by remember { mutableStateOf(false) }
     var editingIngredientIndex by remember { mutableStateOf<Int?>(null) }
 
     if (showEmojiPicker) {
@@ -185,6 +188,17 @@ private fun SuccessContent(
                 showEmojiPicker = false
             },
             onDismiss = { showEmojiPicker = false }
+        )
+    }
+
+    if (showDishNameEditor) {
+        DishNameEditDialog(
+            currentName = result.dishName,
+            onConfirm = { newName ->
+                onDishNameChange(newName)
+                showDishNameEditor = false
+            },
+            onDismiss = { showDishNameEditor = false }
         )
     }
 
@@ -219,7 +233,8 @@ private fun SuccessContent(
                 Text(
                     text = result.dishName,
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { showDishNameEditor = true }
                 )
             }
         }
@@ -722,6 +737,40 @@ private fun EmojiPickerDialog(
         confirmButton = {
             TextButton(
                 onClick = { if (emojiText.isNotBlank()) onEmojiSelected(emojiText) }
+            ) {
+                Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun DishNameEditDialog(
+    currentName: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.result_edit_name_title)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (name.isNotBlank()) onConfirm(name) }
             ) {
                 Text(stringResource(R.string.dialog_button_save))
             }
