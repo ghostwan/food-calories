@@ -1,5 +1,6 @@
 package com.ghostwan.snapcal.data.repository
 
+import android.util.Log
 import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
 import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.data.remote.GeminiAuth
@@ -20,15 +21,21 @@ class FoodAnalysisRepositoryImpl(
 ) : FoodAnalysisRepository {
 
     private suspend fun resolveAuth(): GeminiAuth {
-        if (settingsRepository.isGoogleAuthForGemini() && googleAuthManager.isSignedIn()) {
+        val googleAuthEnabled = settingsRepository.isGoogleAuthForGemini()
+        val signedIn = googleAuthManager.isSignedIn()
+        Log.d("ResolveAuth", "googleAuthForGemini=$googleAuthEnabled, isSignedIn=$signedIn")
+
+        if (googleAuthEnabled && signedIn) {
             try {
                 val token = googleAuthManager.getGeminiAccessToken()
+                Log.d("ResolveAuth", "OAuth token=${if (token != null) "${token.take(10)}..." else "null"}")
                 if (token != null) return GeminiAuth.OAuth(token)
-            } catch (_: Exception) {
-                // Consent not granted or other error, fallback to API key
+            } catch (e: Exception) {
+                Log.e("ResolveAuth", "OAuth token error: ${e.message}")
             }
         }
         val apiKey = settingsRepository.getApiKey()
+        Log.d("ResolveAuth", "Falling back to API key (blank=${apiKey.isBlank()})")
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")
         }
