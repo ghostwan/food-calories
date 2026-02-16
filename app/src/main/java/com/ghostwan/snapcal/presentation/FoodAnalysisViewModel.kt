@@ -281,6 +281,10 @@ class FoodAnalysisViewModel(
         if (current is AnalysisUiState.Success) {
             _uiState.value = AnalysisUiState.Success(current.result.copy(emoji = emoji))
         }
+        val mealId = editingMealId ?: return
+        viewModelScope.launch {
+            mealRepository.updateEmoji(mealId, emoji)
+        }
     }
 
     fun toggleFavorite() {

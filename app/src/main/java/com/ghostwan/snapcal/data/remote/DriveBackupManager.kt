@@ -148,6 +148,8 @@ class DriveBackupManager(private val context: Context) {
                 put("fiber", meal.fiber.toDouble())
                 put("date", meal.date)
                 put("ingredientsJson", meal.ingredientsJson)
+                if (meal.emoji != null) put("emoji", meal.emoji)
+                put("isFavorite", meal.isFavorite)
             })
         }
     }
@@ -192,7 +194,9 @@ class DriveBackupManager(private val context: Context) {
                     fats = obj.getDouble("fats").toFloat(),
                     fiber = obj.getDouble("fiber").toFloat(),
                     date = obj.getString("date"),
-                    ingredientsJson = obj.optString("ingredientsJson", "")
+                    ingredientsJson = obj.optString("ingredientsJson", ""),
+                    emoji = if (obj.has("emoji")) obj.getString("emoji") else null,
+                    isFavorite = obj.optBoolean("isFavorite", false)
                 )
             )
         }

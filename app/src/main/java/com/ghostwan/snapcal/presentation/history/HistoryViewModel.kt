@@ -16,7 +16,6 @@ import java.time.LocalDate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class HistoryViewModel(
@@ -66,6 +65,7 @@ class HistoryViewModel(
     val showBurned: StateFlow<Boolean> = _showBurned
 
     private var historyJob: Job? = null
+    private var selectedDayJob: Job? = null
 
     init {
         _goal.value = userProfileRepository.getGoal()
@@ -145,10 +145,14 @@ class HistoryViewModel(
         if (_selectedDate.value == date) {
             _selectedDate.value = null
             _selectedDayMeals.value = emptyList()
+            selectedDayJob?.cancel()
         } else {
             _selectedDate.value = date
-            viewModelScope.launch {
-                _selectedDayMeals.value = mealRepository.getMealsForDate(date).first()
+            selectedDayJob?.cancel()
+            selectedDayJob = viewModelScope.launch {
+                mealRepository.getMealsForDate(date).collect {
+                    _selectedDayMeals.value = it
+                }
             }
         }
     }
