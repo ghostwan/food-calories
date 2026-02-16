@@ -3,18 +3,22 @@ package com.ghostwan.snapcal.presentation.dashboard
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -388,8 +392,8 @@ private fun MealCard(
         )
     }
 
-    val healthEmoji = remember(meal.ingredientsJson) {
-        computeHealthEmoji(meal.ingredientsJson)
+    val healthInfo = remember(meal.ingredientsJson) {
+        computeHealthInfo(meal.ingredientsJson)
     }
 
     Card(
@@ -399,50 +403,65 @@ private fun MealCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = meal.emoji ?: "🍽️",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .clickable { showEmojiPicker = true }
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = meal.dishName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+            if (healthInfo != null) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .background(healthInfo.color, RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            }
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = meal.emoji ?: "🍽️",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .clickable { showEmojiPicker = true }
+                )
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.result_kcal, meal.calories),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        text = meal.dishName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
                     )
-                    if (healthEmoji != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = " $healthEmoji",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = stringResource(R.string.result_kcal, meal.calories),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
+                        if (healthInfo != null) {
+                            Text(
+                                text = " ${healthInfo.emoji}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
-            }
-            IconButton(onClick = onToggleFavorite) {
-                Icon(
-                    if (meal.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                    contentDescription = stringResource(R.string.dashboard_toggle_favorite),
-                    tint = if (meal.isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
+                IconButton(onClick = onToggleFavorite) {
+                    Icon(
+                        if (meal.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                        contentDescription = stringResource(R.string.dashboard_toggle_favorite),
+                        tint = if (meal.isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
@@ -535,7 +554,9 @@ private fun EmojiPickerDialog(
     )
 }
 
-private fun computeHealthEmoji(ingredientsJson: String): String? {
+private data class HealthInfo(val emoji: String, val color: Color)
+
+private fun computeHealthInfo(ingredientsJson: String): HealthInfo? {
     return try {
         val array = JSONArray(ingredientsJson)
         val scores = mutableListOf<Int>()
@@ -552,9 +573,9 @@ private fun computeHealthEmoji(ingredientsJson: String): String? {
         if (scores.isEmpty()) return null
         val avg = scores.average()
         when {
-            avg >= 1.5 -> "\uD83D\uDE0A"
-            avg >= 0.75 -> "\uD83D\uDE10"
-            else -> "\uD83D\uDE1F"
+            avg >= 1.5 -> HealthInfo("\uD83D\uDE0A", Color(0xFF4CAF50))
+            avg >= 0.75 -> HealthInfo("\uD83D\uDE10", Color(0xFFFF9800))
+            else -> HealthInfo("\uD83D\uDE1F", Color(0xFFF44336))
         }
     } catch (_: Exception) {
         null
