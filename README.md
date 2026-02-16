@@ -10,6 +10,7 @@ A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take 
   <img src="screenshots/history.png" width="200" alt="History" />
   <img src="screenshots/profile.png" width="200" alt="Profile" />
   <img src="screenshots/reminders.png" width="200" alt="Meal Reminders" />
+  <img src="screenshots/merge.png" width="200" alt="Meal Merge" />
 </p>
 
 ## Features
@@ -20,6 +21,7 @@ A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take 
 - **Barcode scanning**: Scan product barcodes to get nutrition info from Open Food Facts
 - **Dashboard**: Track daily calories and macronutrients with a visual progress ring
 - **Meal history & trends**: View past meals and nutrition trends over 1 week, 1 month, 3 months or 1 year
+- **Meal merge**: Long-press to select multiple meals and combine them into one
 - **Favorites**: Star your frequent meals and re-add them with one tap
 - **Nutritional goals**: Set manual calorie goals or let AI compute personalized targets based on your profile
 - **Home screen widget**: Glanceable calories widget showing consumed / goal with a progress bar
