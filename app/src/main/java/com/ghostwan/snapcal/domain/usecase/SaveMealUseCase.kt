@@ -26,6 +26,12 @@ class SaveMealUseCase(
         refreshWidget()
     }
 
+    suspend fun replaceMultipleAndSave(oldMealIds: List<Long>, analysis: FoodAnalysis, date: String) {
+        oldMealIds.forEach { mealRepository.deleteMeal(it) }
+        saveMeal(analysis, date)
+        refreshWidget()
+    }
+
     private fun refreshWidget() {
         val manager = AppWidgetManager.getInstance(appContext)
         val component = ComponentName(appContext, CaloriesWidgetProvider::class.java)

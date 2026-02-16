@@ -77,6 +77,8 @@
     <string name="dashboard_favorites">Favoris</string>
     <string name="dashboard_toggle_favorite">Ajouter/retirer des favoris</string>
     <string name="dashboard_add_favorite">Ajouter au repas du jour</string>
+    <string name="dashboard_merge">Fusionner</string>
+    <string name="dashboard_selection_cancel">Annuler</string>
 
     <!-- Profile -->
     <string name="profile_title">Profil</string>

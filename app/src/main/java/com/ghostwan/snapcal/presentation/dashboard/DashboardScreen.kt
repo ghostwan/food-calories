@@ -5,6 +5,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,15 +25,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.automirrored.filled.MergeType
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +44,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -69,22 +75,53 @@ fun DashboardScreen(
     viewModel: DashboardViewModel,
     onScanMeal: () -> Unit,
     onHistory: () -> Unit,
-    onMealClick: (MealEntry) -> Unit = {}
+    onMealClick: (MealEntry) -> Unit = {},
+    onMergeMeals: (List<MealEntry>) -> Unit = {}
 ) {
     val nutrition by viewModel.nutrition.collectAsState()
     val meals by viewModel.meals.collectAsState()
     val goal by viewModel.goal.collectAsState()
     val caloriesBurned by viewModel.caloriesBurned.collectAsState()
+    val selectionMode by viewModel.selectionMode.collectAsState()
+    val selectedMealIds by viewModel.selectedMealIds.collectAsState()
 
     SideEffect { viewModel.refresh() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.dashboard_title)) },
+                title = {
+                    if (selectionMode) {
+                        Text("${selectedMealIds.size}")
+                    } else {
+                        Text(stringResource(R.string.dashboard_title))
+                    }
+                },
+                navigationIcon = {
+                    if (selectionMode) {
+                        IconButton(onClick = { viewModel.exitSelectionMode() }) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.dashboard_selection_cancel))
+                        }
+                    }
+                },
                 actions = {
-                    IconButton(onClick = onHistory) {
-                        Icon(Icons.Default.History, contentDescription = stringResource(R.string.dashboard_history))
+                    if (selectionMode) {
+                        TextButton(
+                            onClick = {
+                                val selected = viewModel.getSelectedMeals()
+                                viewModel.exitSelectionMode()
+                                onMergeMeals(selected)
+                            },
+                            enabled = selectedMealIds.size >= 2
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.MergeType, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.dashboard_merge))
+                        }
+                    } else {
+                        IconButton(onClick = onHistory) {
+                            Icon(Icons.Default.History, contentDescription = stringResource(R.string.dashboard_history))
+                        }
                     }
                 }
             )
@@ -156,7 +193,20 @@ fun DashboardScreen(
                 items(meals) { meal ->
                     MealCard(
                         meal = meal,
-                        onClick = { onMealClick(meal) },
+                        selectionMode = selectionMode,
+                        isSelected = meal.id in selectedMealIds,
+                        onClick = {
+                            if (selectionMode) {
+                                viewModel.toggleMealSelection(meal.id)
+                            } else {
+                                onMealClick(meal)
+                            }
+                        },
+                        onLongClick = {
+                            if (!selectionMode) {
+                                viewModel.enterSelectionMode(meal.id)
+                            }
+                        },
                         onDelete = { viewModel.deleteMeal(meal.id) },
                         onToggleFavorite = { viewModel.toggleFavorite(meal) }
                     )
@@ -366,10 +416,14 @@ private fun MacroProgressBar(label: String, current: Float, goal: Float, color: 
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MealCard(
     meal: MealEntry,
+    selectionMode: Boolean = false,
+    isSelected: Boolean = false,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
     onDelete: () -> Unit,
     onToggleFavorite: () -> Unit
 ) {
@@ -378,8 +432,12 @@ private fun MealCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
     ) {
         Row(
             modifier = Modifier
@@ -395,10 +453,22 @@ private fun MealCard(
                         .background(healthInfo.color, RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
                 )
             }
+            if (selectionMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onClick() },
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(16.dp),
+                    .padding(
+                        start = if (selectionMode) 4.dp else 16.dp,
+                        top = 16.dp,
+                        bottom = 16.dp,
+                        end = 16.dp
+                    ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -427,19 +497,21 @@ private fun MealCard(
                         }
                     }
                 }
-                IconButton(onClick = onToggleFavorite) {
-                    Icon(
-                        if (meal.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                        contentDescription = stringResource(R.string.dashboard_toggle_favorite),
-                        tint = if (meal.isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                if (!selectionMode) {
+                    IconButton(onClick = onToggleFavorite) {
+                        Icon(
+                            if (meal.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription = stringResource(R.string.dashboard_toggle_favorite),
+                            tint = if (meal.isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

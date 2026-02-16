@@ -48,6 +48,7 @@ class FoodAnalysisViewModel(
 
     private var lastImageData: ByteArray? = null
     private var editingMealId: Long? = null
+    private var editingMealIds: List<Long>? = null
     private var editingMealDate: String? = null
 
     fun getApiKey(): String = settingsRepository.getApiKey()
@@ -129,9 +130,12 @@ class FoodAnalysisViewModel(
     fun saveMeal(analysis: FoodAnalysis) {
         viewModelScope.launch {
             try {
+                val mealIds = editingMealIds
                 val mealId = editingMealId
                 val mealDate = editingMealDate
-                if (mealId != null && mealDate != null) {
+                if (mealIds != null && mealDate != null) {
+                    saveMealUseCase.replaceMultipleAndSave(mealIds, analysis, mealDate)
+                } else if (mealId != null && mealDate != null) {
                     saveMealUseCase.replaceAndSave(mealId, analysis, mealDate)
                 } else {
                     saveMealUseCase(analysis)
@@ -180,6 +184,57 @@ class FoodAnalysisViewModel(
         _isFavorite.value = meal.isFavorite
         editingMealId = meal.id
         editingMealDate = meal.date
+        lastImageData = null
+    }
+
+    fun viewMergedMeals(meals: List<MealEntry>) {
+        val dishName = meals.joinToString(" + ") { it.dishName }
+        val totalCalories = meals.sumOf { it.calories }
+        val totalProteins = meals.sumOf { it.proteins.toDouble() }.toFloat()
+        val totalCarbs = meals.sumOf { it.carbs.toDouble() }.toFloat()
+        val totalFats = meals.sumOf { it.fats.toDouble() }.toFloat()
+        val totalFiber = meals.sumOf { it.fiber.toDouble() }.toFloat()
+
+        val allIngredients = meals.flatMap { meal ->
+            try {
+                val array = JSONArray(meal.ingredientsJson)
+                buildList {
+                    for (i in 0 until array.length()) {
+                        val obj = array.getJSONObject(i)
+                        add(Ingredient(
+                            name = obj.getString("name"),
+                            quantity = obj.getString("quantity"),
+                            calories = obj.getInt("calories"),
+                            healthRating = if (obj.has("healthRating") && !obj.isNull("healthRating")) obj.getString("healthRating") else null
+                        ))
+                    }
+                }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+
+        val emoji = meals.firstOrNull()?.emoji
+
+        val analysis = FoodAnalysis(
+            dishName = dishName,
+            totalCalories = totalCalories,
+            ingredients = allIngredients,
+            macros = Macros(
+                proteins = String.format("%.0fg", totalProteins),
+                carbs = String.format("%.0fg", totalCarbs),
+                fats = String.format("%.0fg", totalFats),
+                fiber = if (totalFiber > 0) String.format("%.0fg", totalFiber) else null
+            ),
+            notes = null,
+            emoji = emoji
+        )
+        _uiState.value = AnalysisUiState.Success(analysis)
+        _mealSaved.value = false
+        _readOnly.value = false
+        _isFavorite.value = false
+        editingMealIds = meals.map { it.id }
+        editingMealDate = meals.firstOrNull()?.date
         lastImageData = null
     }
 
@@ -244,6 +299,7 @@ class FoodAnalysisViewModel(
         _readOnly.value = false
         _isFavorite.value = false
         editingMealId = null
+        editingMealIds = null
         editingMealDate = null
         lastImageData = null
     }

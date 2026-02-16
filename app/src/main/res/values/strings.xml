@@ -77,6 +77,8 @@
     <string name="dashboard_favorites">Favorites</string>
     <string name="dashboard_toggle_favorite">Toggle favorite</string>
     <string name="dashboard_add_favorite">Add to today</string>
+    <string name="dashboard_merge">Merge</string>
+    <string name="dashboard_selection_cancel">Cancel</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>

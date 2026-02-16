@@ -42,6 +42,12 @@ class DashboardViewModel(
     private val _caloriesBurned = MutableStateFlow(0)
     val caloriesBurned: StateFlow<Int> = _caloriesBurned
 
+    private val _selectionMode = MutableStateFlow(false)
+    val selectionMode: StateFlow<Boolean> = _selectionMode
+
+    private val _selectedMealIds = MutableStateFlow<Set<Long>>(emptySet())
+    val selectedMealIds: StateFlow<Set<Long>> = _selectedMealIds
+
     init {
         loadGoal()
         observeNutrition()
@@ -134,6 +140,26 @@ class DashboardViewModel(
         viewModelScope.launch {
             mealRepository.updateEmoji(mealId, emoji)
         }
+    }
+
+    fun enterSelectionMode(mealId: Long) {
+        _selectionMode.value = true
+        _selectedMealIds.value = setOf(mealId)
+    }
+
+    fun toggleMealSelection(mealId: Long) {
+        val current = _selectedMealIds.value
+        _selectedMealIds.value = if (mealId in current) current - mealId else current + mealId
+    }
+
+    fun exitSelectionMode() {
+        _selectionMode.value = false
+        _selectedMealIds.value = emptySet()
+    }
+
+    fun getSelectedMeals(): List<MealEntry> {
+        val ids = _selectedMealIds.value
+        return _meals.value.filter { it.id in ids }
     }
 
     fun quickAddFavorite(meal: MealEntry) {

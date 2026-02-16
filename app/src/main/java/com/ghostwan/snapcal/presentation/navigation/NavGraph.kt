@@ -136,6 +136,10 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
                         navController.navigate("result")
+                    },
+                    onMergeMeals = { meals ->
+                        foodAnalysisViewModel.viewMergedMeals(meals)
+                        navController.navigate("result")
                     }
                 )
             }
