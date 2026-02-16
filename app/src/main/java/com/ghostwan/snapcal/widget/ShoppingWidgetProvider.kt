@@ -91,6 +91,7 @@ class ShoppingWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.widget_shopping_header, openAppPendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_shopping_root, openAppPendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
