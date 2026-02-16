@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.DailyNutrition
+import org.json.JSONArray
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 
@@ -387,6 +388,10 @@ private fun MealCard(
         )
     }
 
+    val healthEmoji = remember(meal.ingredientsJson) {
+        computeHealthEmoji(meal.ingredientsJson)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick
@@ -411,11 +416,19 @@ private fun MealCard(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
-                Text(
-                    text = stringResource(R.string.result_kcal, meal.calories),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.result_kcal, meal.calories),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (healthEmoji != null) {
+                        Text(
+                            text = " $healthEmoji",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
             IconButton(onClick = onToggleFavorite) {
                 Icon(
@@ -522,3 +535,28 @@ private fun EmojiPickerDialog(
     )
 }
 
+private fun computeHealthEmoji(ingredientsJson: String): String? {
+    return try {
+        val array = JSONArray(ingredientsJson)
+        val scores = mutableListOf<Int>()
+        for (i in 0 until array.length()) {
+            val obj = array.getJSONObject(i)
+            if (obj.has("healthRating") && !obj.isNull("healthRating")) {
+                scores.add(when (obj.getString("healthRating")) {
+                    "healthy" -> 2
+                    "moderate" -> 1
+                    else -> 0
+                })
+            }
+        }
+        if (scores.isEmpty()) return null
+        val avg = scores.average()
+        when {
+            avg >= 1.5 -> "\uD83D\uDE0A"
+            avg >= 0.75 -> "\uD83D\uDE10"
+            else -> "\uD83D\uDE1F"
+        }
+    } catch (_: Exception) {
+        null
+    }
+}

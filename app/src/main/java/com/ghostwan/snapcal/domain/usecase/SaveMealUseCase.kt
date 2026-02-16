@@ -64,7 +64,11 @@ class SaveMealUseCase(
             if (index > 0) sb.append(",")
             sb.append("{\"name\":\"${ingredient.name.replace("\"", "\\\"")}\",")
             sb.append("\"quantity\":\"${ingredient.quantity.replace("\"", "\\\"")}\",")
-            sb.append("\"calories\":${ingredient.calories}}")
+            sb.append("\"calories\":${ingredient.calories}")
+            if (ingredient.healthRating != null) {
+                sb.append(",\"healthRating\":\"${ingredient.healthRating}\"")
+            }
+            sb.append("}")
         }
         sb.append("]")
         return sb.toString()

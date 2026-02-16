@@ -147,7 +147,8 @@ class FoodAnalysisViewModel(
                     add(Ingredient(
                         name = obj.getString("name"),
                         quantity = obj.getString("quantity"),
-                        calories = obj.getInt("calories")
+                        calories = obj.getInt("calories"),
+                        healthRating = if (obj.has("healthRating") && !obj.isNull("healthRating")) obj.getString("healthRating") else null
                     ))
                 }
             }
