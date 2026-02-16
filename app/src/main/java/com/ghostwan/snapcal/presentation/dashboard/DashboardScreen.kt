@@ -458,9 +458,13 @@ private fun EmojiPickerDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = emojiText,
-                    onValueChange = { if (it.length <= 2) emojiText = it },
+                    onValueChange = { newValue ->
+                        // Allow up to 12 chars to support complex emojis (ZWJ sequences, skin tones)
+                        if (newValue.length <= 12) emojiText = newValue
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
