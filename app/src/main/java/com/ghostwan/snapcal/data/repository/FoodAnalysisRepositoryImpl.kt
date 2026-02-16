@@ -2,6 +2,8 @@ package com.ghostwan.snapcal.data.repository
 
 import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
 import com.ghostwan.snapcal.data.remote.GeminiApiService
+import com.ghostwan.snapcal.data.remote.GeminiAuth
+import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.data.remote.OpenFoodFactsService
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.repository.FoodAnalysisRepository
@@ -13,24 +15,31 @@ class FoodAnalysisRepositoryImpl(
     private val apiService: GeminiApiService,
     private val settingsRepository: SettingsRepository,
     private val mapper: FoodAnalysisMapper,
-    private val openFoodFactsService: OpenFoodFactsService
+    private val openFoodFactsService: OpenFoodFactsService,
+    private val googleAuthManager: GoogleAuthManager
 ) : FoodAnalysisRepository {
 
-    override suspend fun analyzeFood(imageData: ByteArray, language: String): FoodAnalysis {
+    private suspend fun resolveAuth(): GeminiAuth {
+        if (settingsRepository.isGoogleAuthForGemini() && googleAuthManager.isSignedIn()) {
+            val token = googleAuthManager.getGeminiAccessToken()
+            if (token != null) return GeminiAuth.OAuth(token)
+        }
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")
         }
-        val rawResponse = apiService.analyzeImage(imageData, apiKey, language)
+        return GeminiAuth.ApiKey(apiKey)
+    }
+
+    override suspend fun analyzeFood(imageData: ByteArray, language: String): FoodAnalysis {
+        val auth = resolveAuth()
+        val rawResponse = apiService.analyzeImage(imageData, auth, language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 
     override suspend fun analyzeFoodFromText(description: String, language: String): FoodAnalysis {
-        val apiKey = settingsRepository.getApiKey()
-        if (apiKey.isBlank()) {
-            throw IllegalStateException("Clé API Gemini non configurée")
-        }
-        val rawResponse = apiService.analyzeText(description, apiKey, language)
+        val auth = resolveAuth()
+        val rawResponse = apiService.analyzeText(description, auth, language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 
@@ -40,12 +49,9 @@ class FoodAnalysisRepositoryImpl(
         imageData: ByteArray?,
         language: String
     ): FoodAnalysis {
-        val apiKey = settingsRepository.getApiKey()
-        if (apiKey.isBlank()) {
-            throw IllegalStateException("Clé API Gemini non configurée")
-        }
+        val auth = resolveAuth()
         val originalJson = serializeAnalysis(originalAnalysis)
-        val rawResponse = apiService.correctAnalysis(originalJson, userFeedback, imageData, apiKey, language)
+        val rawResponse = apiService.correctAnalysis(originalJson, userFeedback, imageData, auth, language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 

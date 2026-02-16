@@ -94,6 +94,9 @@ class ProfileViewModel(
     private val _shoppingListEnabled = MutableStateFlow(false)
     val shoppingListEnabled: StateFlow<Boolean> = _shoppingListEnabled
 
+    private val _googleAuthForGemini = MutableStateFlow(false)
+    val googleAuthForGemini: StateFlow<Boolean> = _googleAuthForGemini
+
     init {
         loadProfile()
         checkHealthConnect()
@@ -101,6 +104,7 @@ class ProfileViewModel(
         loadReminderSettings()
         loadBackupInfo()
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
+        _googleAuthForGemini.value = settingsRepository.isGoogleAuthForGemini()
     }
 
     private fun loadProfile() {
@@ -145,6 +149,8 @@ class ProfileViewModel(
             googleAuthManager.signOut()
             _isSignedIn.value = false
             _signedInEmail.value = null
+            _googleAuthForGemini.value = false
+            settingsRepository.setGoogleAuthForGemini(false)
         }
     }
 
@@ -307,6 +313,11 @@ class ProfileViewModel(
     fun toggleShoppingList(enabled: Boolean) {
         _shoppingListEnabled.value = enabled
         settingsRepository.setShoppingListEnabled(enabled)
+    }
+
+    fun toggleGoogleAuthForGemini(enabled: Boolean) {
+        _googleAuthForGemini.value = enabled
+        settingsRepository.setGoogleAuthForGemini(enabled)
     }
 
     fun clearSaved() { _saved.value = false }

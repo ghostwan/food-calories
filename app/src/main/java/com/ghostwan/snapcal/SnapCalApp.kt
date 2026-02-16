@@ -92,13 +92,13 @@ class SnapCalApp : Application() {
         driveBackupManager = DriveBackupManager(this)
 
         val openFoodFactsService = OpenFoodFactsService()
-        val foodAnalysisRepository = FoodAnalysisRepositoryImpl(apiService, settingsRepo, mapper, openFoodFactsService)
+        val foodAnalysisRepository = FoodAnalysisRepositoryImpl(apiService, settingsRepo, mapper, openFoodFactsService, googleAuthManager)
         analyzeFoodUseCase = AnalyzeFoodUseCase(foodAnalysisRepository)
         correctAnalysisUseCase = CorrectAnalysisUseCase(foodAnalysisRepository)
         saveMealUseCase = SaveMealUseCase(mealRepo, this)
         getDailyNutritionUseCase = GetDailyNutritionUseCase(mealRepo)
         getNutritionHistoryUseCase = GetNutritionHistoryUseCase(mealRepo)
-        computeNutritionGoalUseCase = ComputeNutritionGoalUseCase(apiService, settingsRepo)
+        computeNutritionGoalUseCase = ComputeNutritionGoalUseCase(apiService, settingsRepo, googleAuthManager)
 
         mealReminderManager = MealReminderManager(this)
         mealReminderManager.createNotificationChannel()

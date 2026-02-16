@@ -94,6 +94,7 @@ fun ProfileScreen(
     val dinnerTime by viewModel.dinnerTime.collectAsState()
 
     val shoppingListEnabled by viewModel.shoppingListEnabled.collectAsState()
+    val googleAuthForGemini by viewModel.googleAuthForGemini.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -389,6 +390,28 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.profile_restore))
                     }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.profile_google_auth_gemini),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(R.string.profile_google_auth_gemini_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = googleAuthForGemini,
+                        onCheckedChange = { viewModel.toggleGoogleAuthForGemini(it) }
+                    )
                 }
 
                 TextButton(

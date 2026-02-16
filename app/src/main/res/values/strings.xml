@@ -8,7 +8,7 @@
     <string name="home_button_photo">Photo</string>
     <string name="home_button_gallery">Gallery</string>
     <string name="home_button_analyze">Analyze dish</string>
-    <string name="home_api_key_warning">Configure your Gemini API key in settings</string>
+    <string name="home_api_key_warning">Configure your Gemini API key in settings or use your Google account in Profile</string>
     <string name="home_photo_description">Photo of the dish</string>
     <string name="home_or_describe">Or describe what you ate</string>
     <string name="home_text_hint">e.g. "a chicken salad with rice"</string>
@@ -122,6 +122,8 @@
     <string name="profile_restore">Restore from Google Drive</string>
     <string name="profile_restoring">Restoring…</string>
     <string name="profile_restore_done">Data restored!</string>
+    <string name="profile_google_auth_gemini">Use Google account for AI</string>
+    <string name="profile_google_auth_gemini_desc">Use your Google account instead of an API key for food analysis</string>
 
     <!-- History -->
     <string name="history_title">History</string>

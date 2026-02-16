@@ -83,6 +83,8 @@ fun HomeScreen(
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showQuotaWarning by remember { mutableStateOf(false) }
     var apiKey by remember { mutableStateOf(viewModel.getApiKey()) }
+    val geminiConfigured = viewModel.isGeminiConfigured()
+    val analysisEnabled = apiKey.isNotBlank() || geminiConfigured
     var pendingTextAnalysis by remember { mutableStateOf(false) }
 
     val imageFile = remember {
@@ -275,7 +277,7 @@ fun HomeScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = apiKey.isNotBlank()
+                        enabled = analysisEnabled
                     ) {
                         Text(stringResource(R.string.home_button_analyze))
                     }
@@ -333,7 +335,7 @@ fun HomeScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = apiKey.isNotBlank()
+                        enabled = analysisEnabled
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                         Spacer(modifier = Modifier.padding(4.dp))
@@ -380,7 +382,7 @@ fun HomeScreen(
                 }
             }
 
-            if (apiKey.isBlank()) {
+            if (!analysisEnabled) {
                 item {
                     Text(
                         text = stringResource(R.string.home_api_key_warning),
