@@ -40,8 +40,8 @@ class GeminiApiService {
                 "dishName": "Name of the dish",
                 "totalCalories": 500,
                 "ingredients": [
-                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200},
-                    {"name": "Ingredient 2", "quantity": "2 cuillères à soupe (30ml)", "calories": 100}
+                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200, "healthRating": "healthy"},
+                    {"name": "Ingredient 2", "quantity": "2 cuillères à soupe (30ml)", "calories": 100, "healthRating": "moderate"}
                 ],
                 "macros": {
                     "proteins": "25g",
@@ -53,6 +53,7 @@ class GeminiApiService {
             }
 
             The "emoji" field must be a single emoji that best represents the dish (e.g. 🍕 for pizza, 🥗 for salad, 🍣 for sushi).
+            The "healthRating" field for each ingredient must be "healthy" (nutritious, whole foods), "moderate" (acceptable in moderation), or "unhealthy" (highly processed, high sugar/fat).
         """.trimIndent()
 
         return executeRequest(buildTextRequestBody(prompt), apiKey)
@@ -81,7 +82,7 @@ class GeminiApiService {
                 "dishName": "Name of the dish",
                 "totalCalories": 500,
                 "ingredients": [
-                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200}
+                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200, "healthRating": "healthy"}
                 ],
                 "macros": {
                     "proteins": "25g",
@@ -93,6 +94,7 @@ class GeminiApiService {
             }
 
             The "emoji" field must be a single emoji that best represents the dish.
+            The "healthRating" field for each ingredient must be "healthy" (nutritious, whole foods), "moderate" (acceptable in moderation), or "unhealthy" (highly processed, high sugar/fat).
         """.trimIndent()
 
         val requestBody = if (imageData != null) {
@@ -206,8 +208,8 @@ class GeminiApiService {
                 "dishName": "Name of the dish",
                 "totalCalories": 500,
                 "ingredients": [
-                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200},
-                    {"name": "Ingredient 2", "quantity": "2 cuillères à soupe (30ml)", "calories": 100}
+                    {"name": "Ingredient 1", "quantity": "150g", "calories": 200, "healthRating": "healthy"},
+                    {"name": "Ingredient 2", "quantity": "2 cuillères à soupe (30ml)", "calories": 100, "healthRating": "moderate"}
                 ],
                 "macros": {
                     "proteins": "25g",
@@ -219,6 +221,7 @@ class GeminiApiService {
             }
 
             The "emoji" field must be a single emoji that best represents the dish (e.g. 🍕 for pizza, 🥗 for salad, 🍣 for sushi).
+            The "healthRating" field for each ingredient must be "healthy" (nutritious, whole foods), "moderate" (acceptable in moderation), or "unhealthy" (highly processed, high sugar/fat).
 
             If the image does not contain food, respond with:
             {"emoji": "❓", "dishName": "Not recognized", "totalCalories": 0, "ingredients": [], "macros": null, "notes": "The image does not appear to contain food."}

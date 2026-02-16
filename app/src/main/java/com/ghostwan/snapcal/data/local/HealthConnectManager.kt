@@ -47,6 +47,28 @@ class HealthConnectManager(private val context: Context) {
         return energy?.inKilocalories ?: 0.0
     }
 
+    suspend fun readCaloriesBurnedForDateRange(startDate: LocalDate, endDate: LocalDate): Map<String, Double> {
+        val zone = ZoneId.systemDefault()
+        val result = mutableMapOf<String, Double>()
+        var current = startDate
+        while (!current.isAfter(endDate)) {
+            val dayStart = current.atStartOfDay(zone).toInstant()
+            val dayEnd = current.plusDays(1).atStartOfDay(zone).toInstant()
+            val response = healthConnectClient.aggregate(
+                AggregateRequest(
+                    metrics = setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL),
+                    timeRangeFilter = TimeRangeFilter.between(dayStart, dayEnd)
+                )
+            )
+            val energy = response[TotalCaloriesBurnedRecord.ENERGY_TOTAL]
+            if (energy != null) {
+                result[current.toString()] = energy.inKilocalories
+            }
+            current = current.plusDays(1)
+        }
+        return result
+    }
+
     suspend fun readWeightRecords(days: Int = 90): List<WeightData> {
         val now = Instant.now()
         val start = now.minus(days.toLong(), ChronoUnit.DAYS)

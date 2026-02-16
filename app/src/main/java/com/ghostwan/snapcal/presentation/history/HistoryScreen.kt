@@ -32,6 +32,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,11 +59,16 @@ fun HistoryScreen(
 ) {
     val history by viewModel.history.collectAsState()
     val weightHistory by viewModel.weightHistory.collectAsState()
+    val burnedCaloriesHistory by viewModel.burnedCaloriesHistory.collectAsState()
     val goal by viewModel.goal.collectAsState()
     val profile by viewModel.profile.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val selectedDayMeals by viewModel.selectedDayMeals.collectAsState()
     val selectedRange by viewModel.selectedRange.collectAsState()
+
+    var showCalories by remember { mutableStateOf(true) }
+    var showWeight by remember { mutableStateOf(true) }
+    var showBurned by remember { mutableStateOf(true) }
 
     val rangeLabels = mapOf(
         7 to stringResource(R.string.history_range_week),
@@ -99,13 +107,14 @@ fun HistoryScreen(
             val shortFormat = SimpleDateFormat("dd/MM", Locale.US)
 
             val weightByDate = weightHistory.associateBy { it.date }
-            val allDates = (history.map { it.date } + weightHistory.map { it.date })
+            val allDates = (history.map { it.date } + weightHistory.map { it.date } + burnedCaloriesHistory.keys)
                 .distinct()
                 .sorted()
 
             val chartData = allDates.map { date ->
                 val nutrition = history.find { it.date == date }
                 val weight = weightByDate[date]
+                val burned = burnedCaloriesHistory[date]
                 val label = try {
                     shortFormat.format(dateFormat.parse(date)!!)
                 } catch (_: Exception) {
@@ -114,7 +123,8 @@ fun HistoryScreen(
                 ChartDataPoint(
                     label = label,
                     calories = nutrition?.totalCalories,
-                    weight = weight?.weight
+                    weight = weight?.weight,
+                    burnedCalories = burned
                 )
             }
 
@@ -158,8 +168,35 @@ fun HistoryScreen(
                             data = chartData,
                             caloriesGoal = goal.calories,
                             targetWeight = profile.targetWeight.takeIf { it > 0f },
-                            nextDateLabel = nextDateLabel
+                            nextDateLabel = nextDateLabel,
+                            showCalories = showCalories,
+                            showWeight = showWeight,
+                            showBurned = showBurned
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = showCalories,
+                                onClick = { showCalories = !showCalories },
+                                label = { Text(stringResource(R.string.history_toggle_calories)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = showWeight,
+                                onClick = { showWeight = !showWeight },
+                                label = { Text(stringResource(R.string.history_toggle_weight)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = showBurned,
+                                onClick = { showBurned = !showBurned },
+                                label = { Text(stringResource(R.string.history_toggle_burned)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }

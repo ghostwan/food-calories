@@ -3,6 +3,7 @@ package com.ghostwan.snapcal.presentation.dashboard
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +43,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -150,7 +156,8 @@ fun DashboardScreen(
                         meal = meal,
                         onClick = { onMealClick(meal) },
                         onDelete = { viewModel.deleteMeal(meal.id) },
-                        onToggleFavorite = { viewModel.toggleFavorite(meal) }
+                        onToggleFavorite = { viewModel.toggleFavorite(meal) },
+                        onEmojiChange = { emoji -> viewModel.updateMealEmoji(meal.id, emoji) }
                     )
                 }
             }
@@ -363,8 +370,22 @@ private fun MealCard(
     meal: MealEntry,
     onClick: () -> Unit,
     onDelete: () -> Unit,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    onEmojiChange: (String) -> Unit = {}
 ) {
+    var showEmojiPicker by remember { mutableStateOf(false) }
+
+    if (showEmojiPicker) {
+        EmojiPickerDialog(
+            currentEmoji = meal.emoji ?: "🍽️",
+            onEmojiSelected = { emoji ->
+                onEmojiChange(emoji)
+                showEmojiPicker = false
+            },
+            onDismiss = { showEmojiPicker = false }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick
@@ -379,7 +400,9 @@ private fun MealCard(
             Text(
                 text = meal.emoji ?: "🍽️",
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(end = 12.dp)
+                modifier = Modifier
+                    .padding(end = 12.dp)
+                    .clickable { showEmojiPicker = true }
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -409,5 +432,81 @@ private fun MealCard(
             }
         }
     }
+}
+
+@Composable
+private fun EmojiPickerDialog(
+    currentEmoji: String,
+    onEmojiSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var emojiText by remember { mutableStateOf(currentEmoji) }
+    val suggestions = listOf("🍕", "🥗", "🍣", "🍔", "🥩", "🍝", "🍲", "🥘", "🍜", "🍱", "🍛", "🥐", "🍰", "🍎", "🥤")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.emoji_picker_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = emojiText,
+                    onValueChange = { if (it.length <= 2) emojiText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    suggestions.take(5).forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.clickable { emojiText = emoji }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    suggestions.drop(5).take(5).forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.clickable { emojiText = emoji }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    suggestions.drop(10).forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.clickable { emojiText = emoji }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (emojiText.isNotBlank()) onEmojiSelected(emojiText) }
+            ) {
+                Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
 }
 

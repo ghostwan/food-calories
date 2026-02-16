@@ -7,6 +7,7 @@ import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
+import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.GetDailyNutritionUseCase
@@ -47,6 +48,7 @@ class DashboardViewModel(
         observeMeals()
         observeFavorites()
         loadCaloriesBurned()
+        loadLatestWeight()
     }
 
     private fun loadGoal() {
@@ -66,6 +68,29 @@ class DashboardViewModel(
             getDailyNutritionUseCase.getMeals(today).collect {
                 _meals.value = it
             }
+        }
+    }
+
+    private fun loadLatestWeight() {
+        if (!healthConnectManager.isAvailable()) return
+        viewModelScope.launch {
+            try {
+                if (healthConnectManager.hasPermissions()) {
+                    val records = healthConnectManager.readWeightRecords(1)
+                    if (records.isNotEmpty()) {
+                        val latest = records.maxByOrNull { it.time }!!
+                        val profile = userProfileRepository.getProfile()
+                        if (latest.weightKg != profile.weight) {
+                            userProfileRepository.saveProfile(profile.copy(weight = latest.weightKg))
+                            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                            val date = dateFormat.format(Date.from(latest.time))
+                            userProfileRepository.saveWeightRecord(
+                                WeightRecord(weight = latest.weightKg, date = date)
+                            )
+                        }
+                    }
+                }
+            } catch (_: Exception) { }
         }
     }
 
@@ -102,6 +127,12 @@ class DashboardViewModel(
     fun toggleFavorite(meal: MealEntry) {
         viewModelScope.launch {
             mealRepository.setFavorite(meal.id, !meal.isFavorite)
+        }
+    }
+
+    fun updateMealEmoji(mealId: Long, emoji: String) {
+        viewModelScope.launch {
+            mealRepository.updateEmoji(mealId, emoji)
         }
     }
 

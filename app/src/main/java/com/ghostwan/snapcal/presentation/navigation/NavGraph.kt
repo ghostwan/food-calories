@@ -203,7 +203,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     factory = HistoryViewModel.provideFactory(
                         historyUseCase = app.getNutritionHistoryUseCase,
                         userProfileRepository = app.userProfileRepository,
-                        mealRepository = app.mealRepository
+                        mealRepository = app.mealRepository,
+                        healthConnectManager = app.healthConnectManager
                     )
                 )
                 HistoryScreen(

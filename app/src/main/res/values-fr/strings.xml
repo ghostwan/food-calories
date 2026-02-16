@@ -136,6 +136,10 @@
     <string name="history_legend_goal">Objectif</string>
     <string name="history_legend_cal_goal">Obj. calories</string>
     <string name="history_legend_weight_goal">Poids cible</string>
+    <string name="history_legend_burned">Dépensées</string>
+    <string name="history_toggle_calories">Calories</string>
+    <string name="history_toggle_weight">Poids</string>
+    <string name="history_toggle_burned">Dépensées</string>
     <string name="history_meal_macros">P : %.0fg · G : %.0fg · L : %.0fg</string>
 
     <!-- Widget -->
@@ -151,6 +155,9 @@
     <string name="reminder_breakfast_message">N\'oubliez pas de noter votre petit-déjeuner !</string>
     <string name="reminder_lunch_message">N\'oubliez pas de noter votre déjeuner !</string>
     <string name="reminder_dinner_message">N\'oubliez pas de noter votre dîner !</string>
+
+    <!-- Emoji Picker -->
+    <string name="emoji_picker_title">Choisir un emoji</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

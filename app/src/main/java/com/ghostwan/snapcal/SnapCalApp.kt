@@ -30,6 +30,7 @@ import com.ghostwan.snapcal.domain.usecase.GetDailyNutritionUseCase
 import com.ghostwan.snapcal.domain.usecase.GetNutritionHistoryUseCase
 import com.ghostwan.snapcal.data.remote.DailyBackupWorker
 import com.ghostwan.snapcal.domain.usecase.SaveMealUseCase
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 class SnapCalApp : Application() {
@@ -105,10 +106,21 @@ class SnapCalApp : Application() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (before(now)) add(Calendar.DAY_OF_YEAR, 1)
+        }
+        val initialDelay = target.timeInMillis - now.timeInMillis
+
         val backupRequest = PeriodicWorkRequestBuilder<DailyBackupWorker>(
             1, TimeUnit.DAYS
         )
             .setConstraints(constraints)
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(

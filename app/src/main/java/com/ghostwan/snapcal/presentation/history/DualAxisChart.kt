@@ -44,11 +44,13 @@ import com.ghostwan.snapcal.R
 data class ChartDataPoint(
     val label: String,
     val calories: Int?,
-    val weight: Float?
+    val weight: Float?,
+    val burnedCalories: Int? = null
 )
 
 private val CaloriesColor = Color(0xFF4CAF50)
 private val WeightColor = Color(0xFFF44336)
+private val BurnedColor = Color(0xFFFF9800)
 private val CaloriesGoalColor = Color(0xFF388E3C)
 private val WeightGoalColor = Color(0xFFF44336)
 
@@ -58,6 +60,9 @@ fun DualAxisChart(
     caloriesGoal: Int?,
     targetWeight: Float?,
     nextDateLabel: String? = null,
+    showCalories: Boolean = true,
+    showWeight: Boolean = true,
+    showBurned: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     if (data.isEmpty()) return
@@ -109,14 +114,16 @@ fun DualAxisChart(
                 val chartWidth = size.width - leftPadding - rightPadding
                 val chartHeight = size.height - topPadding - bottomPadding
 
-                val caloriesValues = data.mapNotNull { it.calories }
-                val weightValues = data.mapNotNull { it.weight }
+                val caloriesValues = if (showCalories) data.mapNotNull { it.calories } else emptyList()
+                val weightValues = if (showWeight) data.mapNotNull { it.weight } else emptyList()
+                val burnedValues = if (showBurned) data.mapNotNull { it.burnedCalories } else emptyList()
 
-                if (caloriesValues.isEmpty() && weightValues.isEmpty()) return@Canvas
+                if (caloriesValues.isEmpty() && weightValues.isEmpty() && burnedValues.isEmpty()) return@Canvas
 
-                // Calculate ranges — include goals so they're always visible
-                var calMinRaw = (caloriesValues.minOrNull() ?: 0).toFloat()
-                var calMaxRaw = (caloriesValues.maxOrNull() ?: 2500).toFloat()
+                // Calculate ranges — include goals and burned so they're always visible
+                val allCalValues = caloriesValues + burnedValues
+                var calMinRaw = (allCalValues.minOrNull() ?: 0).toFloat()
+                var calMaxRaw = (allCalValues.maxOrNull() ?: 2500).toFloat()
                 if (caloriesGoal != null && caloriesGoal > 0) {
                     calMinRaw = minOf(calMinRaw, caloriesGoal.toFloat())
                     calMaxRaw = maxOf(calMaxRaw, caloriesGoal.toFloat())
@@ -144,7 +151,7 @@ fun DualAxisChart(
                     scale(scaleX = scale, scaleY = 1f, pivot = Offset(leftPadding, 0f))
                 }) {
                     // Draw calories goal line
-                    if (caloriesGoal != null && caloriesGoal > 0) {
+                    if (showCalories && caloriesGoal != null && caloriesGoal > 0) {
                         val goalY = topPadding + chartHeight * (1f - (caloriesGoal - calMin) / calRange)
                         drawLine(
                             color = CaloriesGoalColor,
@@ -156,7 +163,7 @@ fun DualAxisChart(
                     }
 
                     // Draw target weight line
-                    if (targetWeight != null && targetWeight > 0f) {
+                    if (showWeight && targetWeight != null && targetWeight > 0f) {
                         val targetY = topPadding + chartHeight * (1f - (targetWeight - wMin) / wRange)
                         drawLine(
                             color = WeightGoalColor,
@@ -168,30 +175,49 @@ fun DualAxisChart(
                     }
 
                     // Draw calories curve
-                    drawCurve(
-                        data = data,
-                        getValue = { it.calories?.toFloat() },
-                        color = CaloriesColor,
-                        minVal = calMin,
-                        range = calRange,
-                        leftPadding = leftPadding,
-                        topPadding = topPadding,
-                        chartWidth = chartWidth,
-                        chartHeight = chartHeight
-                    )
+                    if (showCalories) {
+                        drawCurve(
+                            data = data,
+                            getValue = { it.calories?.toFloat() },
+                            color = CaloriesColor,
+                            minVal = calMin,
+                            range = calRange,
+                            leftPadding = leftPadding,
+                            topPadding = topPadding,
+                            chartWidth = chartWidth,
+                            chartHeight = chartHeight
+                        )
+                    }
+
+                    // Draw burned calories curve
+                    if (showBurned) {
+                        drawCurve(
+                            data = data,
+                            getValue = { it.burnedCalories?.toFloat() },
+                            color = BurnedColor,
+                            minVal = calMin,
+                            range = calRange,
+                            leftPadding = leftPadding,
+                            topPadding = topPadding,
+                            chartWidth = chartWidth,
+                            chartHeight = chartHeight
+                        )
+                    }
 
                     // Draw weight curve
-                    drawCurve(
-                        data = data,
-                        getValue = { it.weight },
-                        color = WeightColor,
-                        minVal = wMin,
-                        range = wRange,
-                        leftPadding = leftPadding,
-                        topPadding = topPadding,
-                        chartWidth = chartWidth,
-                        chartHeight = chartHeight
-                    )
+                    if (showWeight) {
+                        drawCurve(
+                            data = data,
+                            getValue = { it.weight },
+                            color = WeightColor,
+                            minVal = wMin,
+                            range = wRange,
+                            leftPadding = leftPadding,
+                            topPadding = topPadding,
+                            chartWidth = chartWidth,
+                            chartHeight = chartHeight
+                        )
+                    }
                 }
 
                 // Draw axis labels (outside transform so they stay fixed)
@@ -324,9 +350,17 @@ fun DualAxisChart(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LegendItem(color = CaloriesColor, label = stringResource(R.string.history_legend_calories))
-                Spacer(modifier = Modifier.width(12.dp))
-                LegendItem(color = WeightColor, label = stringResource(R.string.history_legend_weight))
+                if (showCalories) {
+                    LegendItem(color = CaloriesColor, label = stringResource(R.string.history_legend_calories))
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                if (showBurned) {
+                    LegendItem(color = BurnedColor, label = stringResource(R.string.history_legend_burned))
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                if (showWeight) {
+                    LegendItem(color = WeightColor, label = stringResource(R.string.history_legend_weight))
+                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),

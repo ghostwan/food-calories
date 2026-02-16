@@ -12,7 +12,8 @@ data class FoodAnalysis(
 data class Ingredient(
     val name: String,
     val quantity: String,
-    val calories: Int
+    val calories: Int,
+    val healthRating: String? = null
 )
 
 data class Macros(

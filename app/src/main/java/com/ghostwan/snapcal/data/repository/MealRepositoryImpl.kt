@@ -84,6 +84,10 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         }
     }
 
+    override suspend fun updateEmoji(id: Long, emoji: String) {
+        mealDao.updateEmoji(id, emoji)
+    }
+
     private fun daysAgoDate(days: Int): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -days)

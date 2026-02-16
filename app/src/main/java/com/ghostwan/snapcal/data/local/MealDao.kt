@@ -42,6 +42,9 @@ interface MealDao {
 
     @Query("SELECT SUM(calories) FROM meals WHERE date = :date")
     suspend fun getDailyCalories(date: String): Int?
+
+    @Query("UPDATE meals SET emoji = :emoji WHERE id = :id")
+    suspend fun updateEmoji(id: Long, emoji: String)
 }
 
 data class DailyNutritionTuple(

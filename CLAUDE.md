@@ -55,3 +55,7 @@ Jetpack Compose + Material 3 with MVVM pattern (ViewModels + StateFlow). ViewMod
 ## Tech Stack
 
 Kotlin 2.0.0, AGP 8.7.3, Gradle 8.9, Compose BOM 2024.06.00, Room 2.6.1, compileSdk 35, minSdk 26, targetSdk 34, JVM target 21
+
+## Working Process
+
+After each task, build, install, run, commit and push 

@@ -136,6 +136,10 @@
     <string name="history_legend_goal">Goal</string>
     <string name="history_legend_cal_goal">Cal. goal</string>
     <string name="history_legend_weight_goal">Target weight</string>
+    <string name="history_legend_burned">Burned</string>
+    <string name="history_toggle_calories">Calories</string>
+    <string name="history_toggle_weight">Weight</string>
+    <string name="history_toggle_burned">Burned</string>
     <string name="history_meal_macros">P: %.0fg · C: %.0fg · F: %.0fg</string>
 
     <!-- Widget -->
@@ -151,6 +155,9 @@
     <string name="reminder_breakfast_message">Don\'t forget to log your breakfast!</string>
     <string name="reminder_lunch_message">Don\'t forget to log your lunch!</string>
     <string name="reminder_dinner_message">Don\'t forget to log your dinner!</string>
+
+    <!-- Emoji Picker -->
+    <string name="emoji_picker_title">Choose an emoji</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
