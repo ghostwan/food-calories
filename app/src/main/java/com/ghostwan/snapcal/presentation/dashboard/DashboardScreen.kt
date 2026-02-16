@@ -377,6 +377,7 @@ private fun MealCard(
 
     if (showEmojiPicker) {
         EmojiPickerDialog(
+            dishName = meal.dishName,
             currentEmoji = meal.emoji ?: "🍽️",
             onEmojiSelected = { emoji ->
                 onEmojiChange(emoji)
@@ -436,6 +437,7 @@ private fun MealCard(
 
 @Composable
 private fun EmojiPickerDialog(
+    dishName: String,
     currentEmoji: String,
     onEmojiSelected: (String) -> Unit,
     onDismiss: () -> Unit
@@ -448,6 +450,12 @@ private fun EmojiPickerDialog(
         title = { Text(stringResource(R.string.emoji_picker_title)) },
         text = {
             Column {
+                Text(
+                    text = dishName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = emojiText,
                     onValueChange = { if (it.length <= 2) emojiText = it },
