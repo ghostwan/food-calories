@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.RemoteViews
 import com.ghostwan.snapcal.MainActivity
 import com.ghostwan.snapcal.R
@@ -20,21 +21,28 @@ class ShoppingWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
         }
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_shopping_list)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
+        Log.d(TAG, "onReceive action=${intent.action}")
         if (intent.action == ACTION_TOGGLE_ITEM) {
             val itemId = intent.getLongExtra(EXTRA_ITEM_ID, -1L)
+            Log.d(TAG, "Toggle item id=$itemId")
             if (itemId != -1L) {
-                val dao = AppDatabase.getInstance(context).shoppingItemDao()
-                val items = dao.getAllSync()
-                val item = items.find { it.id == itemId }
-                if (item != null) {
-                    runBlocking { dao.setChecked(itemId, !item.isChecked) }
+                runBlocking(kotlinx.coroutines.Dispatchers.IO) {
+                    val dao = AppDatabase.getInstance(context).shoppingItemDao()
+                    val items = dao.getAllSync()
+                    val item = items.find { it.id == itemId }
+                    if (item != null) {
+                        dao.setChecked(itemId, !item.isChecked)
+                        Log.d(TAG, "Toggled ${item.name} to ${!item.isChecked}")
+                    }
                 }
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 val widgetIds = appWidgetManager.getAppWidgetIds(
@@ -46,6 +54,7 @@ class ShoppingWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        private const val TAG = "ShoppingWidget"
         const val ACTION_TOGGLE_ITEM = "com.ghostwan.snapcal.widget.TOGGLE_SHOPPING_ITEM"
         const val EXTRA_ITEM_ID = "extra_item_id"
 

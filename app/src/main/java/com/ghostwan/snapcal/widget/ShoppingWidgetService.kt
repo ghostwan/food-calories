@@ -3,6 +3,7 @@ package com.ghostwan.snapcal.widget
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
+import android.util.Log
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.ghostwan.snapcal.R
@@ -11,6 +12,7 @@ import com.ghostwan.snapcal.data.local.ShoppingItemEntity
 
 class ShoppingWidgetService : RemoteViewsService() {
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
+        Log.d("ShoppingWidget", "onGetViewFactory called")
         return ShoppingWidgetFactory(applicationContext)
     }
 }
@@ -21,11 +23,14 @@ class ShoppingWidgetFactory(
 
     private var items: List<ShoppingItemEntity> = emptyList()
 
-    override fun onCreate() {}
+    override fun onCreate() {
+        Log.d("ShoppingWidget", "Factory onCreate")
+    }
 
     override fun onDataSetChanged() {
         val dao = AppDatabase.getInstance(context).shoppingItemDao()
         items = dao.getAllSync()
+        Log.d("ShoppingWidget", "onDataSetChanged: loaded ${items.size} items")
     }
 
     override fun onDestroy() {
@@ -36,6 +41,7 @@ class ShoppingWidgetFactory(
 
     override fun getViewAt(position: Int): RemoteViews {
         val item = items[position]
+        Log.d("ShoppingWidget", "getViewAt($position): ${item.name} checked=${item.isChecked}")
         val views = RemoteViews(context.packageName, R.layout.widget_shopping_item)
 
         views.setTextViewText(R.id.widget_shopping_item_name, item.name)
