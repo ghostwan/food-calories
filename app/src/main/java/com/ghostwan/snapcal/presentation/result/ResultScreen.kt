@@ -33,7 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -47,6 +47,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -56,6 +58,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +74,7 @@ import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.model.AnalysisUiState
 import androidx.compose.ui.text.input.KeyboardType
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,14 +82,17 @@ fun ResultScreen(
     viewModel: FoodAnalysisViewModel,
     onBack: () -> Unit,
     onMealSaved: () -> Unit = {},
-    showShoppingListButton: Boolean = false,
-    onAddToShoppingList: (List<Ingredient>) -> Unit = {}
+    onAddToShoppingList: ((Ingredient) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val mealSaved by viewModel.mealSaved.collectAsState()
     val readOnly by viewModel.readOnly.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
     val isEditing = viewModel.isEditing()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     androidx.compose.runtime.LaunchedEffect(mealSaved) {
         if (mealSaved) {
@@ -94,6 +101,7 @@ fun ResultScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.result_title)) },
@@ -138,8 +146,16 @@ fun ResultScreen(
                     onDishNameChange = { name -> viewModel.updateDishName(name) },
                     onRemoveIngredient = { index -> viewModel.removeIngredient(index) },
                     onUpdateIngredient = { index, qty, cal -> viewModel.updateIngredient(index, qty, cal) },
-                    showShoppingListButton = showShoppingListButton,
-                    onAddToShoppingList = { onAddToShoppingList(state.result.ingredients) }
+                    onAddToShoppingList = onAddToShoppingList?.let { addToList ->
+                        { ingredient: Ingredient ->
+                            addToList(ingredient)
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    context.getString(R.string.shopping_list_item_added)
+                                )
+                            }
+                        }
+                    }
                 )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
@@ -179,8 +195,7 @@ private fun SuccessContent(
     onDishNameChange: (String) -> Unit = {},
     onRemoveIngredient: (Int) -> Unit = {},
     onUpdateIngredient: (Int, String, Int) -> Unit = { _, _, _ -> },
-    showShoppingListButton: Boolean = false,
-    onAddToShoppingList: () -> Unit = {}
+    onAddToShoppingList: ((Ingredient) -> Unit)? = null
 ) {
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showDishNameEditor by remember { mutableStateOf(false) }
@@ -265,21 +280,9 @@ private fun SuccessContent(
                 ingredient = ingredient,
                 editable = !readOnly,
                 onEdit = { editingIngredientIndex = index },
-                onDelete = { onRemoveIngredient(index) }
+                onDelete = { onRemoveIngredient(index) },
+                onAddToCart = onAddToShoppingList?.let { { it(ingredient) } }
             )
-        }
-
-        if (showShoppingListButton && result.ingredients.isNotEmpty()) {
-            item {
-                OutlinedButton(
-                    onClick = onAddToShoppingList,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.shopping_list_add))
-                }
-            }
         }
 
         if (result.notes != null) {
@@ -523,7 +526,8 @@ private fun IngredientCard(
     ingredient: Ingredient,
     editable: Boolean = false,
     onEdit: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    onAddToCart: (() -> Unit)? = null
 ) {
     val healthColor = when (ingredient.healthRating) {
         "healthy" -> Color(0xFF4CAF50)
@@ -537,6 +541,8 @@ private fun IngredientCard(
         "unhealthy" -> "\uD83D\uDE1F"
         else -> null
     }
+
+    val hasActions = editable || onAddToCart != null
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -559,7 +565,7 @@ private fun IngredientCard(
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = if (editable) 4.dp else 16.dp),
+                    .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = if (hasActions) 4.dp else 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -591,6 +597,19 @@ private fun IngredientCard(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            if (onAddToCart != null) {
+                IconButton(
+                    onClick = onAddToCart,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        Icons.Default.AddShoppingCart,
+                        contentDescription = stringResource(R.string.shopping_list_add),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
             if (editable) {
                 IconButton(
                     onClick = onDelete,
@@ -603,6 +622,8 @@ private fun IngredientCard(
                         modifier = Modifier.size(18.dp)
                     )
                 }
+            }
+            if (hasActions) {
                 Spacer(modifier = Modifier.width(4.dp))
             }
         }

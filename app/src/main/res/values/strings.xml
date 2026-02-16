@@ -175,6 +175,7 @@
     <string name="shopping_list_clear_checked">Clear checked items</string>
     <string name="shopping_list_add">Add to shopping list</string>
     <string name="shopping_list_added">Added to shopping list!</string>
+    <string name="shopping_list_item_added">Added!</string>
 
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>

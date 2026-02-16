@@ -191,22 +191,18 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                             launchSingleTop = true
                         }
                     },
-                    showShoppingListButton = shoppingListEnabled,
-                    onAddToShoppingList = { ingredients ->
+                    onAddToShoppingList = if (shoppingListEnabled) { ingredient ->
                         val today = java.time.LocalDate.now().toString()
                         kotlinx.coroutines.MainScope().launch {
-                            for (ingredient in ingredients) {
-                                app.shoppingRepository.addItem(
-                                    ShoppingItem(
-                                        name = ingredient.name,
-                                        quantity = ingredient.quantity,
-                                        addedDate = today
-                                    )
+                            app.shoppingRepository.addItem(
+                                ShoppingItem(
+                                    name = ingredient.name,
+                                    quantity = ingredient.quantity,
+                                    addedDate = today
                                 )
-                            }
+                            )
                         }
-                        navController.navigate("shopping")
-                    }
+                    } else null
                 )
             }
 
