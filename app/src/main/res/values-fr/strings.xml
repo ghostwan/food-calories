@@ -132,7 +132,7 @@
     <string name="history_range_quarter">3M</string>
     <string name="history_range_year">1A</string>
     <string name="history_chart_title">Tendances</string>
-    <string name="history_legend_calories">Calories</string>
+    <string name="history_legend_calories">Consommées</string>
     <string name="history_legend_weight">Poids</string>
     <string name="history_legend_goal">Objectif</string>
     <string name="history_legend_cal_goal">Obj. calories</string>
@@ -142,6 +142,7 @@
     <string name="history_toggle_weight">Poids</string>
     <string name="history_toggle_burned">Dépensées</string>
     <string name="history_meal_macros">P : %.0fg · G : %.0fg · L : %.0fg</string>
+    <string name="history_chart_origin">Origine :</string>
 
     <!-- Widget -->
     <string name="widget_name">SnapCal Calories</string>

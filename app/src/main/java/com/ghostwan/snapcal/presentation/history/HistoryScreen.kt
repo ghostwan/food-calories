@@ -26,9 +26,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,10 +69,11 @@ fun HistoryScreen(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val selectedDayMeals by viewModel.selectedDayMeals.collectAsState()
     val selectedRange by viewModel.selectedRange.collectAsState()
-
-    var showCalories by remember { mutableStateOf(true) }
-    var showWeight by remember { mutableStateOf(true) }
-    var showBurned by remember { mutableStateOf(true) }
+    val chartCaloriesOrigin by viewModel.chartCaloriesOrigin.collectAsState()
+    val chartWeightOrigin by viewModel.chartWeightOrigin.collectAsState()
+    val showCalories by viewModel.showCalories.collectAsState()
+    val showWeight by viewModel.showWeight.collectAsState()
+    val showBurned by viewModel.showBurned.collectAsState()
 
     val rangeLabels = mapOf(
         7 to stringResource(R.string.history_range_week),
@@ -171,7 +176,9 @@ fun HistoryScreen(
                             nextDateLabel = nextDateLabel,
                             showCalories = showCalories,
                             showWeight = showWeight,
-                            showBurned = showBurned
+                            showBurned = showBurned,
+                            caloriesOrigin = chartCaloriesOrigin,
+                            weightOrigin = chartWeightOrigin
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
@@ -180,21 +187,51 @@ fun HistoryScreen(
                         ) {
                             FilterChip(
                                 selected = showCalories,
-                                onClick = { showCalories = !showCalories },
+                                onClick = { viewModel.toggleShowCalories() },
                                 label = { Text(stringResource(R.string.history_toggle_calories)) },
                                 modifier = Modifier.weight(1f)
                             )
                             FilterChip(
                                 selected = showWeight,
-                                onClick = { showWeight = !showWeight },
+                                onClick = { viewModel.toggleShowWeight() },
                                 label = { Text(stringResource(R.string.history_toggle_weight)) },
                                 modifier = Modifier.weight(1f)
                             )
                             FilterChip(
                                 selected = showBurned,
-                                onClick = { showBurned = !showBurned },
+                                onClick = { viewModel.toggleShowBurned() },
                                 label = { Text(stringResource(R.string.history_toggle_burned)) },
                                 modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.history_chart_origin),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            OutlinedTextField(
+                                value = if (chartCaloriesOrigin == 0) "" else chartCaloriesOrigin.toString(),
+                                onValueChange = { viewModel.setChartCaloriesOrigin(it.toIntOrNull() ?: 0) },
+                                label = { Text(stringResource(R.string.history_toggle_calories)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                textStyle = MaterialTheme.typography.bodySmall
+                            )
+                            OutlinedTextField(
+                                value = if (chartWeightOrigin == 0) "" else chartWeightOrigin.toString(),
+                                onValueChange = { viewModel.setChartWeightOrigin(it.toIntOrNull() ?: 0) },
+                                label = { Text(stringResource(R.string.history_toggle_weight)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                textStyle = MaterialTheme.typography.bodySmall
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))

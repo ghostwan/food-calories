@@ -1,6 +1,7 @@
 package com.ghostwan.snapcal.presentation.history
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,13 +20,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -63,6 +68,8 @@ fun DualAxisChart(
     showCalories: Boolean = true,
     showWeight: Boolean = true,
     showBurned: Boolean = true,
+    caloriesOrigin: Int = 0,
+    weightOrigin: Int = 60,
     modifier: Modifier = Modifier
 ) {
     if (data.isEmpty()) return
@@ -71,6 +78,7 @@ fun DualAxisChart(
 
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
+    var selectedIndex by remember { mutableIntStateOf(-1) }
 
     val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
         scale = (scale * zoomChange).coerceIn(1f, 5f)
@@ -104,6 +112,19 @@ fun DualAxisChart(
                     .fillMaxWidth()
                     .height(220.dp)
                     .clipToBounds()
+                    .pointerInput(data.size, scale, offsetX) {
+                        detectTapGestures { tapOffset ->
+                            val lp = 40.dp.toPx()
+                            val rp = 40.dp.toPx()
+                            val cw = size.width - lp - rp
+                            if (data.size < 2) return@detectTapGestures
+                            val step = cw / (data.size - 1)
+                            // Reverse the transform: screen → data space
+                            val dataX = (tapOffset.x - lp - offsetX) / scale + lp
+                            val idx = ((dataX - lp) / step).toInt().coerceIn(0, data.size - 1)
+                            selectedIndex = if (idx == selectedIndex) -1 else idx
+                        }
+                    }
                     .transformable(state = transformableState)
             ) {
                 val leftPadding = 40.dp.toPx()
@@ -126,17 +147,17 @@ fun DualAxisChart(
                 if (caloriesGoal != null && caloriesGoal > 0) {
                     calMaxRaw = maxOf(calMaxRaw, caloriesGoal.toFloat())
                 }
-                val calMin = 0f
-                val calMax = calMaxRaw * 1.1f
-                val calRange = calMax.coerceAtLeast(100f)
+                val calMin = caloriesOrigin.toFloat()
+                val calMax = maxOf(calMaxRaw * 1.1f, calMin + 100f)
+                val calRange = (calMax - calMin).coerceAtLeast(100f)
 
                 var wMaxRaw = weightValues.maxOrNull() ?: 80f
                 if (targetWeight != null && targetWeight > 0f) {
                     wMaxRaw = maxOf(wMaxRaw, targetWeight)
                 }
-                val wMin = 0f
-                val wMax = wMaxRaw * 1.1f
-                val wRange = wMax.coerceAtLeast(5f)
+                val wMin = weightOrigin.toFloat()
+                val wMax = maxOf(wMaxRaw * 1.1f, wMin + 5f)
+                val wRange = (wMax - wMin).coerceAtLeast(5f)
 
                 // Apply zoom + pan transform for the chart content
                 withTransform({
@@ -332,6 +353,70 @@ fun DualAxisChart(
                             topPadding + chartHeight + 4.dp.toPx()
                         ),
                         style = TextStyle(color = labelColor, fontSize = 9.sp)
+                    )
+                }
+
+                // Selected point tooltip
+                if (selectedIndex in data.indices) {
+                    val step = if (data.size > 1) chartWidth / (data.size - 1) else 0f
+                    val sel = data[selectedIndex]
+                    // X position in screen space (with transform)
+                    val dataX = leftPadding + selectedIndex * step
+                    val screenX = (dataX - leftPadding) * scale + leftPadding + offsetX
+
+                    // Vertical line
+                    drawLine(
+                        color = labelColor.copy(alpha = 0.3f),
+                        start = Offset(screenX, topPadding),
+                        end = Offset(screenX, topPadding + chartHeight),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
+                    )
+
+                    // Highlight circles
+                    if (showCalories && sel.calories != null) {
+                        val y = topPadding + chartHeight * (1f - (sel.calories.toFloat() - calMin) / calRange)
+                        val sy = y // Y not affected by transform
+                        drawCircle(color = CaloriesColor, radius = 6.dp.toPx(), center = Offset(screenX, sy))
+                        drawCircle(color = Color.White, radius = 3.dp.toPx(), center = Offset(screenX, sy))
+                    }
+                    if (showBurned && sel.burnedCalories != null) {
+                        val y = topPadding + chartHeight * (1f - (sel.burnedCalories.toFloat() - calMin) / calRange)
+                        drawCircle(color = BurnedColor, radius = 6.dp.toPx(), center = Offset(screenX, y))
+                        drawCircle(color = Color.White, radius = 3.dp.toPx(), center = Offset(screenX, y))
+                    }
+                    if (showWeight && sel.weight != null) {
+                        val y = topPadding + chartHeight * (1f - (sel.weight - wMin) / wRange)
+                        drawCircle(color = WeightColor, radius = 6.dp.toPx(), center = Offset(screenX, y))
+                        drawCircle(color = Color.White, radius = 3.dp.toPx(), center = Offset(screenX, y))
+                    }
+
+                    // Build tooltip text
+                    val tooltipParts = mutableListOf<String>()
+                    tooltipParts.add(sel.label)
+                    if (showCalories && sel.calories != null) tooltipParts.add("${sel.calories} kcal")
+                    if (showBurned && sel.burnedCalories != null) tooltipParts.add("🔥 ${sel.burnedCalories}")
+                    if (showWeight && sel.weight != null) tooltipParts.add("⚖ ${String.format("%.1f", sel.weight)} kg")
+                    val tooltipText = tooltipParts.joinToString("  ·  ")
+                    val tooltipStyle = TextStyle(fontSize = 10.sp, color = Color.White)
+                    val tooltipMeasured = textMeasurer.measure(tooltipText, tooltipStyle)
+                    val tooltipW = tooltipMeasured.size.width + 16.dp.toPx()
+                    val tooltipH = tooltipMeasured.size.height + 8.dp.toPx()
+                    // Position tooltip centered on point, clamped to chart bounds
+                    val tooltipX = (screenX - tooltipW / 2).coerceIn(0f, size.width - tooltipW)
+                    val tooltipY = (topPadding - tooltipH - 4.dp.toPx()).coerceAtLeast(0f)
+
+                    drawRoundRect(
+                        color = Color(0xCC333333.toInt()),
+                        topLeft = Offset(tooltipX, tooltipY),
+                        size = Size(tooltipW, tooltipH),
+                        cornerRadius = CornerRadius(6.dp.toPx())
+                    )
+                    drawText(
+                        textMeasurer = textMeasurer,
+                        text = tooltipText,
+                        topLeft = Offset(tooltipX + 8.dp.toPx(), tooltipY + 4.dp.toPx()),
+                        style = tooltipStyle
                     )
                 }
             }

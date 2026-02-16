@@ -50,16 +50,67 @@ class HistoryViewModel(
     private val _selectedRange = MutableStateFlow(30)
     val selectedRange: StateFlow<Int> = _selectedRange
 
+    private val _chartCaloriesOrigin = MutableStateFlow(0)
+    val chartCaloriesOrigin: StateFlow<Int> = _chartCaloriesOrigin
+
+    private val _chartWeightOrigin = MutableStateFlow(60)
+    val chartWeightOrigin: StateFlow<Int> = _chartWeightOrigin
+
+    private val _showCalories = MutableStateFlow(true)
+    val showCalories: StateFlow<Boolean> = _showCalories
+
+    private val _showWeight = MutableStateFlow(true)
+    val showWeight: StateFlow<Boolean> = _showWeight
+
+    private val _showBurned = MutableStateFlow(true)
+    val showBurned: StateFlow<Boolean> = _showBurned
+
     private var historyJob: Job? = null
 
     init {
         _goal.value = userProfileRepository.getGoal()
         _profile.value = userProfileRepository.getProfile()
-        loadForRange(30)
+        _chartCaloriesOrigin.value = userProfileRepository.getChartCaloriesOrigin()
+        _chartWeightOrigin.value = userProfileRepository.getChartWeightOrigin()
+        _showCalories.value = userProfileRepository.getChartShowCalories()
+        _showWeight.value = userProfileRepository.getChartShowWeight()
+        _showBurned.value = userProfileRepository.getChartShowBurned()
+        val savedRange = userProfileRepository.getChartRange()
+        _selectedRange.value = savedRange
+        loadForRange(savedRange)
+    }
+
+    fun setChartCaloriesOrigin(value: Int) {
+        _chartCaloriesOrigin.value = value
+        userProfileRepository.setChartCaloriesOrigin(value)
+    }
+
+    fun setChartWeightOrigin(value: Int) {
+        _chartWeightOrigin.value = value
+        userProfileRepository.setChartWeightOrigin(value)
+    }
+
+    fun toggleShowCalories() {
+        val v = !_showCalories.value
+        _showCalories.value = v
+        userProfileRepository.setChartShowCalories(v)
+    }
+
+    fun toggleShowWeight() {
+        val v = !_showWeight.value
+        _showWeight.value = v
+        userProfileRepository.setChartShowWeight(v)
+    }
+
+    fun toggleShowBurned() {
+        val v = !_showBurned.value
+        _showBurned.value = v
+        userProfileRepository.setChartShowBurned(v)
     }
 
     fun setRange(days: Int) {
         _selectedRange.value = days
+        userProfileRepository.setChartRange(days)
         loadForRange(days)
     }
 

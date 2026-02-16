@@ -90,6 +90,27 @@ class UserProfileRepositoryImpl(
         }
     }
 
+    override fun getChartCaloriesOrigin(): Int = prefs.getInt("chart_calories_origin", 0)
+
+    override fun setChartCaloriesOrigin(value: Int) {
+        prefs.edit().putInt("chart_calories_origin", value).apply()
+    }
+
+    override fun getChartWeightOrigin(): Int = prefs.getInt("chart_weight_origin", 60)
+
+    override fun setChartWeightOrigin(value: Int) {
+        prefs.edit().putInt("chart_weight_origin", value).apply()
+    }
+
+    override fun getChartShowCalories(): Boolean = prefs.getBoolean("chart_show_calories", true)
+    override fun setChartShowCalories(value: Boolean) { prefs.edit().putBoolean("chart_show_calories", value).apply() }
+    override fun getChartShowWeight(): Boolean = prefs.getBoolean("chart_show_weight", true)
+    override fun setChartShowWeight(value: Boolean) { prefs.edit().putBoolean("chart_show_weight", value).apply() }
+    override fun getChartShowBurned(): Boolean = prefs.getBoolean("chart_show_burned", true)
+    override fun setChartShowBurned(value: Boolean) { prefs.edit().putBoolean("chart_show_burned", value).apply() }
+    override fun getChartRange(): Int = prefs.getInt("chart_range", 30)
+    override fun setChartRange(value: Int) { prefs.edit().putInt("chart_range", value).apply() }
+
     private fun daysAgoDate(days: Int): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -days)

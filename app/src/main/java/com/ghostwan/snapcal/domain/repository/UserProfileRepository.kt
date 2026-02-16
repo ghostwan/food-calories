@@ -12,4 +12,16 @@ interface UserProfileRepository {
     suspend fun saveWeightRecord(record: WeightRecord)
     suspend fun getLatestWeight(): WeightRecord?
     suspend fun getWeightHistory(days: Int = 90): List<WeightRecord>
+    fun getChartCaloriesOrigin(): Int
+    fun setChartCaloriesOrigin(value: Int)
+    fun getChartWeightOrigin(): Int
+    fun setChartWeightOrigin(value: Int)
+    fun getChartShowCalories(): Boolean
+    fun setChartShowCalories(value: Boolean)
+    fun getChartShowWeight(): Boolean
+    fun setChartShowWeight(value: Boolean)
+    fun getChartShowBurned(): Boolean
+    fun setChartShowBurned(value: Boolean)
+    fun getChartRange(): Int
+    fun setChartRange(value: Int)
 }
