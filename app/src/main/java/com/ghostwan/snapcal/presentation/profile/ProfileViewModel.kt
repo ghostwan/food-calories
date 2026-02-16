@@ -9,7 +9,6 @@ import com.ghostwan.snapcal.data.local.MealReminderManager
 import com.ghostwan.snapcal.data.remote.BackupInfo
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
-import com.google.android.gms.auth.UserRecoverableAuthException
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
@@ -98,8 +97,11 @@ class ProfileViewModel(
     private val _googleAuthForGemini = MutableStateFlow(false)
     val googleAuthForGemini: StateFlow<Boolean> = _googleAuthForGemini
 
-    private val _geminiConsentIntent = MutableStateFlow<Intent?>(null)
-    val geminiConsentIntent: StateFlow<Intent?> = _geminiConsentIntent
+    private val _geminiAuthUrl = MutableStateFlow<String?>(null)
+    val geminiAuthUrl: StateFlow<String?> = _geminiAuthUrl
+
+    private val _isAuthenticatingGemini = MutableStateFlow(false)
+    val isAuthenticatingGemini: StateFlow<Boolean> = _isAuthenticatingGemini
 
     init {
         loadProfile()
@@ -155,6 +157,7 @@ class ProfileViewModel(
             _signedInEmail.value = null
             _googleAuthForGemini.value = false
             settingsRepository.setGoogleAuthForGemini(false)
+            _backupInfo.value = null
         }
     }
 
@@ -321,33 +324,42 @@ class ProfileViewModel(
 
     fun toggleGoogleAuthForGemini(enabled: Boolean) {
         if (enabled) {
-            viewModelScope.launch {
-                try {
-                    val token = googleAuthManager.getGeminiAccessToken()
-                    if (token != null) {
-                        _googleAuthForGemini.value = true
-                        settingsRepository.setGoogleAuthForGemini(true)
-                    } else {
-                        _error.value = "Google auth not available"
-                    }
-                } catch (e: UserRecoverableAuthException) {
-                    _geminiConsentIntent.value = e.intent
-                } catch (e: Exception) {
-                    _error.value = e.message
-                }
-            }
+            val url = googleAuthManager.buildGeminiAuthUrl()
+            _geminiAuthUrl.value = url
         } else {
+            googleAuthManager.clearGeminiTokens()
             _googleAuthForGemini.value = false
             settingsRepository.setGoogleAuthForGemini(false)
         }
     }
 
-    fun handleGeminiConsentResult(success: Boolean) {
-        _geminiConsentIntent.value = null
-        if (success) {
-            _googleAuthForGemini.value = true
-            settingsRepository.setGoogleAuthForGemini(true)
+    fun onGeminiAuthCodeReceived(code: String) {
+        _geminiAuthUrl.value = null
+        _isAuthenticatingGemini.value = true
+        viewModelScope.launch {
+            try {
+                val success = googleAuthManager.exchangeGeminiCode(code)
+                if (success) {
+                    _googleAuthForGemini.value = true
+                    settingsRepository.setGoogleAuthForGemini(true)
+                } else {
+                    _error.value = "Google auth failed"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isAuthenticatingGemini.value = false
+            }
         }
+    }
+
+    fun onGeminiAuthError(error: String) {
+        _geminiAuthUrl.value = null
+        _error.value = error
+    }
+
+    fun cancelGeminiAuth() {
+        _geminiAuthUrl.value = null
     }
 
     fun clearSaved() { _saved.value = false }
