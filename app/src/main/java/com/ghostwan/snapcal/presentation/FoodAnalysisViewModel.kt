@@ -11,6 +11,7 @@ import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.Ingredient
 import com.ghostwan.snapcal.domain.model.Macros
 import com.ghostwan.snapcal.domain.model.MealEntry
+import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UsageRepository
 import com.ghostwan.snapcal.domain.usecase.AnalyzeFoodUseCase
@@ -29,7 +30,8 @@ class FoodAnalysisViewModel(
     private val correctAnalysisUseCase: CorrectAnalysisUseCase,
     private val settingsRepository: SettingsRepository,
     private val usageRepository: UsageRepository,
-    private val saveMealUseCase: SaveMealUseCase
+    private val saveMealUseCase: SaveMealUseCase,
+    private val mealRepository: MealRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Idle)
@@ -40,6 +42,9 @@ class FoodAnalysisViewModel(
 
     private val _readOnly = MutableStateFlow(false)
     val readOnly: StateFlow<Boolean> = _readOnly
+
+    private val _isFavorite = MutableStateFlow(false)
+    val isFavorite: StateFlow<Boolean> = _isFavorite
 
     private var lastImageData: ByteArray? = null
     private var editingMealId: Long? = null
@@ -172,15 +177,51 @@ class FoodAnalysisViewModel(
         _uiState.value = AnalysisUiState.Success(analysis)
         _mealSaved.value = false
         _readOnly.value = true
+        _isFavorite.value = meal.isFavorite
         editingMealId = meal.id
         editingMealDate = meal.date
         lastImageData = null
+    }
+
+    fun removeIngredient(index: Int) {
+        val current = _uiState.value
+        if (current is AnalysisUiState.Success) {
+            val result = current.result
+            val newIngredients = result.ingredients.toMutableList().apply { removeAt(index) }
+            val newCalories = newIngredients.sumOf { it.calories }
+            _uiState.value = AnalysisUiState.Success(
+                result.copy(ingredients = newIngredients, totalCalories = newCalories)
+            )
+        }
+    }
+
+    fun updateIngredient(index: Int, newQuantity: String, newCalories: Int) {
+        val current = _uiState.value
+        if (current is AnalysisUiState.Success) {
+            val result = current.result
+            val newIngredients = result.ingredients.toMutableList().apply {
+                set(index, get(index).copy(quantity = newQuantity, calories = newCalories))
+            }
+            val newTotalCalories = newIngredients.sumOf { it.calories }
+            _uiState.value = AnalysisUiState.Success(
+                result.copy(ingredients = newIngredients, totalCalories = newTotalCalories)
+            )
+        }
     }
 
     fun updateEmoji(emoji: String) {
         val current = _uiState.value
         if (current is AnalysisUiState.Success) {
             _uiState.value = AnalysisUiState.Success(current.result.copy(emoji = emoji))
+        }
+    }
+
+    fun toggleFavorite() {
+        val mealId = editingMealId ?: return
+        val newValue = !_isFavorite.value
+        _isFavorite.value = newValue
+        viewModelScope.launch {
+            mealRepository.setFavorite(mealId, newValue)
         }
     }
 
@@ -194,6 +235,7 @@ class FoodAnalysisViewModel(
         _uiState.value = AnalysisUiState.Idle
         _mealSaved.value = false
         _readOnly.value = false
+        _isFavorite.value = false
         editingMealId = null
         editingMealDate = null
         lastImageData = null
@@ -238,7 +280,8 @@ class FoodAnalysisViewModel(
             correctAnalysisUseCase: CorrectAnalysisUseCase,
             settingsRepository: SettingsRepository,
             usageRepository: UsageRepository,
-            saveMealUseCase: SaveMealUseCase
+            saveMealUseCase: SaveMealUseCase,
+            mealRepository: MealRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -247,7 +290,8 @@ class FoodAnalysisViewModel(
                     correctAnalysisUseCase,
                     settingsRepository,
                     usageRepository,
-                    saveMealUseCase
+                    saveMealUseCase,
+                    mealRepository
                 ) as T
             }
         }

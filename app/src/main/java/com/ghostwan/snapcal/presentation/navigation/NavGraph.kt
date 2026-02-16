@@ -69,7 +69,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             correctAnalysisUseCase = app.correctAnalysisUseCase,
             settingsRepository = app.settingsRepository,
             usageRepository = app.usageRepository,
-            saveMealUseCase = app.saveMealUseCase
+            saveMealUseCase = app.saveMealUseCase,
+            mealRepository = app.mealRepository
         )
     )
 

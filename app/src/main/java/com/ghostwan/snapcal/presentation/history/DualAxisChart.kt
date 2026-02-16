@@ -120,29 +120,23 @@ fun DualAxisChart(
 
                 if (caloriesValues.isEmpty() && weightValues.isEmpty() && burnedValues.isEmpty()) return@Canvas
 
-                // Calculate ranges — include goals and burned so they're always visible
+                // Calculate ranges — start at zero, include goals and burned
                 val allCalValues = caloriesValues + burnedValues
-                var calMinRaw = (allCalValues.minOrNull() ?: 0).toFloat()
                 var calMaxRaw = (allCalValues.maxOrNull() ?: 2500).toFloat()
                 if (caloriesGoal != null && caloriesGoal > 0) {
-                    calMinRaw = minOf(calMinRaw, caloriesGoal.toFloat())
                     calMaxRaw = maxOf(calMaxRaw, caloriesGoal.toFloat())
                 }
-                val calPadding = (calMaxRaw - calMinRaw).coerceAtLeast(100f) * 0.15f
-                val calMin = calMinRaw - calPadding
-                val calMax = calMaxRaw + calPadding
-                val calRange = (calMax - calMin).coerceAtLeast(100f)
+                val calMin = 0f
+                val calMax = calMaxRaw * 1.1f
+                val calRange = calMax.coerceAtLeast(100f)
 
-                var wMinRaw = weightValues.minOrNull() ?: 60f
                 var wMaxRaw = weightValues.maxOrNull() ?: 80f
                 if (targetWeight != null && targetWeight > 0f) {
-                    wMinRaw = minOf(wMinRaw, targetWeight)
                     wMaxRaw = maxOf(wMaxRaw, targetWeight)
                 }
-                val wPadding = (wMaxRaw - wMinRaw).coerceAtLeast(2f) * 0.2f
-                val wMin = wMinRaw - wPadding
-                val wMax = wMaxRaw + wPadding
-                val wRange = (wMax - wMin).coerceAtLeast(5f)
+                val wMin = 0f
+                val wMax = wMaxRaw * 1.1f
+                val wRange = wMax.coerceAtLeast(5f)
 
                 // Apply zoom + pan transform for the chart content
                 withTransform({

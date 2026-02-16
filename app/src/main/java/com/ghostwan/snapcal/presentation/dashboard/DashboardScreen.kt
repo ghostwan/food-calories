@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,10 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -161,8 +158,7 @@ fun DashboardScreen(
                         meal = meal,
                         onClick = { onMealClick(meal) },
                         onDelete = { viewModel.deleteMeal(meal.id) },
-                        onToggleFavorite = { viewModel.toggleFavorite(meal) },
-                        onEmojiChange = { emoji -> viewModel.updateMealEmoji(meal.id, emoji) }
+                        onToggleFavorite = { viewModel.toggleFavorite(meal) }
                     )
                 }
             }
@@ -375,23 +371,8 @@ private fun MealCard(
     meal: MealEntry,
     onClick: () -> Unit,
     onDelete: () -> Unit,
-    onToggleFavorite: () -> Unit,
-    onEmojiChange: (String) -> Unit = {}
+    onToggleFavorite: () -> Unit
 ) {
-    var showEmojiPicker by remember { mutableStateOf(false) }
-
-    if (showEmojiPicker) {
-        EmojiPickerDialog(
-            dishName = meal.dishName,
-            currentEmoji = meal.emoji ?: "🍽️",
-            onEmojiSelected = { emoji ->
-                onEmojiChange(emoji)
-                showEmojiPicker = false
-            },
-            onDismiss = { showEmojiPicker = false }
-        )
-    }
-
     val healthInfo = remember(meal.ingredientsJson) {
         computeHealthInfo(meal.ingredientsJson)
     }
@@ -424,9 +405,7 @@ private fun MealCard(
                 Text(
                     text = meal.emoji ?: "🍽️",
                     style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier
-                        .padding(end = 12.dp)
-                        .clickable { showEmojiPicker = true }
+                    modifier = Modifier.padding(end = 12.dp)
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -465,93 +444,6 @@ private fun MealCard(
             }
         }
     }
-}
-
-@Composable
-private fun EmojiPickerDialog(
-    dishName: String,
-    currentEmoji: String,
-    onEmojiSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var emojiText by remember { mutableStateOf(currentEmoji) }
-    val suggestions = listOf("🍕", "🥗", "🍣", "🍔", "🥩", "🍝", "🍲", "🥘", "🍜", "🍱", "🍛", "🥐", "🍰", "🍎", "🥤")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.emoji_picker_title)) },
-        text = {
-            Column {
-                Text(
-                    text = dishName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = emojiText,
-                    onValueChange = { newValue ->
-                        // Allow up to 12 chars to support complex emojis (ZWJ sequences, skin tones)
-                        if (newValue.length <= 12) emojiText = newValue
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.headlineMedium
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    suggestions.take(5).forEach { emoji ->
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { emojiText = emoji }
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    suggestions.drop(5).take(5).forEach { emoji ->
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { emojiText = emoji }
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    suggestions.drop(10).forEach { emoji ->
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { emojiText = emoji }
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { if (emojiText.isNotBlank()) onEmojiSelected(emojiText) }
-            ) {
-                Text(stringResource(R.string.dialog_button_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_button_cancel))
-            }
-        }
-    )
 }
 
 private data class HealthInfo(val emoji: String, val color: Color)

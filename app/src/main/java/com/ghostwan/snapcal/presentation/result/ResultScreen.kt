@@ -18,16 +18,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -61,6 +68,7 @@ import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.Ingredient
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.model.AnalysisUiState
+import androidx.compose.ui.text.input.KeyboardType
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +81,8 @@ fun ResultScreen(
     val uiState by viewModel.uiState.collectAsState()
     val mealSaved by viewModel.mealSaved.collectAsState()
     val readOnly by viewModel.readOnly.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
+    val isEditing = viewModel.isEditing()
 
     androidx.compose.runtime.LaunchedEffect(mealSaved) {
         if (mealSaved) {
@@ -91,6 +101,17 @@ fun ResultScreen(
                             contentDescription = stringResource(R.string.result_back)
                         )
                     }
+                },
+                actions = {
+                    if (isEditing) {
+                        IconButton(onClick = { viewModel.toggleFavorite() }) {
+                            Icon(
+                                if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                                contentDescription = stringResource(R.string.dashboard_toggle_favorite),
+                                tint = if (isFavorite) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             )
         }
@@ -107,10 +128,12 @@ fun ResultScreen(
                     result = state.result,
                     mealSaved = mealSaved,
                     readOnly = readOnly,
-                    isEditing = viewModel.isEditing(),
+                    isEditing = isEditing,
                     onSave = { viewModel.saveMeal(state.result) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
-                    onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) }
+                    onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) },
+                    onRemoveIngredient = { index -> viewModel.removeIngredient(index) },
+                    onUpdateIngredient = { index, qty, cal -> viewModel.updateIngredient(index, qty, cal) }
                 )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
@@ -146,9 +169,12 @@ private fun SuccessContent(
     isEditing: Boolean = false,
     onSave: () -> Unit,
     onCorrect: (String) -> Unit,
-    onEmojiChange: (String) -> Unit = {}
+    onEmojiChange: (String) -> Unit = {},
+    onRemoveIngredient: (Int) -> Unit = {},
+    onUpdateIngredient: (Int, String, Int) -> Unit = { _, _, _ -> }
 ) {
     var showEmojiPicker by remember { mutableStateOf(false) }
+    var editingIngredientIndex by remember { mutableStateOf<Int?>(null) }
 
     if (showEmojiPicker) {
         EmojiPickerDialog(
@@ -160,6 +186,19 @@ private fun SuccessContent(
             },
             onDismiss = { showEmojiPicker = false }
         )
+    }
+
+    editingIngredientIndex?.let { index ->
+        if (index < result.ingredients.size) {
+            IngredientEditDialog(
+                ingredient = result.ingredients[index],
+                onConfirm = { newQuantity, newCalories ->
+                    onUpdateIngredient(index, newQuantity, newCalories)
+                    editingIngredientIndex = null
+                },
+                onDismiss = { editingIngredientIndex = null }
+            )
+        }
     }
 
     LazyColumn(
@@ -199,8 +238,13 @@ private fun SuccessContent(
             )
         }
 
-        items(result.ingredients) { ingredient ->
-            IngredientCard(ingredient)
+        itemsIndexed(result.ingredients) { index, ingredient ->
+            IngredientCard(
+                ingredient = ingredient,
+                editable = !readOnly,
+                onEdit = { editingIngredientIndex = index },
+                onDelete = { onRemoveIngredient(index) }
+            )
         }
 
         if (result.notes != null) {
@@ -419,7 +463,12 @@ private fun NotesCard(notes: String) {
 }
 
 @Composable
-private fun IngredientCard(ingredient: Ingredient) {
+private fun IngredientCard(
+    ingredient: Ingredient,
+    editable: Boolean = false,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
+) {
     val healthColor = when (ingredient.healthRating) {
         "healthy" -> Color(0xFF4CAF50)
         "moderate" -> Color(0xFFFF9800)
@@ -433,7 +482,10 @@ private fun IngredientCard(ingredient: Ingredient) {
         else -> null
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = if (editable) onEdit else ({})
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -451,7 +503,7 @@ private fun IngredientCard(ingredient: Ingredient) {
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(16.dp),
+                    .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = if (editable) 4.dp else 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -483,8 +535,96 @@ private fun IngredientCard(ingredient: Ingredient) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            if (editable) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+            }
         }
     }
+}
+
+private fun parseNumericValue(text: String): Float? {
+    return text.replace(Regex("[^0-9.,]"), "")
+        .replace(",", ".")
+        .toFloatOrNull()
+}
+
+@Composable
+private fun IngredientEditDialog(
+    ingredient: Ingredient,
+    onConfirm: (String, Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val originalNumeric = remember { parseNumericValue(ingredient.quantity) }
+    var quantity by remember { mutableStateOf(ingredient.quantity) }
+    var calories by remember { mutableStateOf(ingredient.calories.toString()) }
+    var caloriesManuallyEdited by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.ingredient_edit_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = ingredient.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { newQuantity ->
+                        quantity = newQuantity
+                        if (!caloriesManuallyEdited && originalNumeric != null && originalNumeric > 0f) {
+                            val newNumeric = parseNumericValue(newQuantity)
+                            if (newNumeric != null) {
+                                val ratio = newNumeric / originalNumeric
+                                calories = (ingredient.calories * ratio).toInt().toString()
+                            }
+                        }
+                    },
+                    label = { Text(stringResource(R.string.ingredient_quantity_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = calories,
+                    onValueChange = {
+                        calories = it
+                        caloriesManuallyEdited = true
+                    },
+                    label = { Text(stringResource(R.string.ingredient_calories_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val cal = calories.toIntOrNull() ?: ingredient.calories
+                    onConfirm(quantity, cal)
+                }
+            ) {
+                Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
 }
 
 @Composable

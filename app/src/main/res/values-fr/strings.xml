@@ -157,6 +157,12 @@
     <string name="reminder_lunch_message">N\'oubliez pas de noter votre déjeuner !</string>
     <string name="reminder_dinner_message">N\'oubliez pas de noter votre dîner !</string>
 
+    <!-- Ingredient Edit -->
+    <string name="ingredient_edit_title">Modifier l\'ingrédient</string>
+    <string name="ingredient_quantity_label">Quantité</string>
+    <string name="ingredient_calories_label">Calories</string>
+    <string name="ingredient_delete_confirm">Retirer \"%s\" de la liste ?</string>
+
     <!-- Emoji Picker -->
     <string name="emoji_picker_title">Choisir un emoji</string>
 
