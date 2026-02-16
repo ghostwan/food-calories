@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_background"
-    android:padding="8dp"
+    android:background="@drawable/widget_shopping_background"
+    android:padding="12dp"
     android:id="@+id/widget_shopping_root">
 
     <TextView
@@ -12,16 +12,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/shopping_list_title"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="#333333"
-        android:padding="8dp" />
+        android:textColor="#DE000000"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="8dp" />
 
     <ListView
         android:id="@+id/widget_shopping_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:divider="@null"
-        android:dividerHeight="0dp" />
+        android:dividerHeight="4dp" />
 
 </LinearLayout>
