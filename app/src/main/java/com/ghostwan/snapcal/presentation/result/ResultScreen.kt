@@ -370,35 +370,56 @@ private fun CaloriesCard(totalCalories: Int, ingredients: List<Ingredient> = emp
         else -> null
     }
 
+    val healthColor = when (overallRating) {
+        "healthy" -> Color(0xFF4CAF50)
+        "moderate" -> Color(0xFFFF9800)
+        "unhealthy" -> Color(0xFFF44336)
+        else -> null
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.result_total_calories),
-                    style = MaterialTheme.typography.titleMedium
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            if (healthColor != null) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .background(healthColor, RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
                 )
-                if (healthEmoji != null) {
-                    Text(
-                        text = healthEmoji,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }
             }
-            Text(
-                text = stringResource(R.string.result_kcal, totalCalories),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.result_total_calories),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    if (healthEmoji != null) {
+                        Text(
+                            text = healthEmoji,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.result_kcal, totalCalories),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
