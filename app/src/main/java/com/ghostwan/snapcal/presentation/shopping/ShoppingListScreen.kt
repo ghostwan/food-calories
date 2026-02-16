@@ -93,8 +93,14 @@ fun ShoppingListScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // Input bar at the top
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -136,35 +142,33 @@ fun ShoppingListScreen(
                     )
                 }
             }
-        }
-    ) { padding ->
-        if (items.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.shopping_list_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(items, key = { it.id }) { item ->
-                    ShoppingItemCard(
-                        item = item,
-                        onToggle = { viewModel.toggleChecked(item) },
-                        onDelete = { viewModel.deleteItem(item.id) }
+
+            if (items.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.shopping_list_empty),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(items, key = { it.id }) { item ->
+                        ShoppingItemCard(
+                            item = item,
+                            onToggle = { viewModel.toggleChecked(item) },
+                            onDelete = { viewModel.deleteItem(item.id) }
+                        )
+                    }
                 }
             }
         }
