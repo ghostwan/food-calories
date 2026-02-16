@@ -3,6 +3,7 @@ package com.ghostwan.snapcal.data.remote
 import android.content.Context
 import android.content.Intent
 import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -41,14 +42,15 @@ class GoogleAuthManager(private val context: Context) {
         return task.getResult(Exception::class.java)
     }
 
+    /**
+     * Get a Gemini access token. Throws [UserRecoverableAuthException] if consent is needed.
+     * Returns null only if no account is signed in.
+     */
+    @Throws(UserRecoverableAuthException::class)
     suspend fun getGeminiAccessToken(): String? {
         val account = getSignedInAccount() ?: return null
         return withContext(Dispatchers.IO) {
-            try {
-                GoogleAuthUtil.getToken(context, account.account!!, "oauth2:$GEMINI_SCOPE")
-            } catch (_: Exception) {
-                null
-            }
+            GoogleAuthUtil.getToken(context, account.account!!, "oauth2:$GEMINI_SCOPE")
         }
     }
 

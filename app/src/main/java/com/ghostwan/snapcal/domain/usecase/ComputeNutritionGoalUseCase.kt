@@ -15,8 +15,12 @@ class ComputeNutritionGoalUseCase(
 ) {
     private suspend fun resolveAuth(): GeminiAuth {
         if (settingsRepository.isGoogleAuthForGemini() && googleAuthManager.isSignedIn()) {
-            val token = googleAuthManager.getGeminiAccessToken()
-            if (token != null) return GeminiAuth.OAuth(token)
+            try {
+                val token = googleAuthManager.getGeminiAccessToken()
+                if (token != null) return GeminiAuth.OAuth(token)
+            } catch (_: Exception) {
+                // Consent not granted or other error, fallback to API key
+            }
         }
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) {

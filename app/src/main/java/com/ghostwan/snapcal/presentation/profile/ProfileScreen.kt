@@ -124,6 +124,17 @@ fun ProfileScreen(
         viewModel.handleSignInResult(result.data)
     }
 
+    val geminiConsentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        viewModel.handleGeminiConsentResult(result.resultCode == android.app.Activity.RESULT_OK)
+    }
+
+    val geminiConsentIntent by viewModel.geminiConsentIntent.collectAsState()
+    LaunchedEffect(geminiConsentIntent) {
+        geminiConsentIntent?.let { geminiConsentLauncher.launch(it) }
+    }
+
     LaunchedEffect(saved) {
         if (saved) {
             snackbarHostState.showSnackbar(savedMessage)
