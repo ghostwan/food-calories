@@ -21,7 +21,7 @@ class GoogleAuthManager(private val context: Context) {
     private val signInClient: GoogleSignInClient by lazy {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestScopes(Scope(DriveScopes.DRIVE_APPDATA), Scope(GEMINI_SCOPE))
+            .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
             .build()
         GoogleSignIn.getClient(context, gso)
     }
