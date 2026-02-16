@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,7 +36,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -79,14 +78,15 @@ fun DualAxisChart(
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var selectedIndex by remember { mutableIntStateOf(-1) }
+    var chartWidthPx by remember { mutableFloatStateOf(0f) }
 
     val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
         scale = (scale * zoomChange).coerceIn(1f, 5f)
-        if (scale > 1f) {
-            offsetX = (offsetX + panChange.x).coerceIn(
-                -(scale - 1f) * 500f,
-                0f
-            )
+        if (scale > 1f && chartWidthPx > 0f && data.size > 1) {
+            val baseStep = chartWidthPx / (data.size - 1)
+            val totalScaledWidth = (data.size - 1) * baseStep * scale
+            val minOffset = -(totalScaledWidth - chartWidthPx).coerceAtLeast(0f)
+            offsetX = (offsetX + panChange.x).coerceIn(minOffset, 0f)
         } else {
             offsetX = 0f
         }
@@ -118,10 +118,10 @@ fun DualAxisChart(
                             val rp = 40.dp.toPx()
                             val cw = size.width - lp - rp
                             if (data.size < 2) return@detectTapGestures
-                            val step = cw / (data.size - 1)
-                            // Reverse the transform: screen → data space
-                            val dataX = (tapOffset.x - lp - offsetX) / scale + lp
-                            val idx = ((dataX - lp) / step).toInt().coerceIn(0, data.size - 1)
+                            val baseStep = cw / (data.size - 1)
+                            val sStep = baseStep * scale
+                            val tapDataX = tapOffset.x - lp - offsetX
+                            val idx = (tapDataX / sStep + 0.5f).toInt().coerceIn(0, data.size - 1)
                             selectedIndex = if (idx == selectedIndex) -1 else idx
                         }
                     }
@@ -134,6 +134,10 @@ fun DualAxisChart(
 
                 val chartWidth = size.width - leftPadding - rightPadding
                 val chartHeight = size.height - topPadding - bottomPadding
+                chartWidthPx = chartWidth
+
+                val step = if (data.size > 1) chartWidth / (data.size - 1) else 0f
+                val scaledStep = step * scale
 
                 val caloriesValues = if (showCalories) data.mapNotNull { it.calories } else emptyList()
                 val weightValues = if (showWeight) data.mapNotNull { it.weight } else emptyList()
@@ -141,7 +145,7 @@ fun DualAxisChart(
 
                 if (caloriesValues.isEmpty() && weightValues.isEmpty() && burnedValues.isEmpty()) return@Canvas
 
-                // Calculate ranges — start at zero, include goals and burned
+                // Calculate ranges — include goals and burned
                 val allCalValues = caloriesValues + burnedValues
                 var calMaxRaw = (allCalValues.maxOrNull() ?: 2500).toFloat()
                 if (caloriesGoal != null && caloriesGoal > 0) {
@@ -159,37 +163,30 @@ fun DualAxisChart(
                 val wMax = maxOf(wMaxRaw * 1.1f, wMin + 5f)
                 val wRange = (wMax - wMin).coerceAtLeast(5f)
 
-                // Apply zoom + pan transform for the chart content
-                withTransform({
-                    clipRect(leftPadding, 0f, leftPadding + chartWidth, size.height)
-                    translate(left = offsetX)
-                    scale(scaleX = scale, scaleY = 1f, pivot = Offset(leftPadding, 0f))
-                }) {
-                    // Draw calories goal line
-                    if (showCalories && caloriesGoal != null && caloriesGoal > 0) {
-                        val goalY = topPadding + chartHeight * (1f - (caloriesGoal - calMin) / calRange)
-                        drawLine(
-                            color = CaloriesGoalColor,
-                            start = Offset(leftPadding, goalY),
-                            end = Offset(leftPadding + chartWidth, goalY),
-                            strokeWidth = 1.5.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
-                        )
-                    }
+                // Draw goal lines (fixed, not affected by zoom)
+                if (showCalories && caloriesGoal != null && caloriesGoal > 0) {
+                    val goalY = topPadding + chartHeight * (1f - (caloriesGoal - calMin) / calRange)
+                    drawLine(
+                        color = CaloriesGoalColor,
+                        start = Offset(leftPadding, goalY),
+                        end = Offset(leftPadding + chartWidth, goalY),
+                        strokeWidth = 1.5.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+                    )
+                }
+                if (showWeight && targetWeight != null && targetWeight > 0f) {
+                    val targetY = topPadding + chartHeight * (1f - (targetWeight - wMin) / wRange)
+                    drawLine(
+                        color = WeightGoalColor,
+                        start = Offset(leftPadding, targetY),
+                        end = Offset(leftPadding + chartWidth, targetY),
+                        strokeWidth = 1.5.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
+                    )
+                }
 
-                    // Draw target weight line
-                    if (showWeight && targetWeight != null && targetWeight > 0f) {
-                        val targetY = topPadding + chartHeight * (1f - (targetWeight - wMin) / wRange)
-                        drawLine(
-                            color = WeightGoalColor,
-                            start = Offset(leftPadding, targetY),
-                            end = Offset(leftPadding + chartWidth, targetY),
-                            strokeWidth = 1.5.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
-                        )
-                    }
-
-                    // Draw calories curve
+                // Draw curves clipped to chart area
+                clipRect(leftPadding, 0f, leftPadding + chartWidth, size.height) {
                     if (showCalories) {
                         drawCurve(
                             data = data,
@@ -199,12 +196,11 @@ fun DualAxisChart(
                             range = calRange,
                             leftPadding = leftPadding,
                             topPadding = topPadding,
-                            chartWidth = chartWidth,
+                            scaledStep = scaledStep,
+                            panOffsetX = offsetX,
                             chartHeight = chartHeight
                         )
                     }
-
-                    // Draw burned calories curve
                     if (showBurned) {
                         drawCurve(
                             data = data,
@@ -214,12 +210,11 @@ fun DualAxisChart(
                             range = calRange,
                             leftPadding = leftPadding,
                             topPadding = topPadding,
-                            chartWidth = chartWidth,
+                            scaledStep = scaledStep,
+                            panOffsetX = offsetX,
                             chartHeight = chartHeight
                         )
                     }
-
-                    // Draw weight curve
                     if (showWeight) {
                         drawCurve(
                             data = data,
@@ -229,13 +224,14 @@ fun DualAxisChart(
                             range = wRange,
                             leftPadding = leftPadding,
                             topPadding = topPadding,
-                            chartWidth = chartWidth,
+                            scaledStep = scaledStep,
+                            panOffsetX = offsetX,
                             chartHeight = chartHeight
                         )
                     }
                 }
 
-                // Draw axis labels (outside transform so they stay fixed)
+                // Draw axis labels (fixed position, outside chart area)
                 val axisLabelStyle = TextStyle(fontSize = 9.sp)
                 val calMaxLabel = "${calMax.toInt()}"
                 val calMidLabel = "${((calMax + calMin) / 2).toInt()}"
@@ -286,58 +282,40 @@ fun DualAxisChart(
                     style = axisLabelStyle.copy(color = WeightColor)
                 )
 
-                // Draw date labels (first, middle, last + next day)
+                // Date labels (move with zoom/pan)
                 if (data.size >= 2) {
                     val dateLabelY = topPadding + chartHeight + 4.dp.toPx()
                     val dateLabelStyle = TextStyle(color = labelColor, fontSize = 9.sp)
 
-                    // First date
-                    drawText(
-                        textMeasurer = textMeasurer,
-                        text = data.first().label,
-                        topLeft = Offset(leftPadding, dateLabelY),
-                        style = dateLabelStyle
-                    )
+                    val approxLabelWidth = 35.dp.toPx()
+                    val maxLabels = (chartWidth / approxLabelWidth).toInt().coerceAtLeast(2)
+                    val labelInterval = maxOf(1, data.size / maxLabels)
 
-                    // Middle date
-                    if (data.size >= 5) {
-                        val midIndex = data.size / 2
-                        val midLabel = data[midIndex].label
-                        val midMeasured = textMeasurer.measure(midLabel, dateLabelStyle)
-                        val midX = leftPadding + midIndex * (chartWidth / (data.size - 1))
+                    for (i in data.indices step labelInterval) {
+                        val x = leftPadding + i * scaledStep + offsetX
+                        if (x < leftPadding - 20.dp.toPx() || x > leftPadding + chartWidth + 20.dp.toPx()) continue
+                        val label = data[i].label
+                        val measured = textMeasurer.measure(label, dateLabelStyle)
                         drawText(
                             textMeasurer = textMeasurer,
-                            text = midLabel,
-                            topLeft = Offset(midX - midMeasured.size.width / 2, dateLabelY),
+                            text = label,
+                            topLeft = Offset(x - measured.size.width / 2, dateLabelY),
                             style = dateLabelStyle
                         )
                     }
-
-                    // Last date
-                    val lastLabel = data.last().label
-                    val lastMeasured = textMeasurer.measure(lastLabel, dateLabelStyle)
-                    drawText(
-                        textMeasurer = textMeasurer,
-                        text = lastLabel,
-                        topLeft = Offset(
-                            leftPadding + chartWidth - lastMeasured.size.width,
-                            dateLabelY
-                        ),
-                        style = dateLabelStyle
-                    )
-
-                    // Next day label (right edge, faded)
-                    if (nextDateLabel != null) {
-                        val nextMeasured = textMeasurer.measure(nextDateLabel, dateLabelStyle)
-                        drawText(
-                            textMeasurer = textMeasurer,
-                            text = nextDateLabel,
-                            topLeft = Offset(
-                                size.width - nextMeasured.size.width,
-                                dateLabelY
-                            ),
-                            style = TextStyle(color = labelColor.copy(alpha = 0.5f), fontSize = 9.sp)
-                        )
+                    // Always show last label if visible and not already drawn
+                    if ((data.size - 1) % labelInterval != 0) {
+                        val lastX = leftPadding + (data.size - 1) * scaledStep + offsetX
+                        if (lastX >= leftPadding && lastX <= leftPadding + chartWidth + 20.dp.toPx()) {
+                            val lastLabel = data.last().label
+                            val lastMeasured = textMeasurer.measure(lastLabel, dateLabelStyle)
+                            drawText(
+                                textMeasurer = textMeasurer,
+                                text = lastLabel,
+                                topLeft = Offset(lastX - lastMeasured.size.width / 2, dateLabelY),
+                                style = dateLabelStyle
+                            )
+                        }
                     }
                 }
 
@@ -358,11 +336,8 @@ fun DualAxisChart(
 
                 // Selected point tooltip
                 if (selectedIndex in data.indices) {
-                    val step = if (data.size > 1) chartWidth / (data.size - 1) else 0f
                     val sel = data[selectedIndex]
-                    // X position in screen space (with transform)
-                    val dataX = leftPadding + selectedIndex * step
-                    val screenX = (dataX - leftPadding) * scale + leftPadding + offsetX
+                    val screenX = leftPadding + selectedIndex * scaledStep + offsetX
 
                     // Vertical line
                     drawLine(
@@ -376,9 +351,8 @@ fun DualAxisChart(
                     // Highlight circles
                     if (showCalories && sel.calories != null) {
                         val y = topPadding + chartHeight * (1f - (sel.calories.toFloat() - calMin) / calRange)
-                        val sy = y // Y not affected by transform
-                        drawCircle(color = CaloriesColor, radius = 6.dp.toPx(), center = Offset(screenX, sy))
-                        drawCircle(color = Color.White, radius = 3.dp.toPx(), center = Offset(screenX, sy))
+                        drawCircle(color = CaloriesColor, radius = 6.dp.toPx(), center = Offset(screenX, y))
+                        drawCircle(color = Color.White, radius = 3.dp.toPx(), center = Offset(screenX, y))
                     }
                     if (showBurned && sel.burnedCalories != null) {
                         val y = topPadding + chartHeight * (1f - (sel.burnedCalories.toFloat() - calMin) / calRange)
@@ -395,14 +369,13 @@ fun DualAxisChart(
                     val tooltipParts = mutableListOf<String>()
                     tooltipParts.add(sel.label)
                     if (showCalories && sel.calories != null) tooltipParts.add("${sel.calories} kcal")
-                    if (showBurned && sel.burnedCalories != null) tooltipParts.add("🔥 ${sel.burnedCalories}")
-                    if (showWeight && sel.weight != null) tooltipParts.add("⚖ ${String.format("%.1f", sel.weight)} kg")
-                    val tooltipText = tooltipParts.joinToString("  ·  ")
+                    if (showBurned && sel.burnedCalories != null) tooltipParts.add("\uD83D\uDD25 ${sel.burnedCalories}")
+                    if (showWeight && sel.weight != null) tooltipParts.add("\u2696 ${String.format("%.1f", sel.weight)} kg")
+                    val tooltipText = tooltipParts.joinToString("  \u00B7  ")
                     val tooltipStyle = TextStyle(fontSize = 10.sp, color = Color.White)
                     val tooltipMeasured = textMeasurer.measure(tooltipText, tooltipStyle)
                     val tooltipW = tooltipMeasured.size.width + 16.dp.toPx()
                     val tooltipH = tooltipMeasured.size.height + 8.dp.toPx()
-                    // Position tooltip centered on point, clamped to chart bounds
                     val tooltipX = (screenX - tooltipW / 2).coerceIn(0f, size.width - tooltipW)
                     val tooltipY = (topPadding - tooltipH - 4.dp.toPx()).coerceAtLeast(0f)
 
@@ -493,15 +466,15 @@ private fun DrawScope.drawCurve(
     range: Float,
     leftPadding: Float,
     topPadding: Float,
-    chartWidth: Float,
+    scaledStep: Float,
+    panOffsetX: Float,
     chartHeight: Float
 ) {
     val points = mutableListOf<Offset>()
-    val step = if (data.size > 1) chartWidth / (data.size - 1) else 0f
 
     for (i in data.indices) {
         val value = getValue(data[i]) ?: continue
-        val x = leftPadding + i * step
+        val x = leftPadding + i * scaledStep + panOffsetX
         val y = topPadding + chartHeight * (1f - (value - minVal) / range)
         points.add(Offset(x, y))
     }
