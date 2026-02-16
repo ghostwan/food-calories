@@ -115,6 +115,7 @@
     <string name="profile_backup">Backup to Google Drive</string>
     <string name="profile_backing_up">Backing up…</string>
     <string name="profile_backup_done">Backup complete!</string>
+    <string name="profile_backup_info">Last backup: %1$s — %2$s</string>
     <string name="profile_restore">Restore from Google Drive</string>
     <string name="profile_restoring">Restoring…</string>
     <string name="profile_restore_done">Data restored!</string>

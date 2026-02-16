@@ -96,6 +96,20 @@ class DriveBackupManager(private val context: Context) {
         }
     }
 
+    suspend fun getBackupInfo(): BackupInfo? = withContext(Dispatchers.IO) {
+        val drive = getDriveService() ?: return@withContext null
+        val result = drive.files().list()
+            .setSpaces("appDataFolder")
+            .setQ("name = '$BACKUP_FILE_NAME'")
+            .setFields("files(id, size, modifiedTime)")
+            .execute()
+        val file = result.files?.firstOrNull() ?: return@withContext null
+        BackupInfo(
+            sizeBytes = file.getSize()?.toLong() ?: 0L,
+            modifiedTime = file.modifiedTime?.value ?: 0L
+        )
+    }
+
     private fun findBackupFile(drive: Drive): String? {
         val result = drive.files().list()
             .setSpaces("appDataFolder")
@@ -205,4 +219,9 @@ data class BackupData(
     val goal: NutritionGoal,
     val meals: List<MealEntry>,
     val weightRecords: List<WeightRecord>
+)
+
+data class BackupInfo(
+    val sizeBytes: Long,
+    val modifiedTime: Long
 )

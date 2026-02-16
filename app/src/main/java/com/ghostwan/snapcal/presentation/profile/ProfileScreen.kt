@@ -86,6 +86,8 @@ fun ProfileScreen(
     val backupDone by viewModel.backupDone.collectAsState()
     val restoreDone by viewModel.restoreDone.collectAsState()
 
+    val backupInfo by viewModel.backupInfo.collectAsState()
+
     val remindersEnabled by viewModel.remindersEnabled.collectAsState()
     val breakfastTime by viewModel.breakfastTime.collectAsState()
     val lunchTime by viewModel.lunchTime.collectAsState()
@@ -338,6 +340,22 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                if (backupInfo != null) {
+                    val info = backupInfo!!
+                    val dateStr = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        .format(java.util.Date(info.modifiedTime))
+                    val sizeStr = when {
+                        info.sizeBytes < 1024 -> "${info.sizeBytes} B"
+                        info.sizeBytes < 1024 * 1024 -> "${info.sizeBytes / 1024} KB"
+                        else -> String.format("%.1f MB", info.sizeBytes / (1024.0 * 1024.0))
+                    }
+                    Text(
+                        text = stringResource(R.string.profile_backup_info, dateStr, sizeStr),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 OutlinedButton(
                     onClick = { viewModel.backupToDrive() },

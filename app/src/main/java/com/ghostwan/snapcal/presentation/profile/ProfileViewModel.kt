@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.data.local.MealReminderManager
+import com.ghostwan.snapcal.data.remote.BackupInfo
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -73,6 +74,9 @@ class ProfileViewModel(
     private val _restoreDone = MutableStateFlow(false)
     val restoreDone: StateFlow<Boolean> = _restoreDone
 
+    private val _backupInfo = MutableStateFlow<BackupInfo?>(null)
+    val backupInfo: StateFlow<BackupInfo?> = _backupInfo
+
     private val _remindersEnabled = MutableStateFlow(false)
     val remindersEnabled: StateFlow<Boolean> = _remindersEnabled
 
@@ -90,6 +94,7 @@ class ProfileViewModel(
         checkHealthConnect()
         checkGoogleSignIn()
         loadReminderSettings()
+        loadBackupInfo()
     }
 
     private fun loadProfile() {
@@ -106,6 +111,15 @@ class ProfileViewModel(
         _signedInEmail.value = googleAuthManager.getSignedInEmail()
     }
 
+    private fun loadBackupInfo() {
+        if (!googleAuthManager.isSignedIn()) return
+        viewModelScope.launch {
+            try {
+                _backupInfo.value = driveBackupManager.getBackupInfo()
+            } catch (_: Exception) { }
+        }
+    }
+
     fun getSignInIntent(): Intent = googleAuthManager.getSignInIntent()
 
     fun handleSignInResult(data: Intent?) {
@@ -113,6 +127,7 @@ class ProfileViewModel(
             val account = googleAuthManager.handleSignInResult(data)
             _isSignedIn.value = true
             _signedInEmail.value = account.email
+            loadBackupInfo()
         } catch (e: Exception) {
             _isSignedIn.value = false
             _error.value = "Google Sign-In: ${e.message}"
@@ -210,6 +225,7 @@ class ProfileViewModel(
                 )
                 if (success) {
                     _backupDone.value = true
+                    loadBackupInfo()
                 } else {
                     _error.value = "Backup failed"
                 }

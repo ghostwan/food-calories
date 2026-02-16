@@ -115,6 +115,7 @@
     <string name="profile_backup">Sauvegarder sur Google Drive</string>
     <string name="profile_backing_up">Sauvegarde en cours…</string>
     <string name="profile_backup_done">Sauvegarde terminée !</string>
+    <string name="profile_backup_info">Dernière sauvegarde : %1$s — %2$s</string>
     <string name="profile_restore">Restaurer depuis Google Drive</string>
     <string name="profile_restoring">Restauration en cours…</string>
     <string name="profile_restore_done">Données restaurées !</string>
