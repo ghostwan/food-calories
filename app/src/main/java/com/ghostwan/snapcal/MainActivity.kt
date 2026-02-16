@@ -1,5 +1,6 @@
 package com.ghostwan.snapcal
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,15 @@ class MainActivity : ComponentActivity() {
             SnapCalTheme {
                 SnapCalNavGraph(startRoute = startRoute)
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val route = intent.getStringExtra("navigate_to")
+        if (route != null) {
+            setIntent(intent)
+            recreate()
         }
     }
 }

@@ -86,6 +86,7 @@ class ShoppingWidgetProvider : AppWidgetProvider() {
             // Header click opens the app on shopping list
             val openAppIntent = Intent(context, MainActivity::class.java).apply {
                 putExtra("navigate_to", "shopping")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             val openAppPendingIntent = PendingIntent.getActivity(
                 context, 1, openAppIntent,
