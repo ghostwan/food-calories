@@ -62,7 +62,6 @@ class ShoppingWidgetProvider : AppWidgetProvider() {
                 data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
             }
             views.setRemoteAdapter(R.id.widget_shopping_list, serviceIntent)
-            views.setEmptyView(R.id.widget_shopping_list, android.R.id.empty)
 
             // PendingIntent template for item clicks (toggle)
             val toggleIntent = Intent(context, ShoppingWidgetProvider::class.java).apply {
