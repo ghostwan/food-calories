@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -40,6 +41,9 @@ import com.ghostwan.snapcal.presentation.home.HomeScreen
 import com.ghostwan.snapcal.presentation.profile.ProfileScreen
 import com.ghostwan.snapcal.presentation.profile.ProfileViewModel
 import com.ghostwan.snapcal.presentation.result.ResultScreen
+import com.ghostwan.snapcal.presentation.shopping.ShoppingListScreen
+import com.ghostwan.snapcal.presentation.shopping.ShoppingListViewModel
+import com.ghostwan.snapcal.domain.model.ShoppingItem
 
 private sealed class BottomNavItem(val route: String, val labelRes: Int, val icon: ImageVector) {
     data object Dashboard : BottomNavItem("dashboard", R.string.nav_dashboard, Icons.Default.Dashboard)
@@ -54,7 +58,7 @@ private val bottomNavItems = listOf(
 )
 
 // Routes that should NOT show the bottom bar
-private val noBottomBarRoutes = setOf("result", "history")
+private val noBottomBarRoutes = setOf("result", "history", "shopping")
 
 @Composable
 fun SnapCalNavGraph(startRoute: String = "dashboard") {
@@ -73,6 +77,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             mealRepository = app.mealRepository
         )
     )
+
+    val shoppingListEnabled = app.settingsRepository.isShoppingListEnabled()
 
     val layoutDirection = LocalLayoutDirection.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -140,7 +146,10 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     onMergeMeals = { meals ->
                         foodAnalysisViewModel.viewMergedMeals(meals)
                         navController.navigate("result")
-                    }
+                    },
+                    onShoppingList = if (shoppingListEnabled) {
+                        { navController.navigate("shopping") }
+                    } else null
                 )
             }
 
@@ -181,6 +190,22 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                             }
                             launchSingleTop = true
                         }
+                    },
+                    showShoppingListButton = shoppingListEnabled,
+                    onAddToShoppingList = { ingredients ->
+                        val today = java.time.LocalDate.now().toString()
+                        kotlinx.coroutines.MainScope().launch {
+                            for (ingredient in ingredients) {
+                                app.shoppingRepository.addItem(
+                                    ShoppingItem(
+                                        name = ingredient.name,
+                                        quantity = ingredient.quantity,
+                                        addedDate = today
+                                    )
+                                )
+                            }
+                        }
+                        navController.navigate("shopping")
                     }
                 )
             }
@@ -194,7 +219,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         googleAuthManager = app.googleAuthManager,
                         driveBackupManager = app.driveBackupManager,
                         mealRepository = app.mealRepository,
-                        mealReminderManager = app.mealReminderManager
+                        mealReminderManager = app.mealReminderManager,
+                        settingsRepository = app.settingsRepository
                     )
                 )
                 ProfileScreen(
@@ -220,6 +246,20 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
                         navController.navigate("result")
+                    }
+                )
+            }
+
+            composable("shopping") {
+                val shoppingViewModel: ShoppingListViewModel = viewModel(
+                    factory = ShoppingListViewModel.provideFactory(
+                        shoppingRepository = app.shoppingRepository
+                    )
+                )
+                ShoppingListScreen(
+                    viewModel = shoppingViewModel,
+                    onBack = {
+                        navController.popBackStack()
                     }
                 )
             }

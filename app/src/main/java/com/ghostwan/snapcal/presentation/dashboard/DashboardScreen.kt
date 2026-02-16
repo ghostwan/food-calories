@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.automirrored.filled.MergeType
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
@@ -76,7 +77,8 @@ fun DashboardScreen(
     onScanMeal: () -> Unit,
     onHistory: () -> Unit,
     onMealClick: (MealEntry) -> Unit = {},
-    onMergeMeals: (List<MealEntry>) -> Unit = {}
+    onMergeMeals: (List<MealEntry>) -> Unit = {},
+    onShoppingList: (() -> Unit)? = null
 ) {
     val nutrition by viewModel.nutrition.collectAsState()
     val meals by viewModel.meals.collectAsState()
@@ -119,6 +121,11 @@ fun DashboardScreen(
                             Text(stringResource(R.string.dashboard_merge))
                         }
                     } else {
+                        if (onShoppingList != null) {
+                            IconButton(onClick = onShoppingList) {
+                                Icon(Icons.Default.ShoppingCart, contentDescription = stringResource(R.string.shopping_list_title))
+                            }
+                        }
                         IconButton(onClick = onHistory) {
                             Icon(Icons.Default.History, contentDescription = stringResource(R.string.dashboard_history))
                         }

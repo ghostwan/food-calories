@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -76,7 +77,9 @@ import java.util.Locale
 fun ResultScreen(
     viewModel: FoodAnalysisViewModel,
     onBack: () -> Unit,
-    onMealSaved: () -> Unit = {}
+    onMealSaved: () -> Unit = {},
+    showShoppingListButton: Boolean = false,
+    onAddToShoppingList: (List<Ingredient>) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val mealSaved by viewModel.mealSaved.collectAsState()
@@ -134,7 +137,9 @@ fun ResultScreen(
                     onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) },
                     onDishNameChange = { name -> viewModel.updateDishName(name) },
                     onRemoveIngredient = { index -> viewModel.removeIngredient(index) },
-                    onUpdateIngredient = { index, qty, cal -> viewModel.updateIngredient(index, qty, cal) }
+                    onUpdateIngredient = { index, qty, cal -> viewModel.updateIngredient(index, qty, cal) },
+                    showShoppingListButton = showShoppingListButton,
+                    onAddToShoppingList = { onAddToShoppingList(state.result.ingredients) }
                 )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
@@ -173,7 +178,9 @@ private fun SuccessContent(
     onEmojiChange: (String) -> Unit = {},
     onDishNameChange: (String) -> Unit = {},
     onRemoveIngredient: (Int) -> Unit = {},
-    onUpdateIngredient: (Int, String, Int) -> Unit = { _, _, _ -> }
+    onUpdateIngredient: (Int, String, Int) -> Unit = { _, _, _ -> },
+    showShoppingListButton: Boolean = false,
+    onAddToShoppingList: () -> Unit = {}
 ) {
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showDishNameEditor by remember { mutableStateOf(false) }
@@ -260,6 +267,19 @@ private fun SuccessContent(
                 onEdit = { editingIngredientIndex = index },
                 onDelete = { onRemoveIngredient(index) }
             )
+        }
+
+        if (showShoppingListButton && result.ingredients.isNotEmpty()) {
+            item {
+                OutlinedButton(
+                    onClick = onAddToShoppingList,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.ShoppingCart, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.shopping_list_add))
+                }
+            }
         }
 
         if (result.notes != null) {

@@ -93,6 +93,8 @@ fun ProfileScreen(
     val lunchTime by viewModel.lunchTime.collectAsState()
     val dinnerTime by viewModel.dinnerTime.collectAsState()
 
+    val shoppingListEnabled by viewModel.shoppingListEnabled.collectAsState()
+
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -404,6 +406,30 @@ fun ProfileScreen(
                 ) {
                     Text(stringResource(R.string.profile_sign_in_google))
                 }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Shopping List section
+            Text(
+                text = stringResource(R.string.profile_shopping_list_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_shopping_list_enable),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Switch(
+                    checked = shoppingListEnabled,
+                    onCheckedChange = { viewModel.toggleShoppingList(it) }
+                )
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

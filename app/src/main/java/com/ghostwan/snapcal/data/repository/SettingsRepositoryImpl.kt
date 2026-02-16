@@ -18,7 +18,16 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putString(KEY_API, key).apply()
     }
 
+    override fun isShoppingListEnabled(): Boolean {
+        return prefs.getBoolean(KEY_SHOPPING_LIST, false)
+    }
+
+    override fun setShoppingListEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SHOPPING_LIST, enabled).apply()
+    }
+
     private companion object {
         const val KEY_API = "gemini_api_key"
+        const val KEY_SHOPPING_LIST = "shopping_list_enabled"
     }
 }

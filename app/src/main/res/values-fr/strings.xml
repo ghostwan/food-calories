@@ -167,6 +167,15 @@
     <!-- Emoji Picker -->
     <string name="emoji_picker_title">Choisir un emoji</string>
 
+    <!-- Shopping List -->
+    <string name="profile_shopping_list_title">Liste de courses</string>
+    <string name="profile_shopping_list_enable">Activer la liste de courses</string>
+    <string name="shopping_list_title">Liste de courses</string>
+    <string name="shopping_list_empty">Votre liste de courses est vide</string>
+    <string name="shopping_list_clear_checked">Supprimer les articles cochés</string>
+    <string name="shopping_list_add">Ajouter à la liste de courses</string>
+    <string name="shopping_list_added">Ajouté à la liste de courses !</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>

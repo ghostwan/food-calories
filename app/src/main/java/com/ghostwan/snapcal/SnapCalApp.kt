@@ -17,10 +17,12 @@ import com.ghostwan.snapcal.data.remote.OpenFoodFactsService
 import com.ghostwan.snapcal.data.repository.FoodAnalysisRepositoryImpl
 import com.ghostwan.snapcal.data.repository.MealRepositoryImpl
 import com.ghostwan.snapcal.data.repository.SettingsRepositoryImpl
+import com.ghostwan.snapcal.data.repository.ShoppingRepositoryImpl
 import com.ghostwan.snapcal.data.repository.UsageRepositoryImpl
 import com.ghostwan.snapcal.data.repository.UserProfileRepositoryImpl
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
+import com.ghostwan.snapcal.domain.repository.ShoppingRepository
 import com.ghostwan.snapcal.domain.repository.UsageRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.AnalyzeFoodUseCase
@@ -63,6 +65,8 @@ class SnapCalApp : Application() {
         private set
     lateinit var mealReminderManager: MealReminderManager
         private set
+    lateinit var shoppingRepository: ShoppingRepository
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -78,6 +82,7 @@ class SnapCalApp : Application() {
         val weightDao = database.weightDao()
         val mealRepo = MealRepositoryImpl(mealDao)
         mealRepository = mealRepo
+        shoppingRepository = ShoppingRepositoryImpl(database.shoppingItemDao())
 
         val userProfileRepo = UserProfileRepositoryImpl(this, weightDao)
         userProfileRepository = userProfileRepo

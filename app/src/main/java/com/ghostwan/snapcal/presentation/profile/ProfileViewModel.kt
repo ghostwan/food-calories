@@ -13,6 +13,7 @@ import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.MealRepository
+import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.ComputeNutritionGoalUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,8 @@ class ProfileViewModel(
     private val googleAuthManager: GoogleAuthManager,
     private val driveBackupManager: DriveBackupManager,
     private val mealRepository: MealRepository,
-    private val mealReminderManager: MealReminderManager
+    private val mealReminderManager: MealReminderManager,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _profile = MutableStateFlow(UserProfile())
@@ -89,12 +91,16 @@ class ProfileViewModel(
     private val _dinnerTime = MutableStateFlow(Pair(20, 30))
     val dinnerTime: StateFlow<Pair<Int, Int>> = _dinnerTime
 
+    private val _shoppingListEnabled = MutableStateFlow(false)
+    val shoppingListEnabled: StateFlow<Boolean> = _shoppingListEnabled
+
     init {
         loadProfile()
         checkHealthConnect()
         checkGoogleSignIn()
         loadReminderSettings()
         loadBackupInfo()
+        _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
     }
 
     private fun loadProfile() {
@@ -298,6 +304,11 @@ class ProfileViewModel(
         }
     }
 
+    fun toggleShoppingList(enabled: Boolean) {
+        _shoppingListEnabled.value = enabled
+        settingsRepository.setShoppingListEnabled(enabled)
+    }
+
     fun clearSaved() { _saved.value = false }
     fun clearError() { _error.value = null }
     fun clearWeightSynced() { _weightSynced.value = false }
@@ -312,7 +323,8 @@ class ProfileViewModel(
             googleAuthManager: GoogleAuthManager,
             driveBackupManager: DriveBackupManager,
             mealRepository: MealRepository,
-            mealReminderManager: MealReminderManager
+            mealReminderManager: MealReminderManager,
+            settingsRepository: SettingsRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -323,7 +335,8 @@ class ProfileViewModel(
                     googleAuthManager,
                     driveBackupManager,
                     mealRepository,
-                    mealReminderManager
+                    mealReminderManager,
+                    settingsRepository
                 ) as T
             }
         }
