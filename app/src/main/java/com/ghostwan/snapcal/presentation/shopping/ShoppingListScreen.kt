@@ -200,12 +200,14 @@ private fun ShoppingItemCard(
                     color = if (item.isChecked) MaterialTheme.colorScheme.onSurfaceVariant
                             else MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = item.quantity,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None
-                )
+                if (item.quantity.isNotBlank()) {
+                    Text(
+                        text = item.quantity,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None
+                    )
+                }
             }
             IconButton(
                 onClick = onDelete,
