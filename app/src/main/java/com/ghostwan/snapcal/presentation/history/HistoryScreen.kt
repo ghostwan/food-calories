@@ -18,7 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -30,15 +29,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -188,19 +183,19 @@ fun HistoryScreen(
                             FilterChip(
                                 selected = showCalories,
                                 onClick = { viewModel.toggleShowCalories() },
-                                label = { Text(stringResource(R.string.history_toggle_calories)) },
+                                label = { Text(stringResource(R.string.history_consumed)) },
                                 modifier = Modifier.weight(1f)
                             )
                             FilterChip(
                                 selected = showWeight,
                                 onClick = { viewModel.toggleShowWeight() },
-                                label = { Text(stringResource(R.string.history_toggle_weight)) },
+                                label = { Text(stringResource(R.string.history_weight)) },
                                 modifier = Modifier.weight(1f)
                             )
                             FilterChip(
                                 selected = showBurned,
                                 onClick = { viewModel.toggleShowBurned() },
-                                label = { Text(stringResource(R.string.history_toggle_burned)) },
+                                label = { Text(stringResource(R.string.history_burned)) },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -218,7 +213,7 @@ fun HistoryScreen(
                             OutlinedTextField(
                                 value = if (chartCaloriesOrigin == 0) "" else chartCaloriesOrigin.toString(),
                                 onValueChange = { viewModel.setChartCaloriesOrigin(it.toIntOrNull() ?: 0) },
-                                label = { Text(stringResource(R.string.history_toggle_calories)) },
+                                label = { Text(stringResource(R.string.history_consumed)) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -227,7 +222,7 @@ fun HistoryScreen(
                             OutlinedTextField(
                                 value = if (chartWeightOrigin == 0) "" else chartWeightOrigin.toString(),
                                 onValueChange = { viewModel.setChartWeightOrigin(it.toIntOrNull() ?: 0) },
-                                label = { Text(stringResource(R.string.history_toggle_weight)) },
+                                label = { Text(stringResource(R.string.history_weight)) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

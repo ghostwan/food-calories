@@ -403,15 +403,15 @@ fun DualAxisChart(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (showCalories) {
-                    LegendItem(color = CaloriesColor, label = stringResource(R.string.history_legend_calories))
+                    LegendItem(color = CaloriesColor, label = stringResource(R.string.history_consumed))
                     Spacer(modifier = Modifier.width(12.dp))
                 }
                 if (showBurned) {
-                    LegendItem(color = BurnedColor, label = stringResource(R.string.history_legend_burned))
+                    LegendItem(color = BurnedColor, label = stringResource(R.string.history_burned))
                     Spacer(modifier = Modifier.width(12.dp))
                 }
                 if (showWeight) {
-                    LegendItem(color = WeightColor, label = stringResource(R.string.history_legend_weight))
+                    LegendItem(color = WeightColor, label = stringResource(R.string.history_weight))
                 }
             }
             Row(

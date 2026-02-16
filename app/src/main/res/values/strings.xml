@@ -132,15 +132,12 @@
     <string name="history_range_quarter">3M</string>
     <string name="history_range_year">1Y</string>
     <string name="history_chart_title">Trends</string>
-    <string name="history_legend_calories">Consumed</string>
-    <string name="history_legend_weight">Weight</string>
+    <string name="history_consumed">Consumed</string>
+    <string name="history_burned">Burned</string>
+    <string name="history_weight">Weight</string>
     <string name="history_legend_goal">Goal</string>
     <string name="history_legend_cal_goal">Cal. goal</string>
     <string name="history_legend_weight_goal">Target weight</string>
-    <string name="history_legend_burned">Burned</string>
-    <string name="history_toggle_calories">Calories</string>
-    <string name="history_toggle_weight">Weight</string>
-    <string name="history_toggle_burned">Burned</string>
     <string name="history_meal_macros">P: %.0fg · C: %.0fg · F: %.0fg</string>
     <string name="history_chart_origin">Origin:</string>
 
