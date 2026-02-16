@@ -39,16 +39,13 @@ class ShoppingWidgetFactory(
         val views = RemoteViews(context.packageName, R.layout.widget_shopping_item)
 
         views.setTextViewText(R.id.widget_shopping_item_name, item.name)
+        views.setBoolean(R.id.widget_shopping_item_checkbox, "setChecked", item.isChecked)
 
         if (item.isChecked) {
-            views.setImageViewResource(R.id.widget_shopping_item_icon,
-                android.R.drawable.checkbox_on_background)
             views.setInt(R.id.widget_shopping_item_name, "setPaintFlags",
                 Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG)
             views.setTextColor(R.id.widget_shopping_item_name, 0xFF999999.toInt())
         } else {
-            views.setImageViewResource(R.id.widget_shopping_item_icon,
-                android.R.drawable.checkbox_off_background)
             views.setInt(R.id.widget_shopping_item_name, "setPaintFlags", Paint.ANTI_ALIAS_FLAG)
             views.setTextColor(R.id.widget_shopping_item_name, 0xFF000000.toInt())
         }
