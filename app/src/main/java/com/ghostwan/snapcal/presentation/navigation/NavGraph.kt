@@ -89,11 +89,12 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
+                val showLabels = bottomNavItems.size <= 3
                 NavigationBar {
                     bottomNavItems.forEach { item ->
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = null) },
-                            label = { Text(stringResource(item.labelRes)) },
+                            icon = { Icon(item.icon, contentDescription = stringResource(item.labelRes)) },
+                            label = if (showLabels) {{ Text(stringResource(item.labelRes)) }} else null,
                             selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == item.route } == true,
                             onClick = {
                                 navController.navigate(item.route) {
