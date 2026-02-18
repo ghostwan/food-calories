@@ -14,9 +14,9 @@ class SaveMealUseCase(
     private val mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
     private val appContext: Context
 ) {
-    suspend operator fun invoke(analysis: FoodAnalysis, quantity: Int = 1) {
-        val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        saveMeal(analysis, date, quantity)
+    suspend operator fun invoke(analysis: FoodAnalysis, quantity: Int = 1, date: String? = null) {
+        val mealDate = date ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        saveMeal(analysis, mealDate, quantity)
         refreshWidget()
     }
 

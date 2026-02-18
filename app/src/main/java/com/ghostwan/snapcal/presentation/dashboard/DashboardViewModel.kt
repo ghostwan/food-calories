@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -26,7 +27,11 @@ class DashboardViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
-    private var today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    val selectedDate: StateFlow<LocalDate> = _selectedDate
+
+    val isToday: Boolean
+        get() = _selectedDate.value == LocalDate.now()
 
     private val _nutrition = MutableStateFlow<DailyNutrition?>(null)
     val nutrition: StateFlow<DailyNutrition?> = _nutrition
@@ -58,6 +63,32 @@ class DashboardViewModel(
         loadLatestWeight()
     }
 
+    fun goToPreviousDay() {
+        _selectedDate.value = _selectedDate.value.minusDays(1)
+        onDateChanged()
+    }
+
+    fun goToNextDay() {
+        val next = _selectedDate.value.plusDays(1)
+        if (!next.isAfter(LocalDate.now())) {
+            _selectedDate.value = next
+            onDateChanged()
+        }
+    }
+
+    fun goToDate(date: LocalDate) {
+        if (!date.isAfter(LocalDate.now())) {
+            _selectedDate.value = date
+            onDateChanged()
+        }
+    }
+
+    private fun onDateChanged() {
+        observeNutrition()
+        observeMeals()
+        loadCaloriesBurned()
+    }
+
     private fun loadGoal() {
         _goal.value = userProfileRepository.getGoal()
     }
@@ -68,7 +99,7 @@ class DashboardViewModel(
     private fun observeNutrition() {
         nutritionJob?.cancel()
         nutritionJob = viewModelScope.launch {
-            getDailyNutritionUseCase.getNutrition(today).collect {
+            getDailyNutritionUseCase.getNutrition(_selectedDate.value.toString()).collect {
                 _nutrition.value = it
             }
         }
@@ -77,7 +108,7 @@ class DashboardViewModel(
     private fun observeMeals() {
         mealsJob?.cancel()
         mealsJob = viewModelScope.launch {
-            getDailyNutritionUseCase.getMeals(today).collect {
+            getDailyNutritionUseCase.getMeals(_selectedDate.value.toString()).collect {
                 _meals.value = it
             }
         }
@@ -111,20 +142,24 @@ class DashboardViewModel(
         viewModelScope.launch {
             try {
                 if (healthConnectManager.hasPermissions()) {
-                    _caloriesBurned.value = healthConnectManager.readTodayCaloriesBurned().toInt()
+                    val date = _selectedDate.value
+                    val burned = healthConnectManager.readCaloriesBurnedForDateRange(date, date)
+                    _caloriesBurned.value = burned.values.firstOrNull()?.toInt() ?: 0
                 }
             } catch (_: Exception) { }
         }
     }
 
     fun refresh() {
-        val now = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        if (now != today) {
-            today = now
-            observeNutrition()
-            observeMeals()
+        val now = LocalDate.now()
+        // Auto-advance to today if user was viewing today and the day changed
+        if (_selectedDate.value != now && _selectedDate.value == now.minusDays(1)) {
+            // Only auto-advance if the user was on "today" (which became yesterday)
+            // We can't distinguish this reliably, so just reload data for the current date
         }
         loadGoal()
+        observeNutrition()
+        observeMeals()
         loadCaloriesBurned()
     }
 
@@ -176,12 +211,12 @@ class DashboardViewModel(
 
     fun quickAddFavorite(meal: MealEntry) {
         viewModelScope.launch {
-            val todayMeal = meal.copy(
+            val targetMeal = meal.copy(
                 id = 0,
-                date = today,
+                date = _selectedDate.value.toString(),
                 isFavorite = false
             )
-            mealRepository.saveMeal(todayMeal)
+            mealRepository.saveMeal(targetMeal)
         }
     }
 

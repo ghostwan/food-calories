@@ -53,6 +53,11 @@ class FoodAnalysisViewModel(
     private var editingMealId: Long? = null
     private var editingMealIds: List<Long>? = null
     private var editingMealDate: String? = null
+    private var targetDate: String? = null
+
+    fun setTargetDate(date: String?) {
+        targetDate = date
+    }
 
     fun getApiKey(): String = settingsRepository.getApiKey()
 
@@ -142,7 +147,7 @@ class FoodAnalysisViewModel(
                 } else if (mealId != null && mealDate != null) {
                     saveMealUseCase.replaceAndSave(mealId, analysis, mealDate, qty)
                 } else {
-                    saveMealUseCase(analysis, qty)
+                    saveMealUseCase(analysis, qty, targetDate)
                 }
                 _mealSaved.value = true
             } catch (_: Exception) {
@@ -184,7 +189,7 @@ class FoodAnalysisViewModel(
         )
         _uiState.value = AnalysisUiState.Success(analysis)
         _mealSaved.value = false
-        _readOnly.value = true
+        _readOnly.value = false
         _isFavorite.value = meal.isFavorite
         _quantity.value = meal.quantity
         editingMealId = meal.id
@@ -334,6 +339,7 @@ class FoodAnalysisViewModel(
         editingMealId = null
         editingMealIds = null
         editingMealDate = null
+        targetDate = null
         lastImageData = null
     }
 

@@ -80,6 +80,11 @@
     <string name="dashboard_favorites">Favorites</string>
     <string name="dashboard_toggle_favorite">Toggle favorite</string>
     <string name="dashboard_add_favorite">Add to today</string>
+    <string name="dashboard_yesterday">Yesterday</string>
+    <string name="dashboard_date_navigate_previous">Previous day</string>
+    <string name="dashboard_date_navigate_next">Next day</string>
+    <string name="dashboard_no_meals_past">No meals recorded for this day</string>
+    <string name="dashboard_add_meal">Add a meal</string>
     <string name="dashboard_merge">Merge</string>
     <string name="dashboard_selection_cancel">Cancel</string>
 

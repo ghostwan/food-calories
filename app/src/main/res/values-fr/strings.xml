@@ -80,6 +80,11 @@
     <string name="dashboard_favorites">Favoris</string>
     <string name="dashboard_toggle_favorite">Ajouter/retirer des favoris</string>
     <string name="dashboard_add_favorite">Ajouter au repas du jour</string>
+    <string name="dashboard_yesterday">Hier</string>
+    <string name="dashboard_date_navigate_previous">Jour précédent</string>
+    <string name="dashboard_date_navigate_next">Jour suivant</string>
+    <string name="dashboard_no_meals_past">Aucun repas enregistré pour cette journée</string>
+    <string name="dashboard_add_meal">Ajouter un repas</string>
     <string name="dashboard_merge">Fusionner</string>
     <string name="dashboard_selection_cancel">Annuler</string>
 

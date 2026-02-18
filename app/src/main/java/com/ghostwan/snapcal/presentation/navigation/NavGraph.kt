@@ -88,6 +88,15 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
         )
     )
 
+    val dashboardViewModel: DashboardViewModel = viewModel(
+        factory = DashboardViewModel.provideFactory(
+            getDailyNutritionUseCase = app.getDailyNutritionUseCase,
+            userProfileRepository = app.userProfileRepository,
+            mealRepository = app.mealRepository,
+            healthConnectManager = app.healthConnectManager
+        )
+    )
+
     val shoppingListEnabled = app.settingsRepository.isShoppingListEnabled()
 
     val bottomNavItems = buildList {
@@ -137,17 +146,14 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                 .consumeWindowInsets(innerPadding)
         ) {
             composable("dashboard") {
-                val dashboardViewModel: DashboardViewModel = viewModel(
-                    factory = DashboardViewModel.provideFactory(
-                        getDailyNutritionUseCase = app.getDailyNutritionUseCase,
-                        userProfileRepository = app.userProfileRepository,
-                        mealRepository = app.mealRepository,
-                        healthConnectManager = app.healthConnectManager
-                    )
-                )
                 DashboardScreen(
                     viewModel = dashboardViewModel,
                     onScanMeal = {
+                        val selectedDate = dashboardViewModel.selectedDate.value
+                        val today = java.time.LocalDate.now()
+                        foodAnalysisViewModel.setTargetDate(
+                            if (selectedDate == today) null else selectedDate.toString()
+                        )
                         navController.navigate("home") {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
@@ -180,9 +186,9 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     favorites = favorites,
                     onQuickAddFavorite = { meal ->
                         kotlinx.coroutines.MainScope().launch {
-                            val today = java.time.LocalDate.now().toString()
+                            val date = dashboardViewModel.selectedDate.value.toString()
                             app.mealRepository.saveMeal(
-                                meal.copy(id = 0, date = today, isFavorite = false)
+                                meal.copy(id = 0, date = date, isFavorite = false)
                             )
                         }
                     },

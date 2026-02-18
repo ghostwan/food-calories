@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.MergeType
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -40,15 +42,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -66,12 +72,18 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import org.json.JSONArray
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,10 +100,57 @@ fun DashboardScreen(
     val caloriesBurned by viewModel.caloriesBurned.collectAsState()
     val selectionMode by viewModel.selectionMode.collectAsState()
     val selectedMealIds by viewModel.selectedMealIds.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
 
     val context = LocalContext.current
+    val isToday = selectedDate == LocalDate.now()
+    val isYesterday = selectedDate == LocalDate.now().minusDays(1)
+
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val dateLabel = when {
+        isToday -> stringResource(R.string.dashboard_today)
+        isYesterday -> stringResource(R.string.dashboard_yesterday)
+        else -> selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+    }
 
     SideEffect { viewModel.refresh() }
+
+    if (showDatePicker) {
+        val todayMillis = LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val initialMillis = selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis <= todayMillis
+                }
+            }
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val picked = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        viewModel.goToDate(picked)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text(stringResource(R.string.dialog_button_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(R.string.dialog_button_cancel))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -100,7 +159,35 @@ fun DashboardScreen(
                     if (selectionMode) {
                         Text("${selectedMealIds.size}")
                     } else {
-                        Text(stringResource(R.string.dashboard_title))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            IconButton(onClick = { viewModel.goToPreviousDay() }) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    contentDescription = stringResource(R.string.dashboard_date_navigate_previous)
+                                )
+                            }
+                            Text(
+                                text = dateLabel,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .clickable { showDatePicker = true }
+                            )
+                            IconButton(
+                                onClick = { viewModel.goToNextDay() },
+                                enabled = !isToday
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = stringResource(R.string.dashboard_date_navigate_next)
+                                )
+                            }
+                        }
                     }
                 },
                 navigationIcon = {
@@ -203,7 +290,8 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(R.string.dashboard_no_meals),
+                                text = if (isToday) stringResource(R.string.dashboard_no_meals)
+                                       else stringResource(R.string.dashboard_no_meals_past),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -241,7 +329,10 @@ fun DashboardScreen(
                 ) {
                     Icon(Icons.Default.Restaurant, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.dashboard_scan_meal))
+                    Text(
+                        if (isToday) stringResource(R.string.dashboard_scan_meal)
+                        else stringResource(R.string.dashboard_add_meal)
+                    )
                 }
             }
         }
@@ -495,7 +586,7 @@ private fun MealCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = meal.emoji ?: "🍽️",
+                    text = meal.emoji ?: "\uD83C\uDF7D\uFE0F",
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(end = 12.dp)
                 )
@@ -509,7 +600,7 @@ private fun MealCard(
                         )
                         if (meal.quantity > 1) {
                             Text(
-                                text = " ×${meal.quantity}",
+                                text = " \u00D7${meal.quantity}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
