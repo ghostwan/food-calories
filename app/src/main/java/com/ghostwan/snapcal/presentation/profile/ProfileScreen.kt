@@ -1,15 +1,10 @@
 package com.ghostwan.snapcal.presentation.profile
 
 import android.Manifest
-import android.net.Uri
 import android.os.Build
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +41,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
@@ -64,9 +58,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.health.connect.client.PermissionController
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.data.local.HealthConnectManager
@@ -103,9 +94,6 @@ fun ProfileScreen(
     val dinnerTime by viewModel.dinnerTime.collectAsState()
 
     val shoppingListEnabled by viewModel.shoppingListEnabled.collectAsState()
-    val googleAuthForGemini by viewModel.googleAuthForGemini.collectAsState()
-    val geminiAuthUrl by viewModel.geminiAuthUrl.collectAsState()
-    val isAuthenticatingGemini by viewModel.isAuthenticatingGemini.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -133,15 +121,6 @@ fun ProfileScreen(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         viewModel.handleSignInResult(result.data)
-    }
-
-    if (geminiAuthUrl != null) {
-        GeminiOAuthDialog(
-            authUrl = geminiAuthUrl!!,
-            onCodeReceived = { code -> viewModel.onGeminiAuthCodeReceived(code) },
-            onError = { error -> viewModel.onGeminiAuthError(error) },
-            onDismiss = { viewModel.cancelGeminiAuth() }
-        )
     }
 
     LaunchedEffect(saved) {
@@ -412,32 +391,6 @@ fun ProfileScreen(
                     }
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.profile_google_auth_gemini),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_google_auth_gemini_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    if (isAuthenticatingGemini) {
-                        CircularProgressIndicator(modifier = Modifier.height(24.dp).width(24.dp))
-                    } else {
-                        Switch(
-                            checked = googleAuthForGemini,
-                            onCheckedChange = { viewModel.toggleGoogleAuthForGemini(it) }
-                        )
-                    }
-                }
-
                 TextButton(
                     onClick = { viewModel.signOut() },
                     modifier = Modifier.fillMaxWidth()
@@ -691,61 +644,6 @@ private fun ActivityLevelSelector(selected: ActivityLevel, onSelect: (ActivityLe
                     onClick = { onSelect(level); expanded = false }
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun GeminiOAuthDialog(
-    authUrl: String,
-    onCodeReceived: (String) -> Unit,
-    onError: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxSize()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        // Remove "wv" from User-Agent to avoid Google blocking WebView
-                        settings.userAgentString = settings.userAgentString.replace("; wv", "")
-
-                        webViewClient = object : WebViewClient() {
-                            override fun shouldOverrideUrlLoading(
-                                view: WebView?,
-                                request: WebResourceRequest?
-                            ): Boolean {
-                                val url = request?.url?.toString() ?: return false
-                                if (url.startsWith("http://localhost")) {
-                                    val uri = Uri.parse(url)
-                                    val code = uri.getQueryParameter("code")
-                                    val error = uri.getQueryParameter("error")
-                                    if (code != null) {
-                                        onCodeReceived(code)
-                                    } else {
-                                        onError(error ?: "No authorization code")
-                                    }
-                                    return true
-                                }
-                                return false
-                            }
-                        }
-                        loadUrl(authUrl)
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
         }
     }
 }

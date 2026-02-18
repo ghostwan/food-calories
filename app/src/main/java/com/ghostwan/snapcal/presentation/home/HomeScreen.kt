@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
@@ -53,8 +54,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
@@ -83,8 +89,7 @@ fun HomeScreen(
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showQuotaWarning by remember { mutableStateOf(false) }
     var apiKey by remember { mutableStateOf(viewModel.getApiKey()) }
-    val geminiConfigured = viewModel.isGeminiConfigured()
-    val analysisEnabled = apiKey.isNotBlank() || geminiConfigured
+    val analysisEnabled = apiKey.isNotBlank()
     var pendingTextAnalysis by remember { mutableStateOf(false) }
 
     val imageFile = remember {
@@ -422,6 +427,7 @@ private fun ApiKeyDialog(
     onConfirm: (String) -> Unit
 ) {
     var key by remember { mutableStateOf(currentKey) }
+    val uriHandler = LocalUriHandler.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -431,6 +437,28 @@ private fun ApiKeyDialog(
                 Text(
                     stringResource(R.string.dialog_api_key_message),
                     style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val linkText = stringResource(R.string.dialog_api_key_link)
+                val annotatedString = buildAnnotatedString {
+                    pushStringAnnotation(tag = "URL", annotation = "https://aistudio.google.com/apikey")
+                    withStyle(style = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline
+                    )) {
+                        append(linkText)
+                    }
+                    pop()
+                }
+                ClickableText(
+                    text = annotatedString,
+                    style = MaterialTheme.typography.bodyMedium,
+                    onClick = { offset ->
+                        annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                            .firstOrNull()?.let { annotation ->
+                                uriHandler.openUri(annotation.item)
+                            }
+                    }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(

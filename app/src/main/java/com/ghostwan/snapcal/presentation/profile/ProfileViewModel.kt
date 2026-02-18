@@ -94,15 +94,6 @@ class ProfileViewModel(
     private val _shoppingListEnabled = MutableStateFlow(false)
     val shoppingListEnabled: StateFlow<Boolean> = _shoppingListEnabled
 
-    private val _googleAuthForGemini = MutableStateFlow(false)
-    val googleAuthForGemini: StateFlow<Boolean> = _googleAuthForGemini
-
-    private val _geminiAuthUrl = MutableStateFlow<String?>(null)
-    val geminiAuthUrl: StateFlow<String?> = _geminiAuthUrl
-
-    private val _isAuthenticatingGemini = MutableStateFlow(false)
-    val isAuthenticatingGemini: StateFlow<Boolean> = _isAuthenticatingGemini
-
     init {
         loadProfile()
         checkHealthConnect()
@@ -110,7 +101,6 @@ class ProfileViewModel(
         loadReminderSettings()
         loadBackupInfo()
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
-        _googleAuthForGemini.value = settingsRepository.isGoogleAuthForGemini()
     }
 
     private fun loadProfile() {
@@ -155,8 +145,6 @@ class ProfileViewModel(
             googleAuthManager.signOut()
             _isSignedIn.value = false
             _signedInEmail.value = null
-            _googleAuthForGemini.value = false
-            settingsRepository.setGoogleAuthForGemini(false)
             _backupInfo.value = null
         }
     }
@@ -320,46 +308,6 @@ class ProfileViewModel(
     fun toggleShoppingList(enabled: Boolean) {
         _shoppingListEnabled.value = enabled
         settingsRepository.setShoppingListEnabled(enabled)
-    }
-
-    fun toggleGoogleAuthForGemini(enabled: Boolean) {
-        if (enabled) {
-            val url = googleAuthManager.buildGeminiAuthUrl()
-            _geminiAuthUrl.value = url
-        } else {
-            googleAuthManager.clearGeminiTokens()
-            _googleAuthForGemini.value = false
-            settingsRepository.setGoogleAuthForGemini(false)
-        }
-    }
-
-    fun onGeminiAuthCodeReceived(code: String) {
-        _geminiAuthUrl.value = null
-        _isAuthenticatingGemini.value = true
-        viewModelScope.launch {
-            try {
-                val success = googleAuthManager.exchangeGeminiCode(code)
-                if (success) {
-                    _googleAuthForGemini.value = true
-                    settingsRepository.setGoogleAuthForGemini(true)
-                } else {
-                    _error.value = "Google auth failed"
-                }
-            } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
-                _isAuthenticatingGemini.value = false
-            }
-        }
-    }
-
-    fun onGeminiAuthError(error: String) {
-        _geminiAuthUrl.value = null
-        _error.value = error
-    }
-
-    fun cancelGeminiAuth() {
-        _geminiAuthUrl.value = null
     }
 
     fun clearSaved() { _saved.value = false }

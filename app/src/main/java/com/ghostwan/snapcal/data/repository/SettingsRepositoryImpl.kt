@@ -26,17 +26,8 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putBoolean(KEY_SHOPPING_LIST, enabled).apply()
     }
 
-    override fun isGoogleAuthForGemini(): Boolean {
-        return prefs.getBoolean(KEY_GOOGLE_AUTH_GEMINI, false)
-    }
-
-    override fun setGoogleAuthForGemini(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_GOOGLE_AUTH_GEMINI, enabled).apply()
-    }
-
     private companion object {
         const val KEY_API = "gemini_api_key_v2"
         const val KEY_SHOPPING_LIST = "shopping_list_enabled"
-        const val KEY_GOOGLE_AUTH_GEMINI = "google_auth_gemini"
     }
 }

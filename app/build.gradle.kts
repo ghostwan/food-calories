@@ -30,16 +30,6 @@ android {
             "GEMINI_API_KEY",
             "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\""
         )
-        buildConfigField(
-            "String",
-            "OAUTH_CLIENT_ID",
-            "\"${localProperties.getProperty("OAUTH_CLIENT_ID", "")}\""
-        )
-        buildConfigField(
-            "String",
-            "OAUTH_CLIENT_SECRET",
-            "\"${localProperties.getProperty("OAUTH_CLIENT_SECRET", "")}\""
-        )
     }
 
     buildFeatures {

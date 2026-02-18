@@ -18,13 +18,13 @@ class GeminiApiService {
         private val RETRY_DELAYS_MS = longArrayOf(2_000, 5_000, 10_000)
     }
 
-    suspend fun analyzeImage(imageData: ByteArray, auth: GeminiAuth, language: String): String {
+    suspend fun analyzeImage(imageData: ByteArray, apiKey: String, language: String): String {
         val base64Image = Base64.encodeToString(imageData, Base64.NO_WRAP)
         val requestBody = buildImageRequestBody(buildAnalysisPrompt(language), base64Image)
-        return executeRequest(requestBody, auth)
+        return executeRequest(requestBody, apiKey)
     }
 
-    suspend fun analyzeText(description: String, auth: GeminiAuth, language: String): String {
+    suspend fun analyzeText(description: String, apiKey: String, language: String): String {
         val prompt = """
             A user describes what they ate:
             "$description"
@@ -56,14 +56,14 @@ class GeminiApiService {
             The "healthRating" field for each ingredient must be "healthy" (nutritious, whole foods), "moderate" (acceptable in moderation), or "unhealthy" (highly processed, high sugar/fat).
         """.trimIndent()
 
-        return executeRequest(buildTextRequestBody(prompt), auth)
+        return executeRequest(buildTextRequestBody(prompt), apiKey)
     }
 
     suspend fun correctAnalysis(
         originalAnalysisJson: String,
         userFeedback: String,
         imageData: ByteArray?,
-        auth: GeminiAuth,
+        apiKey: String,
         language: String
     ): String {
         val prompt = """
@@ -103,10 +103,10 @@ class GeminiApiService {
         } else {
             buildTextRequestBody(prompt)
         }
-        return executeRequest(requestBody, auth)
+        return executeRequest(requestBody, apiKey)
     }
 
-    suspend fun computeNutritionGoal(profile: UserProfile, auth: GeminiAuth, language: String): String {
+    suspend fun computeNutritionGoal(profile: UserProfile, apiKey: String, language: String): String {
         val prompt = """
             Given a person with the following characteristics:
             - Height: ${profile.height} cm
@@ -130,25 +130,19 @@ class GeminiApiService {
             }
         """.trimIndent()
 
-        return executeRequest(buildTextRequestBody(prompt), auth)
+        return executeRequest(buildTextRequestBody(prompt), apiKey)
     }
 
-    private suspend fun executeRequest(requestBody: String, auth: GeminiAuth): String {
+    private suspend fun executeRequest(requestBody: String, apiKey: String): String {
         return withContext(Dispatchers.IO) {
             var lastException: Exception? = null
             for (attempt in 0..MAX_RETRIES) {
                 if (attempt > 0) Thread.sleep(RETRY_DELAYS_MS[attempt - 1])
 
-                val url = when (auth) {
-                    is GeminiAuth.ApiKey -> URL("$BASE_URL/$MODEL:generateContent?key=${auth.key}")
-                    is GeminiAuth.OAuth -> URL("$BASE_URL/$MODEL:generateContent")
-                }
+                val url = URL("$BASE_URL/$MODEL:generateContent?key=$apiKey")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.setRequestProperty("Content-Type", "application/json")
-                if (auth is GeminiAuth.OAuth) {
-                    connection.setRequestProperty("Authorization", "Bearer ${auth.accessToken}")
-                }
                 connection.doOutput = true
                 connection.connectTimeout = 30_000
                 connection.readTimeout = 60_000

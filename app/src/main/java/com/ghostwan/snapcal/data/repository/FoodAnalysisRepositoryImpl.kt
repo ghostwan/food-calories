@@ -1,10 +1,7 @@
 package com.ghostwan.snapcal.data.repository
 
-import android.util.Log
 import com.ghostwan.snapcal.data.mapper.FoodAnalysisMapper
 import com.ghostwan.snapcal.data.remote.GeminiApiService
-import com.ghostwan.snapcal.data.remote.GeminiAuth
-import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.data.remote.OpenFoodFactsService
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.repository.FoodAnalysisRepository
@@ -16,41 +13,24 @@ class FoodAnalysisRepositoryImpl(
     private val apiService: GeminiApiService,
     private val settingsRepository: SettingsRepository,
     private val mapper: FoodAnalysisMapper,
-    private val openFoodFactsService: OpenFoodFactsService,
-    private val googleAuthManager: GoogleAuthManager
+    private val openFoodFactsService: OpenFoodFactsService
 ) : FoodAnalysisRepository {
 
-    private suspend fun resolveAuth(): GeminiAuth {
-        val googleAuthEnabled = settingsRepository.isGoogleAuthForGemini()
-        val signedIn = googleAuthManager.isSignedIn()
-        Log.d("ResolveAuth", "googleAuthForGemini=$googleAuthEnabled, isSignedIn=$signedIn")
-
-        if (googleAuthEnabled && signedIn) {
-            try {
-                val token = googleAuthManager.getGeminiAccessToken()
-                Log.d("ResolveAuth", "OAuth token=${if (token != null) "${token.take(10)}..." else "null"}")
-                if (token != null) return GeminiAuth.OAuth(token)
-            } catch (e: Exception) {
-                Log.e("ResolveAuth", "OAuth token error: ${e.message}")
-            }
-        }
+    private fun getApiKey(): String {
         val apiKey = settingsRepository.getApiKey()
-        Log.d("ResolveAuth", "Falling back to API key (blank=${apiKey.isBlank()})")
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")
         }
-        return GeminiAuth.ApiKey(apiKey)
+        return apiKey
     }
 
     override suspend fun analyzeFood(imageData: ByteArray, language: String): FoodAnalysis {
-        val auth = resolveAuth()
-        val rawResponse = apiService.analyzeImage(imageData, auth, language)
+        val rawResponse = apiService.analyzeImage(imageData, getApiKey(), language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 
     override suspend fun analyzeFoodFromText(description: String, language: String): FoodAnalysis {
-        val auth = resolveAuth()
-        val rawResponse = apiService.analyzeText(description, auth, language)
+        val rawResponse = apiService.analyzeText(description, getApiKey(), language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 
@@ -60,9 +40,8 @@ class FoodAnalysisRepositoryImpl(
         imageData: ByteArray?,
         language: String
     ): FoodAnalysis {
-        val auth = resolveAuth()
         val originalJson = serializeAnalysis(originalAnalysis)
-        val rawResponse = apiService.correctAnalysis(originalJson, userFeedback, imageData, auth, language)
+        val rawResponse = apiService.correctAnalysis(originalJson, userFeedback, imageData, getApiKey(), language)
         return mapper.mapFromApiResponse(rawResponse)
     }
 

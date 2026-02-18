@@ -1,8 +1,6 @@
 package com.ghostwan.snapcal.domain.usecase
 
 import com.ghostwan.snapcal.data.remote.GeminiApiService
-import com.ghostwan.snapcal.data.remote.GeminiAuth
-import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
@@ -10,28 +8,14 @@ import org.json.JSONObject
 
 class ComputeNutritionGoalUseCase(
     private val apiService: GeminiApiService,
-    private val settingsRepository: SettingsRepository,
-    private val googleAuthManager: GoogleAuthManager
+    private val settingsRepository: SettingsRepository
 ) {
-    private suspend fun resolveAuth(): GeminiAuth {
-        if (settingsRepository.isGoogleAuthForGemini() && googleAuthManager.isSignedIn()) {
-            try {
-                val token = googleAuthManager.getGeminiAccessToken()
-                if (token != null) return GeminiAuth.OAuth(token)
-            } catch (_: Exception) {
-                // Consent not granted or other error, fallback to API key
-            }
-        }
+    suspend operator fun invoke(profile: UserProfile, language: String): NutritionGoal {
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")
         }
-        return GeminiAuth.ApiKey(apiKey)
-    }
-
-    suspend operator fun invoke(profile: UserProfile, language: String): NutritionGoal {
-        val auth = resolveAuth()
-        val rawResponse = apiService.computeNutritionGoal(profile, auth, language)
+        val rawResponse = apiService.computeNutritionGoal(profile, apiKey, language)
 
         val json = JSONObject(rawResponse)
         val textContent = json.getJSONArray("candidates")

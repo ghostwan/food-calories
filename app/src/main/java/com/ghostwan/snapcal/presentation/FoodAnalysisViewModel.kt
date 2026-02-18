@@ -11,7 +11,6 @@ import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.Ingredient
 import com.ghostwan.snapcal.domain.model.Macros
 import com.ghostwan.snapcal.domain.model.MealEntry
-import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UsageRepository
@@ -32,8 +31,7 @@ class FoodAnalysisViewModel(
     private val settingsRepository: SettingsRepository,
     private val usageRepository: UsageRepository,
     private val saveMealUseCase: SaveMealUseCase,
-    private val mealRepository: MealRepository,
-    private val googleAuthManager: GoogleAuthManager
+    private val mealRepository: MealRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Idle)
@@ -56,9 +54,6 @@ class FoodAnalysisViewModel(
     fun getApiKey(): String = settingsRepository.getApiKey()
 
     fun setApiKey(key: String) = settingsRepository.setApiKey(key)
-
-    fun isGeminiConfigured(): Boolean =
-        settingsRepository.isGoogleAuthForGemini() && googleAuthManager.isSignedIn()
 
     fun isQuotaExceeded(): Boolean =
         usageRepository.getDailyRequestCount() >= FREE_DAILY_LIMIT
@@ -353,8 +348,7 @@ class FoodAnalysisViewModel(
             settingsRepository: SettingsRepository,
             usageRepository: UsageRepository,
             saveMealUseCase: SaveMealUseCase,
-            mealRepository: MealRepository,
-            googleAuthManager: GoogleAuthManager
+            mealRepository: MealRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -364,8 +358,7 @@ class FoodAnalysisViewModel(
                     settingsRepository,
                     usageRepository,
                     saveMealUseCase,
-                    mealRepository,
-                    googleAuthManager
+                    mealRepository
                 ) as T
             }
         }
