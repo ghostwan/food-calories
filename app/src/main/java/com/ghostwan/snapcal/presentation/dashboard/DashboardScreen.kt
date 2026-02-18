@@ -145,12 +145,18 @@ fun DashboardScreen(
                     goal = goal.calories,
                     burned = caloriesBurned,
                     onBurnedClick = {
-                        val intent = context.packageManager.getLaunchIntentForPackage("com.google.android.apps.fitness")
-                        if (intent != null) {
-                            context.startActivity(intent)
-                        } else {
-                            val playStore = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness"))
-                            context.startActivity(playStore)
+                        try {
+                            val fitnessIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.google.fitness://activity"))
+                            fitnessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            context.startActivity(fitnessIntent)
+                        } catch (_: Exception) {
+                            val launchIntent = context.packageManager.getLaunchIntentForPackage("com.google.android.apps.fitness")
+                            if (launchIntent != null) {
+                                context.startActivity(launchIntent)
+                            } else {
+                                val playStore = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness"))
+                                context.startActivity(playStore)
+                            }
                         }
                     }
                 )
