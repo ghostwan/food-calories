@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -146,17 +147,17 @@ fun DashboardScreen(
                     burned = caloriesBurned,
                     onBurnedClick = {
                         try {
-                            val fitnessIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.google.fitness://activity"))
-                            fitnessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            val fitnessIntent = Intent(Intent.ACTION_MAIN).apply {
+                                component = ComponentName(
+                                    "com.google.android.apps.fitness",
+                                    "com.google.android.apps.fitness.welcome.WelcomeActivity"
+                                )
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
                             context.startActivity(fitnessIntent)
                         } catch (_: Exception) {
-                            val launchIntent = context.packageManager.getLaunchIntentForPackage("com.google.android.apps.fitness")
-                            if (launchIntent != null) {
-                                context.startActivity(launchIntent)
-                            } else {
-                                val playStore = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness"))
-                                context.startActivity(playStore)
-                            }
+                            val playStore = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness"))
+                            context.startActivity(playStore)
                         }
                     }
                 )
