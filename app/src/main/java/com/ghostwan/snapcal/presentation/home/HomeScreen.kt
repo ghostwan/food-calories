@@ -68,7 +68,14 @@ import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel.Companion.FREE_DAILY_LIMIT
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import com.google.mlkit.vision.barcode.common.Barcode
+import org.json.JSONArray
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import java.io.File
@@ -514,6 +521,10 @@ private fun QuotaWarningDialog(
 
 @Composable
 private fun FavoriteCard(meal: MealEntry, onQuickAdd: () -> Unit, onClick: () -> Unit) {
+    val healthColor = remember(meal.ingredientsJson) {
+        computeHealthColor(meal.ingredientsJson)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick
@@ -521,34 +532,75 @@ private fun FavoriteCard(meal: MealEntry, onQuickAdd: () -> Unit, onClick: () ->
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = meal.emoji ?: "\uD83C\uDF7D\uFE0F",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(end = 12.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = meal.dishName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = stringResource(R.string.result_kcal, meal.calories),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
+            if (healthColor != null) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .background(healthColor, RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
                 )
             }
-            IconButton(onClick = onQuickAdd) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.dashboard_add_favorite),
-                    tint = MaterialTheme.colorScheme.primary
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = meal.emoji ?: "\uD83C\uDF7D\uFE0F",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(end = 12.dp)
                 )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = meal.dishName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.result_kcal, meal.calories),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onQuickAdd) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.dashboard_add_favorite),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
+    }
+}
+
+private fun computeHealthColor(ingredientsJson: String): Color? {
+    return try {
+        val array = JSONArray(ingredientsJson)
+        val scores = mutableListOf<Int>()
+        for (i in 0 until array.length()) {
+            val obj = array.getJSONObject(i)
+            if (obj.has("healthRating") && !obj.isNull("healthRating")) {
+                scores.add(when (obj.getString("healthRating")) {
+                    "healthy" -> 2
+                    "moderate" -> 1
+                    else -> 0
+                })
+            }
+        }
+        if (scores.isEmpty()) return null
+        val avg = scores.average()
+        when {
+            avg >= 1.5 -> Color(0xFF4CAF50)
+            avg >= 0.75 -> Color(0xFFFF9800)
+            else -> Color(0xFFF44336)
+        }
+    } catch (_: Exception) {
+        null
     }
 }
