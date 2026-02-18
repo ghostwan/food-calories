@@ -53,7 +53,7 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
     onMealClick: (MealEntry) -> Unit = {}
 ) {
     val history by viewModel.history.collectAsState()
@@ -82,8 +82,10 @@ fun HistoryScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.history_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.result_back))
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.result_back))
+                        }
                     }
                 }
             )

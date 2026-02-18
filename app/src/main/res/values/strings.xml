@@ -62,6 +62,8 @@
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_scanner">Scanner</string>
     <string name="nav_profile">Profile</string>
+    <string name="nav_history">History</string>
+    <string name="nav_shopping">Shopping</string>
 
     <!-- Dashboard -->
     <string name="dashboard_title">Dashboard</string>

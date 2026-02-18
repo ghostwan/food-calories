@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.Button
@@ -33,6 +34,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -69,7 +71,8 @@ import com.ghostwan.snapcal.domain.model.Gender
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
-    healthConnectManager: HealthConnectManager
+    healthConnectManager: HealthConnectManager,
+    onBack: (() -> Unit)? = null
 ) {
     val profile by viewModel.profile.collectAsState()
     val goal by viewModel.goal.collectAsState()
@@ -160,7 +163,16 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.profile_title)) })
+            TopAppBar(
+                title = { Text(stringResource(R.string.profile_title)) },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.result_back))
+                        }
+                    }
+                }
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->

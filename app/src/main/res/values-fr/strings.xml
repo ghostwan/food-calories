@@ -62,6 +62,8 @@
     <string name="nav_dashboard">Tableau de bord</string>
     <string name="nav_scanner">Scanner</string>
     <string name="nav_profile">Profil</string>
+    <string name="nav_history">Historique</string>
+    <string name="nav_shopping">Courses</string>
 
     <!-- Dashboard -->
     <string name="dashboard_title">Tableau de bord</string>

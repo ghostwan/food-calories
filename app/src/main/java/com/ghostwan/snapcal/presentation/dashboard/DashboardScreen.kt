@@ -27,11 +27,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.MergeType
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
@@ -75,10 +74,9 @@ import com.ghostwan.snapcal.domain.model.NutritionGoal
 fun DashboardScreen(
     viewModel: DashboardViewModel,
     onScanMeal: () -> Unit,
-    onHistory: () -> Unit,
+    onProfile: () -> Unit,
     onMealClick: (MealEntry) -> Unit = {},
-    onMergeMeals: (List<MealEntry>) -> Unit = {},
-    onShoppingList: (() -> Unit)? = null
+    onMergeMeals: (List<MealEntry>) -> Unit = {}
 ) {
     val nutrition by viewModel.nutrition.collectAsState()
     val meals by viewModel.meals.collectAsState()
@@ -121,13 +119,8 @@ fun DashboardScreen(
                             Text(stringResource(R.string.dashboard_merge))
                         }
                     } else {
-                        if (onShoppingList != null) {
-                            IconButton(onClick = onShoppingList) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = stringResource(R.string.shopping_list_title))
-                            }
-                        }
-                        IconButton(onClick = onHistory) {
-                            Icon(Icons.Default.History, contentDescription = stringResource(R.string.dashboard_history))
+                        IconButton(onClick = onProfile) {
+                            Icon(Icons.Default.Person, contentDescription = stringResource(R.string.nav_profile))
                         }
                     }
                 }

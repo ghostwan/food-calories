@@ -53,7 +53,7 @@ import java.util.Locale
 @Composable
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel,
-    onBack: () -> Unit
+    onBack: (() -> Unit)? = null
 ) {
     val items by viewModel.items.collectAsState()
     var itemText by rememberSaveable { mutableStateOf("") }
@@ -75,11 +75,13 @@ fun ShoppingListScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.shopping_list_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.result_back)
-                        )
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.result_back)
+                            )
+                        }
                     }
                 },
                 actions = {

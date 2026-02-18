@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -46,20 +47,10 @@ import com.ghostwan.snapcal.presentation.shopping.ShoppingListViewModel
 import com.ghostwan.snapcal.domain.model.ShoppingItem
 import com.ghostwan.snapcal.widget.ShoppingWidgetProvider
 
-private sealed class BottomNavItem(val route: String, val labelRes: Int, val icon: ImageVector) {
-    data object Dashboard : BottomNavItem("dashboard", R.string.nav_dashboard, Icons.Default.Dashboard)
-    data object Scanner : BottomNavItem("home", R.string.nav_scanner, Icons.Default.Restaurant)
-    data object Profile : BottomNavItem("profile", R.string.nav_profile, Icons.Default.Person)
-}
-
-private val bottomNavItems = listOf(
-    BottomNavItem.Dashboard,
-    BottomNavItem.Scanner,
-    BottomNavItem.Profile
-)
+private data class BottomNavItem(val route: String, val labelRes: Int, val icon: ImageVector)
 
 // Routes that should NOT show the bottom bar
-private val noBottomBarRoutes = setOf("result", "history", "shopping")
+private val noBottomBarRoutes = setOf("result", "profile")
 
 @Composable
 fun SnapCalNavGraph(startRoute: String = "dashboard") {
@@ -80,6 +71,15 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
     )
 
     val shoppingListEnabled = app.settingsRepository.isShoppingListEnabled()
+
+    val bottomNavItems = buildList {
+        add(BottomNavItem("dashboard", R.string.nav_dashboard, Icons.Default.Dashboard))
+        add(BottomNavItem("home", R.string.nav_scanner, Icons.Default.Restaurant))
+        add(BottomNavItem("history", R.string.nav_history, Icons.Default.History))
+        if (shoppingListEnabled) {
+            add(BottomNavItem("shopping", R.string.nav_shopping, Icons.Default.ShoppingCart))
+        }
+    }
 
     val layoutDirection = LocalLayoutDirection.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -137,8 +137,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                             restoreState = true
                         }
                     },
-                    onHistory = {
-                        navController.navigate("history")
+                    onProfile = {
+                        navController.navigate("profile")
                     },
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
@@ -147,10 +147,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     onMergeMeals = { meals ->
                         foodAnalysisViewModel.viewMergedMeals(meals)
                         navController.navigate("result")
-                    },
-                    onShoppingList = if (shoppingListEnabled) {
-                        { navController.navigate("shopping") }
-                    } else null
+                    }
                 )
             }
 
@@ -223,7 +220,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                 )
                 ProfileScreen(
                     viewModel = profileViewModel,
-                    healthConnectManager = app.healthConnectManager
+                    healthConnectManager = app.healthConnectManager,
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -238,9 +236,6 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                 )
                 HistoryScreen(
                     viewModel = historyViewModel,
-                    onBack = {
-                        navController.popBackStack()
-                    },
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
                         navController.navigate("result")
@@ -256,10 +251,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     )
                 )
                 ShoppingListScreen(
-                    viewModel = shoppingViewModel,
-                    onBack = {
-                        navController.popBackStack()
-                    }
+                    viewModel = shoppingViewModel
                 )
             }
         }
