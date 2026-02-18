@@ -14,4 +14,5 @@ interface MealRepository {
     suspend fun setFavorite(id: Long, isFavorite: Boolean)
     fun getFavorites(): Flow<List<MealEntry>>
     suspend fun updateEmoji(id: Long, emoji: String)
+    suspend fun updateQuantity(id: Long, quantity: Int)
 }

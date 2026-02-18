@@ -46,6 +46,9 @@ class FoodAnalysisViewModel(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite: StateFlow<Boolean> = _isFavorite
 
+    private val _quantity = MutableStateFlow(1)
+    val quantity: StateFlow<Int> = _quantity
+
     private var lastImageData: ByteArray? = null
     private var editingMealId: Long? = null
     private var editingMealIds: List<Long>? = null
@@ -130,15 +133,16 @@ class FoodAnalysisViewModel(
     fun saveMeal(analysis: FoodAnalysis) {
         viewModelScope.launch {
             try {
+                val qty = _quantity.value
                 val mealIds = editingMealIds
                 val mealId = editingMealId
                 val mealDate = editingMealDate
                 if (mealIds != null && mealDate != null) {
-                    saveMealUseCase.replaceMultipleAndSave(mealIds, analysis, mealDate)
+                    saveMealUseCase.replaceMultipleAndSave(mealIds, analysis, mealDate, qty)
                 } else if (mealId != null && mealDate != null) {
-                    saveMealUseCase.replaceAndSave(mealId, analysis, mealDate)
+                    saveMealUseCase.replaceAndSave(mealId, analysis, mealDate, qty)
                 } else {
-                    saveMealUseCase(analysis)
+                    saveMealUseCase(analysis, qty)
                 }
                 _mealSaved.value = true
             } catch (_: Exception) {
@@ -182,6 +186,7 @@ class FoodAnalysisViewModel(
         _mealSaved.value = false
         _readOnly.value = true
         _isFavorite.value = meal.isFavorite
+        _quantity.value = meal.quantity
         editingMealId = meal.id
         editingMealDate = meal.date
         lastImageData = null
@@ -189,11 +194,11 @@ class FoodAnalysisViewModel(
 
     fun viewMergedMeals(meals: List<MealEntry>) {
         val dishName = meals.joinToString(" + ") { it.dishName }
-        val totalCalories = meals.sumOf { it.calories }
-        val totalProteins = meals.sumOf { it.proteins.toDouble() }.toFloat()
-        val totalCarbs = meals.sumOf { it.carbs.toDouble() }.toFloat()
-        val totalFats = meals.sumOf { it.fats.toDouble() }.toFloat()
-        val totalFiber = meals.sumOf { it.fiber.toDouble() }.toFloat()
+        val totalCalories = meals.sumOf { it.calories * it.quantity }
+        val totalProteins = meals.sumOf { it.proteins.toDouble() * it.quantity }.toFloat()
+        val totalCarbs = meals.sumOf { it.carbs.toDouble() * it.quantity }.toFloat()
+        val totalFats = meals.sumOf { it.fats.toDouble() * it.quantity }.toFloat()
+        val totalFiber = meals.sumOf { it.fiber.toDouble() * it.quantity }.toFloat()
 
         val allIngredients = meals.flatMap { meal ->
             try {
@@ -233,6 +238,7 @@ class FoodAnalysisViewModel(
         _mealSaved.value = false
         _readOnly.value = false
         _isFavorite.value = false
+        _quantity.value = 1
         editingMealIds = meals.map { it.id }
         editingMealDate = meals.firstOrNull()?.date
         lastImageData = null
@@ -282,6 +288,18 @@ class FoodAnalysisViewModel(
         }
     }
 
+    fun updateQuantity(qty: Int) {
+        if (qty < 1) return
+        _quantity.value = qty
+        // Auto-save in readOnly mode (viewing a saved meal)
+        if (_readOnly.value) {
+            val mealId = editingMealId ?: return
+            viewModelScope.launch {
+                mealRepository.updateQuantity(mealId, qty)
+            }
+        }
+    }
+
     fun toggleFavorite() {
         val mealId = editingMealId ?: return
         val newValue = !_isFavorite.value
@@ -302,6 +320,7 @@ class FoodAnalysisViewModel(
         _mealSaved.value = false
         _readOnly.value = false
         _isFavorite.value = false
+        _quantity.value = 1
         editingMealId = null
         editingMealIds = null
         editingMealDate = null

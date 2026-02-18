@@ -168,6 +168,9 @@
     <string name="ingredient_calories_label">Calories</string>
     <string name="ingredient_delete_confirm">Retirer \"%s\" de la liste ?</string>
 
+    <!-- Meal Quantity -->
+    <string name="meal_quantity_label">Portions</string>
+
     <!-- Emoji Picker -->
     <string name="emoji_picker_title">Choisir un emoji</string>
 

@@ -14,21 +14,21 @@ class SaveMealUseCase(
     private val mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
     private val appContext: Context
 ) {
-    suspend operator fun invoke(analysis: FoodAnalysis) {
+    suspend operator fun invoke(analysis: FoodAnalysis, quantity: Int = 1) {
         val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        saveMeal(analysis, date)
+        saveMeal(analysis, date, quantity)
         refreshWidget()
     }
 
-    suspend fun replaceAndSave(oldMealId: Long, analysis: FoodAnalysis, date: String) {
+    suspend fun replaceAndSave(oldMealId: Long, analysis: FoodAnalysis, date: String, quantity: Int = 1) {
         mealRepository.deleteMeal(oldMealId)
-        saveMeal(analysis, date)
+        saveMeal(analysis, date, quantity)
         refreshWidget()
     }
 
-    suspend fun replaceMultipleAndSave(oldMealIds: List<Long>, analysis: FoodAnalysis, date: String) {
+    suspend fun replaceMultipleAndSave(oldMealIds: List<Long>, analysis: FoodAnalysis, date: String, quantity: Int = 1) {
         oldMealIds.forEach { mealRepository.deleteMeal(it) }
-        saveMeal(analysis, date)
+        saveMeal(analysis, date, quantity)
         refreshWidget()
     }
 
@@ -41,7 +41,7 @@ class SaveMealUseCase(
         }
     }
 
-    private suspend fun saveMeal(analysis: FoodAnalysis, date: String) {
+    private suspend fun saveMeal(analysis: FoodAnalysis, date: String, quantity: Int = 1) {
         val ingredientsJson = buildIngredientsJson(analysis)
         val meal = MealEntry(
             dishName = analysis.dishName,
@@ -52,7 +52,8 @@ class SaveMealUseCase(
             fiber = parseGrams(analysis.macros?.fiber),
             date = date,
             ingredientsJson = ingredientsJson,
-            emoji = analysis.emoji
+            emoji = analysis.emoji,
+            quantity = quantity
         )
         mealRepository.saveMeal(meal)
     }

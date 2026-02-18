@@ -478,14 +478,25 @@ private fun MealCard(
                     modifier = Modifier.padding(end = 12.dp)
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = meal.dishName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = stringResource(R.string.result_kcal, meal.calories),
+                            text = meal.dishName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (meal.quantity > 1) {
+                            Text(
+                                text = " ×${meal.quantity}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.result_kcal, meal.calories * meal.quantity),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )

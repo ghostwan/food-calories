@@ -89,6 +89,7 @@ fun ResultScreen(
     val mealSaved by viewModel.mealSaved.collectAsState()
     val readOnly by viewModel.readOnly.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
+    val quantity by viewModel.quantity.collectAsState()
     val isEditing = viewModel.isEditing()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -141,6 +142,8 @@ fun ResultScreen(
                     mealSaved = mealSaved,
                     readOnly = readOnly,
                     isEditing = isEditing,
+                    quantity = quantity,
+                    onQuantityChange = { viewModel.updateQuantity(it) },
                     onSave = { viewModel.saveMeal(state.result) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
                     onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) },
@@ -190,6 +193,8 @@ private fun SuccessContent(
     mealSaved: Boolean,
     readOnly: Boolean = false,
     isEditing: Boolean = false,
+    quantity: Int = 1,
+    onQuantityChange: (Int) -> Unit = {},
     onSave: () -> Unit,
     onCorrect: (String) -> Unit,
     onEmojiChange: (String) -> Unit = {},
@@ -262,14 +267,32 @@ private fun SuccessContent(
             }
         }
 
-        item { CaloriesCard(result.totalCalories, result.ingredients) }
+        if (!mealSaved || readOnly) {
+            item {
+                QuantitySelector(
+                    quantity = quantity,
+                    onQuantityChange = onQuantityChange
+                )
+            }
+        }
+
+        item { CaloriesCard(result.totalCalories * quantity, result.ingredients) }
 
         if (result.healthInfo != null) {
             item { HealthInfoCard(result.healthInfo) }
         }
 
         if (result.macros != null) {
-            item { MacrosCard(result.macros) }
+            item {
+                MacrosCard(
+                    macros = if (quantity > 1) com.ghostwan.snapcal.domain.model.Macros(
+                        proteins = scaleGrams(result.macros.proteins, quantity),
+                        carbs = scaleGrams(result.macros.carbs, quantity),
+                        fats = scaleGrams(result.macros.fats, quantity),
+                        fiber = result.macros.fiber?.let { scaleGrams(it, quantity) }
+                    ) else result.macros
+                )
+            }
         }
 
         item {
@@ -322,6 +345,63 @@ private fun SuccessContent(
                             else R.string.result_save_meal
                         ))
                     }
+                }
+            }
+        }
+    }
+}
+
+private fun scaleGrams(value: String, factor: Int): String {
+    if (factor <= 1) return value
+    val numeric = value.replace(Regex("[^0-9.,]"), "").replace(",", ".").toFloatOrNull()
+        ?: return value
+    val scaled = (numeric * factor).let { if (it == it.toLong().toFloat()) it.toLong().toString() else String.format("%.1f", it) }
+    return "${scaled}g"
+}
+
+@Composable
+private fun QuantitySelector(
+    quantity: Int,
+    onQuantityChange: (Int) -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.meal_quantity_label),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { if (quantity > 1) onQuantityChange(quantity - 1) },
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    enabled = quantity > 1
+                ) {
+                    Text("−", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+                Text(
+                    text = "$quantity",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                OutlinedButton(
+                    onClick = { onQuantityChange(quantity + 1) },
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                ) {
+                    Text("+", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }

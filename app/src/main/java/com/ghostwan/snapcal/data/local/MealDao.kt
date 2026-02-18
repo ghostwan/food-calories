@@ -15,15 +15,15 @@ interface MealDao {
     fun getMealsForDate(date: String): Flow<List<MealEntity>>
 
     @Query(
-        "SELECT date, SUM(calories) as totalCalories, SUM(proteins) as totalProteins, " +
-        "SUM(carbs) as totalCarbs, SUM(fats) as totalFats, SUM(fiber) as totalFiber " +
+        "SELECT date, SUM(calories * quantity) as totalCalories, SUM(proteins * quantity) as totalProteins, " +
+        "SUM(carbs * quantity) as totalCarbs, SUM(fats * quantity) as totalFats, SUM(fiber * quantity) as totalFiber " +
         "FROM meals WHERE date = :date GROUP BY date"
     )
     fun getDailyNutrition(date: String): Flow<DailyNutritionTuple?>
 
     @Query(
-        "SELECT date, SUM(calories) as totalCalories, SUM(proteins) as totalProteins, " +
-        "SUM(carbs) as totalCarbs, SUM(fats) as totalFats, SUM(fiber) as totalFiber " +
+        "SELECT date, SUM(calories * quantity) as totalCalories, SUM(proteins * quantity) as totalProteins, " +
+        "SUM(carbs * quantity) as totalCarbs, SUM(fats * quantity) as totalFats, SUM(fiber * quantity) as totalFiber " +
         "FROM meals WHERE date >= :startDate GROUP BY date ORDER BY date DESC"
     )
     fun getDailyNutritionHistory(startDate: String): Flow<List<DailyNutritionTuple>>
@@ -40,11 +40,14 @@ interface MealDao {
     @Query("SELECT * FROM meals WHERE isFavorite = 1 ORDER BY id DESC")
     fun getFavorites(): Flow<List<MealEntity>>
 
-    @Query("SELECT SUM(calories) FROM meals WHERE date = :date")
+    @Query("SELECT SUM(calories * quantity) FROM meals WHERE date = :date")
     suspend fun getDailyCalories(date: String): Int?
 
     @Query("UPDATE meals SET emoji = :emoji WHERE id = :id")
     suspend fun updateEmoji(id: Long, emoji: String)
+
+    @Query("UPDATE meals SET quantity = :quantity WHERE id = :id")
+    suspend fun updateQuantity(id: Long, quantity: Int)
 }
 
 data class DailyNutritionTuple(
