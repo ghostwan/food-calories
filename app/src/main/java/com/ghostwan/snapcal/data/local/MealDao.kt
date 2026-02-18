@@ -48,6 +48,9 @@ interface MealDao {
 
     @Query("UPDATE meals SET quantity = :quantity WHERE id = :id")
     suspend fun updateQuantity(id: Long, quantity: Int)
+
+    @Query("UPDATE meals SET calories = :calories, proteins = :proteins, carbs = :carbs, fats = :fats, fiber = :fiber, ingredientsJson = :ingredientsJson WHERE id = :id")
+    suspend fun updateMealNutrition(id: Long, calories: Int, proteins: Float, carbs: Float, fats: Float, fiber: Float, ingredientsJson: String)
 }
 
 data class DailyNutritionTuple(

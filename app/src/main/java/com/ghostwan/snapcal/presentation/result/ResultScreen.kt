@@ -306,7 +306,8 @@ private fun SuccessContent(
         itemsIndexed(result.ingredients) { index, ingredient ->
             IngredientCard(
                 ingredient = ingredient,
-                editable = !readOnly,
+                editable = true,
+                deletable = !readOnly,
                 onEdit = { editingIngredientIndex = index },
                 onDelete = { onRemoveIngredient(index) },
                 onAddToCart = onAddToShoppingList?.let { { it(ingredient) } }
@@ -785,6 +786,7 @@ private fun NotesCard(notes: String) {
 private fun IngredientCard(
     ingredient: Ingredient,
     editable: Boolean = false,
+    deletable: Boolean = editable,
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {},
     onAddToCart: (() -> Unit)? = null
@@ -802,7 +804,7 @@ private fun IngredientCard(
         else -> null
     }
 
-    val hasActions = editable || onAddToCart != null
+    val hasActions = deletable || onAddToCart != null
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -870,7 +872,7 @@ private fun IngredientCard(
                     )
                 }
             }
-            if (editable) {
+            if (deletable) {
                 IconButton(
                     onClick = onDelete,
                     modifier = Modifier.size(36.dp)

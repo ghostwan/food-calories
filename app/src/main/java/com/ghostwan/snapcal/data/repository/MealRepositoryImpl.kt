@@ -93,6 +93,10 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         mealDao.updateQuantity(id, quantity)
     }
 
+    override suspend fun updateMealNutrition(id: Long, calories: Int, proteins: Float, carbs: Float, fats: Float, fiber: Float, ingredientsJson: String) {
+        mealDao.updateMealNutrition(id, calories, proteins, carbs, fats, fiber, ingredientsJson)
+    }
+
     private fun daysAgoDate(days: Int): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -days)

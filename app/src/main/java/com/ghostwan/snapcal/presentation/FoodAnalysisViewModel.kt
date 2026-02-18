@@ -248,11 +248,16 @@ class FoodAnalysisViewModel(
         val current = _uiState.value
         if (current is AnalysisUiState.Success) {
             val result = current.result
+            val oldTotalCalories = result.totalCalories
             val newIngredients = result.ingredients.toMutableList().apply { removeAt(index) }
-            val newCalories = newIngredients.sumOf { it.calories }
-            _uiState.value = AnalysisUiState.Success(
-                result.copy(ingredients = newIngredients, totalCalories = newCalories)
+            val newTotalCalories = newIngredients.sumOf { it.calories }
+            val updatedResult = result.copy(
+                ingredients = newIngredients,
+                totalCalories = newTotalCalories,
+                macros = scaleMacros(result.macros, oldTotalCalories, newTotalCalories)
             )
+            _uiState.value = AnalysisUiState.Success(updatedResult)
+            if (_readOnly.value) persistMealUpdate(updatedResult)
         }
     }
 
@@ -260,13 +265,18 @@ class FoodAnalysisViewModel(
         val current = _uiState.value
         if (current is AnalysisUiState.Success) {
             val result = current.result
+            val oldTotalCalories = result.totalCalories
             val newIngredients = result.ingredients.toMutableList().apply {
                 set(index, get(index).copy(quantity = newQuantity, calories = newCalories))
             }
             val newTotalCalories = newIngredients.sumOf { it.calories }
-            _uiState.value = AnalysisUiState.Success(
-                result.copy(ingredients = newIngredients, totalCalories = newTotalCalories)
+            val updatedResult = result.copy(
+                ingredients = newIngredients,
+                totalCalories = newTotalCalories,
+                macros = scaleMacros(result.macros, oldTotalCalories, newTotalCalories)
             )
+            _uiState.value = AnalysisUiState.Success(updatedResult)
+            if (_readOnly.value) persistMealUpdate(updatedResult)
         }
     }
 
@@ -325,6 +335,56 @@ class FoodAnalysisViewModel(
         editingMealIds = null
         editingMealDate = null
         lastImageData = null
+    }
+
+    private fun scaleMacros(macros: Macros?, oldCalories: Int, newCalories: Int): Macros? {
+        if (macros == null || oldCalories <= 0) return macros
+        val ratio = newCalories.toFloat() / oldCalories
+        return Macros(
+            proteins = scaleGramString(macros.proteins, ratio),
+            carbs = scaleGramString(macros.carbs, ratio),
+            fats = scaleGramString(macros.fats, ratio),
+            fiber = macros.fiber?.let { scaleGramString(it, ratio) }
+        )
+    }
+
+    private fun scaleGramString(value: String, ratio: Float): String {
+        val numeric = value.replace(Regex("[^0-9.,]"), "").replace(",", ".").toFloatOrNull()
+            ?: return value
+        return String.format("%.0fg", numeric * ratio)
+    }
+
+    private fun persistMealUpdate(result: FoodAnalysis) {
+        val mealId = editingMealId ?: return
+        viewModelScope.launch {
+            val proteins = parseGrams(result.macros?.proteins)
+            val carbs = parseGrams(result.macros?.carbs)
+            val fats = parseGrams(result.macros?.fats)
+            val fiber = parseGrams(result.macros?.fiber)
+            val ingredientsJson = buildIngredientsJson(result.ingredients)
+            mealRepository.updateMealNutrition(mealId, result.totalCalories, proteins, carbs, fats, fiber, ingredientsJson)
+        }
+    }
+
+    private fun parseGrams(value: String?): Float {
+        if (value == null) return 0f
+        return value.replace(Regex("[^0-9.,]"), "").replace(",", ".").toFloatOrNull() ?: 0f
+    }
+
+    private fun buildIngredientsJson(ingredients: List<Ingredient>): String {
+        val sb = StringBuilder("[")
+        ingredients.forEachIndexed { index, ingredient ->
+            if (index > 0) sb.append(",")
+            sb.append("{\"name\":\"${ingredient.name.replace("\"", "\\\"")}\",")
+            sb.append("\"quantity\":\"${ingredient.quantity.replace("\"", "\\\"")}\",")
+            sb.append("\"calories\":${ingredient.calories}")
+            if (ingredient.healthRating != null) {
+                sb.append(",\"healthRating\":\"${ingredient.healthRating}\"")
+            }
+            sb.append("}")
+        }
+        sb.append("]")
+        return sb.toString()
     }
 
     private fun readAndCompressImage(context: Context, uri: Uri): ByteArray {
