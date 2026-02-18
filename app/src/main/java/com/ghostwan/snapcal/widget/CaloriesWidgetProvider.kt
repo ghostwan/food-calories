@@ -61,6 +61,7 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
 
             val intent = Intent(context, MainActivity::class.java).apply {
                 putExtra("navigate_to", "home")
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             val pendingIntent = PendingIntent.getActivity(
                 context, 0, intent,

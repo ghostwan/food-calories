@@ -15,6 +15,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ghostwan.snapcal.MainActivity
 import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
@@ -58,6 +60,22 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
     val app = context.applicationContext as SnapCalApp
 
     val navController = rememberNavController()
+
+    // Handle navigation from widgets when app is already open
+    val activity = context as? MainActivity
+    val pendingRoute = activity?.pendingRoute?.collectAsState()?.value
+    LaunchedEffect(pendingRoute) {
+        if (pendingRoute != null) {
+            navController.navigate(pendingRoute) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+            activity.consumePendingRoute()
+        }
+    }
 
     val foodAnalysisViewModel: FoodAnalysisViewModel = viewModel(
         factory = FoodAnalysisViewModel.provideFactory(

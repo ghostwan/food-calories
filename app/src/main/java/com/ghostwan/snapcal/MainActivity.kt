@@ -7,8 +7,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.ghostwan.snapcal.presentation.navigation.SnapCalNavGraph
 import com.ghostwan.snapcal.presentation.theme.SnapCalTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class MainActivity : ComponentActivity() {
+
+    private val _pendingRoute = MutableStateFlow<String?>(null)
+    val pendingRoute: StateFlow<String?> = _pendingRoute
+
+    fun consumePendingRoute() {
+        _pendingRoute.value = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -24,8 +34,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         val route = intent.getStringExtra("navigate_to")
         if (route != null) {
-            setIntent(intent)
-            recreate()
+            _pendingRoute.value = route
         }
     }
 }
