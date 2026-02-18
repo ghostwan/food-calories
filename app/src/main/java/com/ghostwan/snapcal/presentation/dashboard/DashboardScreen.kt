@@ -195,6 +195,8 @@ fun DashboardScreen(
                         IconButton(onClick = { viewModel.exitSelectionMode() }) {
                             Icon(Icons.Default.Close, contentDescription = stringResource(R.string.dashboard_selection_cancel))
                         }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
                     }
                 },
                 actions = {
