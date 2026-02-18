@@ -188,6 +188,23 @@
     <!-- Widget -->
     <string name="widget_shopping_name">SnapCal Liste de courses</string>
 
+    <!-- Health Indicators -->
+    <string name="health_indicators_title">Indicateurs de santé</string>
+    <string name="health_nutriscore_label">Nutri-Score</string>
+    <string name="health_nova_label">Groupe NOVA</string>
+    <string name="health_nova_1">Non transformé ou peu transformé</string>
+    <string name="health_nova_2">Ingrédients culinaires transformés</string>
+    <string name="health_nova_3">Aliments transformés</string>
+    <string name="health_nova_4">Produits ultra-transformés</string>
+    <string name="health_nutrient_levels">Niveaux de nutriments</string>
+    <string name="health_fat">Matières grasses</string>
+    <string name="health_saturated_fat">Graisses saturées</string>
+    <string name="health_sugars">Sucres</string>
+    <string name="health_salt">Sel</string>
+    <string name="health_level_low">Faible</string>
+    <string name="health_level_moderate">Modéré</string>
+    <string name="health_level_high">Élevé</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>

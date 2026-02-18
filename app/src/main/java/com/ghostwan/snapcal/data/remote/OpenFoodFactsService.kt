@@ -3,6 +3,8 @@ package com.ghostwan.snapcal.data.remote
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.Ingredient
 import com.ghostwan.snapcal.domain.model.Macros
+import com.ghostwan.snapcal.domain.model.NutrientLevels
+import com.ghostwan.snapcal.domain.model.ProductHealthInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -86,6 +88,8 @@ class OpenFoodFactsService {
             "Open Food Facts · 100g"
         }
 
+        val healthInfo = parseHealthInfo(product)
+
         return FoodAnalysis(
             dishName = dishName,
             totalCalories = calories,
@@ -103,8 +107,30 @@ class OpenFoodFactsService {
                 fiber = if (fiber > 0) String.format("%.1fg", fiber) else null
             ),
             notes = note,
-            emoji = "\uD83D\uDCE6"
+            emoji = "\uD83D\uDCE6",
+            healthInfo = healthInfo
         )
+    }
+    private fun parseHealthInfo(product: JSONObject): ProductHealthInfo? {
+        val nutriScore = product.optString("nutriscore_grade", "").ifBlank {
+            product.optString("nutrition_grades", "").ifBlank { null }
+        }?.lowercase()?.takeIf { it in listOf("a", "b", "c", "d", "e") }
+
+        val novaGroup = product.optInt("nova_group", 0).takeIf { it in 1..4 }
+
+        val nutrientLevelsJson = product.optJSONObject("nutrient_levels")
+        val nutrientLevels = if (nutrientLevelsJson != null) {
+            NutrientLevels(
+                fat = nutrientLevelsJson.optString("fat", "").ifBlank { null },
+                saturatedFat = nutrientLevelsJson.optString("saturated-fat", "").ifBlank { null },
+                sugars = nutrientLevelsJson.optString("sugars", "").ifBlank { null },
+                salt = nutrientLevelsJson.optString("salt", "").ifBlank { null }
+            ).takeIf { it.fat != null || it.saturatedFat != null || it.sugars != null || it.salt != null }
+        } else null
+
+        return if (nutriScore != null || novaGroup != null || nutrientLevels != null) {
+            ProductHealthInfo(nutriScore, novaGroup, nutrientLevels)
+        } else null
     }
 }
 

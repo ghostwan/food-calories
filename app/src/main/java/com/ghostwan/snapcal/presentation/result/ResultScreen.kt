@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.Ingredient
+import com.ghostwan.snapcal.domain.model.ProductHealthInfo
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.model.AnalysisUiState
 import androidx.compose.ui.text.input.KeyboardType
@@ -262,6 +263,10 @@ private fun SuccessContent(
         }
 
         item { CaloriesCard(result.totalCalories, result.ingredients) }
+
+        if (result.healthInfo != null) {
+            item { HealthInfoCard(result.healthInfo) }
+        }
 
         if (result.macros != null) {
             item { MacrosCard(result.macros) }
@@ -481,6 +486,181 @@ private fun MacrosCard(macros: com.ghostwan.snapcal.domain.model.Macros) {
                 MacroRow(stringResource(R.string.result_fiber), macros.fiber)
             }
         }
+    }
+}
+
+@Composable
+private fun HealthInfoCard(healthInfo: ProductHealthInfo) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.health_indicators_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (healthInfo.nutriScore != null) {
+                NutriScoreRow(healthInfo.nutriScore)
+            }
+
+            if (healthInfo.novaGroup != null) {
+                NovaGroupRow(healthInfo.novaGroup)
+            }
+
+            if (healthInfo.nutrientLevels != null) {
+                NutrientLevelsSection(healthInfo.nutrientLevels)
+            }
+        }
+    }
+}
+
+@Composable
+private fun NutriScoreRow(grade: String) {
+    val grades = listOf("a", "b", "c", "d", "e")
+    val colors = listOf(
+        Color(0xFF038141), // A - dark green
+        Color(0xFF85BB2F), // B - light green
+        Color(0xFFFECB02), // C - yellow
+        Color(0xFFEE8100), // D - orange
+        Color(0xFFE63E11)  // E - red
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.health_nutriscore_label),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.width(90.dp)
+        )
+        grades.forEachIndexed { index, g ->
+            val isActive = g == grade.lowercase()
+            Box(
+                modifier = Modifier
+                    .size(if (isActive) 36.dp else 28.dp)
+                    .background(
+                        color = if (isActive) colors[index] else colors[index].copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(6.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = g.uppercase(),
+                    color = Color.White,
+                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                    style = if (isActive) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NovaGroupRow(group: Int) {
+    val description = when (group) {
+        1 -> stringResource(R.string.health_nova_1)
+        2 -> stringResource(R.string.health_nova_2)
+        3 -> stringResource(R.string.health_nova_3)
+        4 -> stringResource(R.string.health_nova_4)
+        else -> ""
+    }
+    val color = when (group) {
+        1 -> Color(0xFF038141)
+        2 -> Color(0xFF85BB2F)
+        3 -> Color(0xFFEE8100)
+        4 -> Color(0xFFE63E11)
+        else -> Color.Gray
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.health_nova_label),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.width(90.dp)
+        )
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(color, RoundedCornerShape(6.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = group.toString(),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun NutrientLevelsSection(levels: com.ghostwan.snapcal.domain.model.NutrientLevels) {
+    val items = listOfNotNull(
+        levels.fat?.let { stringResource(R.string.health_fat) to it },
+        levels.saturatedFat?.let { stringResource(R.string.health_saturated_fat) to it },
+        levels.sugars?.let { stringResource(R.string.health_sugars) to it },
+        levels.salt?.let { stringResource(R.string.health_salt) to it }
+    )
+    if (items.isEmpty()) return
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        items.forEach { (label, level) ->
+            NutrientLevelRow(label, level)
+        }
+    }
+}
+
+@Composable
+private fun NutrientLevelRow(label: String, level: String) {
+    val color = when (level) {
+        "low" -> Color(0xFF038141)
+        "moderate" -> Color(0xFFEE8100)
+        "high" -> Color(0xFFE63E11)
+        else -> Color.Gray
+    }
+    val levelText = when (level) {
+        "low" -> stringResource(R.string.health_level_low)
+        "moderate" -> stringResource(R.string.health_level_moderate)
+        "high" -> stringResource(R.string.health_level_high)
+        else -> level
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(color, RoundedCornerShape(50))
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = levelText,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = color
+        )
     }
 }
 

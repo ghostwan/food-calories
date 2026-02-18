@@ -6,7 +6,8 @@ data class FoodAnalysis(
     val ingredients: List<Ingredient>,
     val macros: Macros?,
     val notes: String?,
-    val emoji: String? = null
+    val emoji: String? = null,
+    val healthInfo: ProductHealthInfo? = null
 )
 
 data class Ingredient(
@@ -21,4 +22,17 @@ data class Macros(
     val carbs: String,
     val fats: String,
     val fiber: String?
+)
+
+data class ProductHealthInfo(
+    val nutriScore: String?,
+    val novaGroup: Int?,
+    val nutrientLevels: NutrientLevels?
+)
+
+data class NutrientLevels(
+    val fat: String?,
+    val saturatedFat: String?,
+    val sugars: String?,
+    val salt: String?
 )

@@ -187,6 +187,23 @@
     <!-- Widget -->
     <string name="widget_shopping_name">SnapCal Shopping List</string>
 
+    <!-- Health Indicators -->
+    <string name="health_indicators_title">Health indicators</string>
+    <string name="health_nutriscore_label">Nutri-Score</string>
+    <string name="health_nova_label">NOVA group</string>
+    <string name="health_nova_1">Unprocessed or minimally processed</string>
+    <string name="health_nova_2">Processed culinary ingredients</string>
+    <string name="health_nova_3">Processed foods</string>
+    <string name="health_nova_4">Ultra-processed products</string>
+    <string name="health_nutrient_levels">Nutrient levels</string>
+    <string name="health_fat">Fat</string>
+    <string name="health_saturated_fat">Saturated fat</string>
+    <string name="health_sugars">Sugars</string>
+    <string name="health_salt">Salt</string>
+    <string name="health_level_low">Low</string>
+    <string name="health_level_moderate">Moderate</string>
+    <string name="health_level_high">High</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>
