@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +62,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -84,6 +87,8 @@ fun DashboardScreen(
     val caloriesBurned by viewModel.caloriesBurned.collectAsState()
     val selectionMode by viewModel.selectionMode.collectAsState()
     val selectedMealIds by viewModel.selectedMealIds.collectAsState()
+
+    val context = LocalContext.current
 
     SideEffect { viewModel.refresh() }
 
@@ -138,7 +143,16 @@ fun DashboardScreen(
                 CaloriesRingCard(
                     current = nutrition?.totalCalories ?: 0,
                     goal = goal.calories,
-                    burned = caloriesBurned
+                    burned = caloriesBurned,
+                    onBurnedClick = {
+                        val intent = context.packageManager.getLaunchIntentForPackage("com.google.android.apps.fitness")
+                        if (intent != null) {
+                            context.startActivity(intent)
+                        } else {
+                            val playStore = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness"))
+                            context.startActivity(playStore)
+                        }
+                    }
                 )
             }
 
@@ -228,7 +242,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun CaloriesRingCard(current: Int, goal: Int, burned: Int) {
+private fun CaloriesRingCard(current: Int, goal: Int, burned: Int, onBurnedClick: () -> Unit = {}) {
     val progress = if (goal > 0) (current.toFloat() / goal).coerceIn(0f, 1.5f) else 0f
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -321,7 +335,8 @@ private fun CaloriesRingCard(current: Int, goal: Int, burned: Int) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.clickable { onBurnedClick() }
                 ) {
                     Icon(
                         Icons.Default.LocalFireDepartment,
