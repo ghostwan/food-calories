@@ -106,6 +106,22 @@ class GeminiApiService {
         return executeRequest(requestBody, apiKey)
     }
 
+    suspend fun pickEmoji(productName: String, apiKey: String): String {
+        val prompt = "Reply with a single emoji that best represents this food product: \"$productName\". Reply ONLY with the emoji, nothing else."
+        val rawResponse = executeRequest(buildTextRequestBody(prompt), apiKey)
+        val text = JSONObject(rawResponse)
+            .getJSONArray("candidates")
+            .getJSONObject(0)
+            .getJSONObject("content")
+            .getJSONArray("parts")
+            .getJSONObject(0)
+            .getString("text")
+            .trim()
+        // Extract first emoji (could have trailing whitespace/text)
+        val emojiRegex = Regex("[\\p{So}\\p{Cs}]+")
+        return emojiRegex.find(text)?.value ?: "🍽️"
+    }
+
     suspend fun computeNutritionGoal(profile: UserProfile, apiKey: String, language: String): String {
         val prompt = """
             Given a person with the following characteristics:

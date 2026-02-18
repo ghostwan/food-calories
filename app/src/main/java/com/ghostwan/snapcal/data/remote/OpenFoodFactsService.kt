@@ -90,6 +90,13 @@ class OpenFoodFactsService {
 
         val healthInfo = parseHealthInfo(product)
 
+        val healthRating = when (healthInfo?.nutriScore?.lowercase()) {
+            "a", "b" -> "healthy"
+            "c" -> "moderate"
+            "d", "e" -> "unhealthy"
+            else -> null
+        }
+
         return FoodAnalysis(
             dishName = dishName,
             totalCalories = calories,
@@ -97,7 +104,8 @@ class OpenFoodFactsService {
                 Ingredient(
                     name = productName,
                     quantity = quantityLabel,
-                    calories = calories
+                    calories = calories,
+                    healthRating = healthRating
                 )
             ),
             macros = Macros(
@@ -107,76 +115,9 @@ class OpenFoodFactsService {
                 fiber = if (fiber > 0) String.format("%.1fg", fiber) else null
             ),
             notes = note,
-            emoji = pickEmoji(product),
+            emoji = "🍽️",
             healthInfo = healthInfo
         )
-    }
-    private fun pickEmoji(product: JSONObject): String {
-        val tags = mutableListOf<String>()
-        val categoriesTags = product.optJSONArray("categories_tags")
-        if (categoriesTags != null) {
-            for (i in 0 until categoriesTags.length()) {
-                tags.add(categoriesTags.getString(i).lowercase())
-            }
-        }
-        val allTags = tags.joinToString(" ")
-
-        // Order matters: more specific categories first
-        val mapping = listOf(
-            "coffee" to "☕", "cafe" to "☕",
-            "tea" to "🍵", "the" to "🍵",
-            "juice" to "🧃", "jus" to "🧃",
-            "beer" to "🍺", "biere" to "🍺",
-            "wine" to "🍷", "vin" to "🍷",
-            "water" to "💧", "eau" to "💧",
-            "milk" to "🥛", "lait" to "🥛",
-            "soda" to "🥤", "beverage" to "🥤", "boisson" to "🥤", "drink" to "🥤",
-            "chocolate" to "🍫", "chocolat" to "🍫", "cacao" to "🍫",
-            "candy" to "🍬", "bonbon" to "🍬", "confiserie" to "🍬",
-            "ice-cream" to "🍦", "glace" to "🍦",
-            "cake" to "🍰", "gateau" to "🍰", "patisserie" to "🍰",
-            "biscuit" to "🍪", "cookie" to "🍪",
-            "bread" to "🍞", "pain" to "🍞",
-            "croissant" to "🥐", "viennoiserie" to "🥐",
-            "pizza" to "🍕",
-            "pasta" to "🍝", "pate" to "🍝", "noodle" to "🍜", "nouille" to "🍜",
-            "rice" to "🍚", "riz" to "🍚",
-            "cereal" to "🥣", "cereale" to "🥣",
-            "soup" to "🥣", "soupe" to "🥣",
-            "burger" to "🍔", "hamburger" to "🍔",
-            "sandwich" to "🥪",
-            "sushi" to "🍣",
-            "salad" to "🥗", "salade" to "🥗",
-            "egg" to "🥚", "oeuf" to "🥚",
-            "cheese" to "🧀", "fromage" to "🧀",
-            "yogurt" to "🍶", "yaourt" to "🍶",
-            "butter" to "🧈", "beurre" to "🧈",
-            "fish" to "🐟", "poisson" to "🐟", "tuna" to "🐟", "thon" to "🐟", "salmon" to "🐟", "saumon" to "🐟",
-            "chicken" to "🍗", "poulet" to "🍗", "poultry" to "🍗", "volaille" to "🍗",
-            "meat" to "🥩", "viande" to "🥩", "beef" to "🥩", "boeuf" to "🥩", "pork" to "🥩", "porc" to "🥩",
-            "sausage" to "🌭", "saucisse" to "🌭", "hot-dog" to "🌭",
-            "ham" to "🥓", "jambon" to "🥓",
-            "fruit" to "🍎",
-            "vegetable" to "🥬", "legume" to "🥬",
-            "nut" to "🥜", "noix" to "🥜", "arachide" to "🥜", "peanut" to "🥜",
-            "chip" to "🍿", "crisp" to "🍿", "snack" to "🍿",
-            "sauce" to "🫙", "condiment" to "🫙", "ketchup" to "🫙", "mayonnaise" to "🫙",
-            "oil" to "🫒", "huile" to "🫒",
-            "honey" to "🍯", "miel" to "🍯",
-            "jam" to "🫙", "confiture" to "🫙",
-            "spice" to "🧂", "epice" to "🧂", "sel" to "🧂", "salt" to "🧂",
-            "baby-food" to "🍼", "bebe" to "🍼",
-            "frozen" to "🧊", "surgele" to "🧊",
-            "canned" to "🥫", "conserve" to "🥫",
-            "meal" to "🍽️", "plat" to "🍽️", "prepared" to "🍽️",
-            "dairy" to "🧀", "laitier" to "🧀",
-        )
-
-        for ((keyword, emoji) in mapping) {
-            if (keyword in allTags) return emoji
-        }
-
-        return "🍽️"
     }
 
     private fun parseHealthInfo(product: JSONObject): ProductHealthInfo? {

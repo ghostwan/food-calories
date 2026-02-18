@@ -46,7 +46,17 @@ class FoodAnalysisRepositoryImpl(
     }
 
     override suspend fun analyzeFoodFromBarcode(barcode: String): FoodAnalysis {
-        return openFoodFactsService.lookupProduct(barcode)
+        var result = openFoodFactsService.lookupProduct(barcode)
+        val apiKey = settingsRepository.getApiKey()
+        if (apiKey.isNotBlank()) {
+            try {
+                val smartEmoji = apiService.pickEmoji(result.dishName, apiKey)
+                result = result.copy(emoji = smartEmoji)
+            } catch (_: Exception) {
+                // Keep fallback emoji from OpenFoodFacts
+            }
+        }
+        return result
     }
 
     private fun serializeAnalysis(analysis: FoodAnalysis): String {
