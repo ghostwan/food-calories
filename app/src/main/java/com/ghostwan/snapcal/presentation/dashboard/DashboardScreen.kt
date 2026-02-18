@@ -258,7 +258,7 @@ private fun CaloriesRingCard(current: Int, goal: Int, burned: Int, onBurnedClick
     )
 
     val ringColor = when {
-        progress <= 0.75f -> Color(0xFF4CAF50)
+        progress <= 0.9f -> Color(0xFF4CAF50)
         progress <= 1.0f -> Color(0xFFFF9800)
         else -> Color(0xFFF44336)
     }

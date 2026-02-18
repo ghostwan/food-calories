@@ -46,7 +46,7 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
 
             val progressFraction = if (goal > 0) consumed.toFloat() / goal else 0f
             val progressColor = when {
-                progressFraction <= 0.75f -> 0xFF4CAF50.toInt() // green
+                progressFraction <= 0.9f -> 0xFF4CAF50.toInt() // green
                 progressFraction <= 1.0f  -> 0xFFFF9800.toInt() // orange
                 else                      -> 0xFFF44336.toInt() // red
             }
