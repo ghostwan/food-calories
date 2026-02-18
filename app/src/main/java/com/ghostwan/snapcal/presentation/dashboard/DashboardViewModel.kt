@@ -11,6 +11,7 @@ import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.GetDailyNutritionUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,7 +26,7 @@ class DashboardViewModel(
     private val healthConnectManager: HealthConnectManager
 ) : ViewModel() {
 
-    private val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+    private var today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
     private val _nutrition = MutableStateFlow<DailyNutrition?>(null)
     val nutrition: StateFlow<DailyNutrition?> = _nutrition
@@ -61,8 +62,12 @@ class DashboardViewModel(
         _goal.value = userProfileRepository.getGoal()
     }
 
+    private var nutritionJob: Job? = null
+    private var mealsJob: Job? = null
+
     private fun observeNutrition() {
-        viewModelScope.launch {
+        nutritionJob?.cancel()
+        nutritionJob = viewModelScope.launch {
             getDailyNutritionUseCase.getNutrition(today).collect {
                 _nutrition.value = it
             }
@@ -70,7 +75,8 @@ class DashboardViewModel(
     }
 
     private fun observeMeals() {
-        viewModelScope.launch {
+        mealsJob?.cancel()
+        mealsJob = viewModelScope.launch {
             getDailyNutritionUseCase.getMeals(today).collect {
                 _meals.value = it
             }
@@ -112,6 +118,12 @@ class DashboardViewModel(
     }
 
     fun refresh() {
+        val now = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        if (now != today) {
+            today = now
+            observeNutrition()
+            observeMeals()
+        }
         loadGoal()
         loadCaloriesBurned()
     }
