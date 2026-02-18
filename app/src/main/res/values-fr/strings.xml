@@ -125,6 +125,11 @@
     <string name="profile_restore">Restaurer depuis Google Drive</string>
     <string name="profile_restoring">Restauration en cours…</string>
     <string name="profile_restore_done">Données restaurées !</string>
+    <string name="backup_frequency_label">Sauvegarde automatique</string>
+    <string name="backup_frequency_never">Désactivée</string>
+    <string name="backup_frequency_daily">Tous les jours</string>
+    <string name="backup_frequency_3days">Tous les 3 jours</string>
+    <string name="backup_frequency_weekly">Toutes les semaines</string>
 
     <!-- History -->
     <string name="history_title">Historique</string>

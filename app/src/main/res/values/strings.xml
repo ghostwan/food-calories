@@ -125,6 +125,11 @@
     <string name="profile_restore">Restore from Google Drive</string>
     <string name="profile_restoring">Restoring…</string>
     <string name="profile_restore_done">Data restored!</string>
+    <string name="backup_frequency_label">Automatic backup</string>
+    <string name="backup_frequency_never">Disabled</string>
+    <string name="backup_frequency_daily">Every day</string>
+    <string name="backup_frequency_3days">Every 3 days</string>
+    <string name="backup_frequency_weekly">Every week</string>
 
     <!-- History -->
     <string name="history_title">History</string>

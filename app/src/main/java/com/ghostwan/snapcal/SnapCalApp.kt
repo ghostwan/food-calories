@@ -103,10 +103,17 @@ class SnapCalApp : Application() {
         mealReminderManager = MealReminderManager(this)
         mealReminderManager.createNotificationChannel()
 
-        scheduleDailyBackup()
+        scheduleBackup()
     }
 
-    private fun scheduleDailyBackup() {
+    fun scheduleBackup() {
+        val frequencyDays = settingsRepository.getBackupFrequencyDays()
+
+        if (frequencyDays <= 0) {
+            WorkManager.getInstance(this).cancelUniqueWork("daily_drive_backup")
+            return
+        }
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -122,7 +129,7 @@ class SnapCalApp : Application() {
         val initialDelay = target.timeInMillis - now.timeInMillis
 
         val backupRequest = PeriodicWorkRequestBuilder<DailyBackupWorker>(
-            1, TimeUnit.DAYS
+            frequencyDays.toLong(), TimeUnit.DAYS
         )
             .setConstraints(constraints)
             .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
@@ -130,7 +137,7 @@ class SnapCalApp : Application() {
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "daily_drive_backup",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             backupRequest
         )
     }

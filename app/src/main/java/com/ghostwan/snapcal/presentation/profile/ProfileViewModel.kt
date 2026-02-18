@@ -1,11 +1,13 @@
 package com.ghostwan.snapcal.presentation.profile
 
+import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.data.local.MealReminderManager
+import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.data.remote.BackupInfo
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
@@ -24,6 +26,7 @@ import java.util.Date
 import java.util.Locale
 
 class ProfileViewModel(
+    private val application: Application,
     private val userProfileRepository: UserProfileRepository,
     private val computeNutritionGoalUseCase: ComputeNutritionGoalUseCase,
     private val healthConnectManager: HealthConnectManager,
@@ -94,6 +97,9 @@ class ProfileViewModel(
     private val _shoppingListEnabled = MutableStateFlow(false)
     val shoppingListEnabled: StateFlow<Boolean> = _shoppingListEnabled
 
+    private val _backupFrequencyDays = MutableStateFlow(1)
+    val backupFrequencyDays: StateFlow<Int> = _backupFrequencyDays
+
     init {
         loadProfile()
         checkHealthConnect()
@@ -101,6 +107,7 @@ class ProfileViewModel(
         loadReminderSettings()
         loadBackupInfo()
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
+        _backupFrequencyDays.value = settingsRepository.getBackupFrequencyDays()
     }
 
     private fun loadProfile() {
@@ -310,6 +317,12 @@ class ProfileViewModel(
         settingsRepository.setShoppingListEnabled(enabled)
     }
 
+    fun setBackupFrequency(days: Int) {
+        _backupFrequencyDays.value = days
+        settingsRepository.setBackupFrequencyDays(days)
+        (application as SnapCalApp).scheduleBackup()
+    }
+
     fun clearSaved() { _saved.value = false }
     fun clearError() { _error.value = null }
     fun clearWeightSynced() { _weightSynced.value = false }
@@ -318,6 +331,7 @@ class ProfileViewModel(
 
     companion object {
         fun provideFactory(
+            application: Application,
             userProfileRepository: UserProfileRepository,
             computeNutritionGoalUseCase: ComputeNutritionGoalUseCase,
             healthConnectManager: HealthConnectManager,
@@ -330,6 +344,7 @@ class ProfileViewModel(
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return ProfileViewModel(
+                    application,
                     userProfileRepository,
                     computeNutritionGoalUseCase,
                     healthConnectManager,

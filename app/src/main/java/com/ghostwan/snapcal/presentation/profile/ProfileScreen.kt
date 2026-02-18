@@ -97,6 +97,7 @@ fun ProfileScreen(
     val dinnerTime by viewModel.dinnerTime.collectAsState()
 
     val shoppingListEnabled by viewModel.shoppingListEnabled.collectAsState()
+    val backupFrequencyDays by viewModel.backupFrequencyDays.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -370,6 +371,11 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                BackupFrequencySelector(
+                    selectedDays = backupFrequencyDays,
+                    onSelect = { viewModel.setBackupFrequency(it) }
+                )
 
                 OutlinedButton(
                     onClick = { viewModel.backupToDrive() },
@@ -654,6 +660,39 @@ private fun ActivityLevelSelector(selected: ActivityLevel, onSelect: (ActivityLe
                 DropdownMenuItem(
                     text = { Text(labels[level] ?: level.name) },
                     onClick = { onSelect(level); expanded = false }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BackupFrequencySelector(selectedDays: Int, onSelect: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val options = listOf(0, 1, 3, 7)
+    val labels = mapOf(
+        0 to stringResource(R.string.backup_frequency_never),
+        1 to stringResource(R.string.backup_frequency_daily),
+        3 to stringResource(R.string.backup_frequency_3days),
+        7 to stringResource(R.string.backup_frequency_weekly)
+    )
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = labels[selectedDays] ?: "$selectedDays",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.backup_frequency_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { days ->
+                DropdownMenuItem(
+                    text = { Text(labels[days] ?: "$days") },
+                    onClick = { onSelect(days); expanded = false }
                 )
             }
         }

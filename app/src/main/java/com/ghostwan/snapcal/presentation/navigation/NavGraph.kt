@@ -227,6 +227,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             composable("profile") {
                 val profileViewModel: ProfileViewModel = viewModel(
                     factory = ProfileViewModel.provideFactory(
+                        application = app,
                         userProfileRepository = app.userProfileRepository,
                         computeNutritionGoalUseCase = app.computeNutritionGoalUseCase,
                         healthConnectManager = app.healthConnectManager,

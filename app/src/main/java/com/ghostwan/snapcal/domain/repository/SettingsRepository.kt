@@ -5,4 +5,6 @@ interface SettingsRepository {
     fun setApiKey(key: String)
     fun isShoppingListEnabled(): Boolean
     fun setShoppingListEnabled(enabled: Boolean)
+    fun getBackupFrequencyDays(): Int
+    fun setBackupFrequencyDays(days: Int)
 }

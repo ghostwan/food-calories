@@ -26,8 +26,17 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putBoolean(KEY_SHOPPING_LIST, enabled).apply()
     }
 
+    override fun getBackupFrequencyDays(): Int {
+        return prefs.getInt(KEY_BACKUP_FREQUENCY, 1)
+    }
+
+    override fun setBackupFrequencyDays(days: Int) {
+        prefs.edit().putInt(KEY_BACKUP_FREQUENCY, days).apply()
+    }
+
     private companion object {
         const val KEY_API = "gemini_api_key_v2"
         const val KEY_SHOPPING_LIST = "shopping_list_enabled"
+        const val KEY_BACKUP_FREQUENCY = "backup_frequency_days"
     }
 }
