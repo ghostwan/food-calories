@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.widget.RemoteViews
 import com.ghostwan.snapcal.MainActivity
 import com.ghostwan.snapcal.R
@@ -62,6 +63,7 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
             val intent = Intent(context, MainActivity::class.java).apply {
                 putExtra("navigate_to", "home")
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                data = Uri.parse("snapcal://widget/calories")
             }
             val pendingIntent = PendingIntent.getActivity(
                 context, 0, intent,
