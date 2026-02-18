@@ -268,10 +268,11 @@ private fun DayCard(
         day.date
     }
 
-    val calProgress = if (goal.calories > 0) (day.totalCalories.toFloat() / goal.calories).coerceIn(0f, 1f) else 0f
+    val calRatio = if (goal.calories > 0) day.totalCalories.toFloat() / goal.calories else 0f
+    val calProgress = calRatio.coerceIn(0f, 1f)
     val calColor = when {
-        calProgress <= 0.75f -> Color(0xFF4CAF50)
-        calProgress <= 1.0f -> Color(0xFFFF9800)
+        calRatio <= 0.75f -> Color(0xFF4CAF50)
+        calRatio <= 1.0f -> Color(0xFFFF9800)
         else -> Color(0xFFF44336)
     }
 
