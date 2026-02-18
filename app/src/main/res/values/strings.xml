@@ -179,6 +179,8 @@
     <string name="shopping_list_add">Add to shopping list</string>
     <string name="shopping_list_added">Added to shopping list!</string>
     <string name="shopping_list_item_added">Added!</string>
+    <string name="shopping_list_edit_title">Edit item</string>
+    <string name="shopping_list_edit_name">Name</string>
     <string name="shopping_list_input_hint">Add an item…</string>
     <string name="shopping_list_voice_prompt">What do you want to add?</string>
 

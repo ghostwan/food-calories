@@ -30,6 +30,10 @@ class ShoppingRepositoryImpl(private val dao: ShoppingItemDao) : ShoppingReposit
         dao.setChecked(id, checked)
     }
 
+    override suspend fun updateItem(id: Long, name: String, quantity: String) {
+        dao.updateItem(id, name, quantity)
+    }
+
     override suspend fun delete(id: Long) {
         dao.delete(id)
     }

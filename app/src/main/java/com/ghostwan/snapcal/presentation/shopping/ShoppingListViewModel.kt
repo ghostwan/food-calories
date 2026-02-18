@@ -43,6 +43,13 @@ class ShoppingListViewModel(
         }
     }
 
+    fun updateItem(id: Long, name: String, quantity: String) {
+        viewModelScope.launch {
+            shoppingRepository.updateItem(id, name, quantity)
+            ShoppingWidgetProvider.updateAllWidgets(appContext)
+        }
+    }
+
     fun deleteItem(id: Long) {
         viewModelScope.launch {
             shoppingRepository.delete(id)

@@ -180,6 +180,8 @@
     <string name="shopping_list_add">Ajouter à la liste de courses</string>
     <string name="shopping_list_added">Ajouté à la liste de courses !</string>
     <string name="shopping_list_item_added">Ajouté !</string>
+    <string name="shopping_list_edit_title">Modifier l\'article</string>
+    <string name="shopping_list_edit_name">Nom</string>
     <string name="shopping_list_input_hint">Ajouter un article…</string>
     <string name="shopping_list_voice_prompt">Qu\'est-ce que vous voulez ajouter ?</string>
 

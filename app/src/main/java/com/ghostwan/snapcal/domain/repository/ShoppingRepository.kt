@@ -7,6 +7,7 @@ interface ShoppingRepository {
     suspend fun addItem(item: ShoppingItem)
     fun getAll(): Flow<List<ShoppingItem>>
     suspend fun setChecked(id: Long, checked: Boolean)
+    suspend fun updateItem(id: Long, name: String, quantity: String)
     suspend fun delete(id: Long)
     suspend fun deleteChecked()
 }
