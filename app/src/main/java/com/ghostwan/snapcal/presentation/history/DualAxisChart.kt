@@ -54,7 +54,7 @@ data class ChartDataPoint(
 
 private val CaloriesColor = Color(0xFF4CAF50)
 private val WeightColor = Color(0xFF2196F3)
-private val BurnedColor = Color(0xFFFF9800)
+private val BurnedColor = Color(0xFF9C27B0)
 private val CaloriesGoalColor = Color(0xFF388E3C)
 private val WeightGoalColor = Color(0xFF1976D2)
 
