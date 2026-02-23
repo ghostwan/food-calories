@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="scan_meal"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scanner"
+        android:shortcutShortLabel="@string/shortcut_scan_short"
+        android:shortcutLongLabel="@string/shortcut_scan_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ghostwan.snapcal"
+            android:targetClass="com.ghostwan.snapcal.MainActivity">
+            <extra android:name="navigate_to" android:value="home" />
+        </intent>
+    </shortcut>
+</shortcuts>

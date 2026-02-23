@@ -224,6 +224,11 @@
     <string name="health_level_moderate">Modéré</string>
     <string name="health_level_high">Élevé</string>
 
+    <!-- Shortcuts & Tile -->
+    <string name="shortcut_scan_short">Scanner</string>
+    <string name="shortcut_scan_long">Scanner un repas</string>
+    <string name="tile_scan_meal">Scanner repas</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>

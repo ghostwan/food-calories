@@ -223,6 +223,11 @@
     <string name="health_level_moderate">Moderate</string>
     <string name="health_level_high">High</string>
 
+    <!-- Shortcuts & Tile -->
+    <string name="shortcut_scan_short">Scan</string>
+    <string name="shortcut_scan_long">Scan a meal</string>
+    <string name="tile_scan_meal">Scan meal</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>
