@@ -188,10 +188,18 @@ fun DualAxisChart(
                 // Draw curves clipped to chart area
                 clipRect(leftPadding, 0f, leftPadding + chartWidth, size.height) {
                     if (showCalories) {
-                        drawCurve(
+                        drawColoredCurve(
                             data = data,
                             getValue = { it.calories?.toFloat() },
-                            color = CaloriesColor,
+                            getColor = { point ->
+                                val consumed = point.calories ?: 0
+                                val burned = point.burnedCalories ?: 0
+                                when {
+                                    caloriesGoal != null && consumed > caloriesGoal -> Color(0xFFF44336)
+                                    consumed > burned -> Color(0xFFFF9800)
+                                    else -> Color(0xFF4CAF50)
+                                }
+                            },
                             minVal = calMin,
                             range = calRange,
                             leftPadding = leftPadding,
@@ -350,8 +358,13 @@ fun DualAxisChart(
 
                     // Highlight circles
                     if (showCalories && sel.calories != null) {
+                        val selCalColor = when {
+                            caloriesGoal != null && sel.calories > caloriesGoal -> Color(0xFFF44336)
+                            sel.calories > (sel.burnedCalories ?: 0) -> Color(0xFFFF9800)
+                            else -> Color(0xFF4CAF50)
+                        }
                         val y = topPadding + chartHeight * (1f - (sel.calories.toFloat() - calMin) / calRange)
-                        drawCircle(color = CaloriesColor, radius = 6.dp.toPx(), center = Offset(screenX, y))
+                        drawCircle(color = selCalColor, radius = 6.dp.toPx(), center = Offset(screenX, y))
                         drawCircle(color = Color.White, radius = 3.dp.toPx(), center = Offset(screenX, y))
                     }
                     if (showBurned && sel.burnedCalories != null) {
@@ -455,6 +468,49 @@ private fun LegendItem(color: Color, label: String, dashed: Boolean = false) {
         }
         Spacer(modifier = Modifier.width(4.dp))
         Text(text = label, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+private fun DrawScope.drawColoredCurve(
+    data: List<ChartDataPoint>,
+    getValue: (ChartDataPoint) -> Float?,
+    getColor: (ChartDataPoint) -> Color,
+    minVal: Float,
+    range: Float,
+    leftPadding: Float,
+    topPadding: Float,
+    scaledStep: Float,
+    panOffsetX: Float,
+    chartHeight: Float
+) {
+    val pointsWithColor = mutableListOf<Triple<Offset, Color, Int>>()
+
+    for (i in data.indices) {
+        val value = getValue(data[i]) ?: continue
+        val x = leftPadding + i * scaledStep + panOffsetX
+        val y = topPadding + chartHeight * (1f - (value - minVal) / range)
+        pointsWithColor.add(Triple(Offset(x, y), getColor(data[i]), i))
+    }
+
+    if (pointsWithColor.size < 2) {
+        pointsWithColor.firstOrNull()?.let { (offset, color, _) ->
+            drawCircle(color = color, radius = 4.dp.toPx(), center = offset)
+        }
+        return
+    }
+
+    for (i in 1 until pointsWithColor.size) {
+        val (prev, _, _) = pointsWithColor[i - 1]
+        val (curr, color, _) = pointsWithColor[i]
+        val path = Path()
+        path.moveTo(prev.x, prev.y)
+        val cpx = (prev.x + curr.x) / 2
+        path.cubicTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y)
+        drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+    }
+
+    for ((offset, color, _) in pointsWithColor) {
+        drawCircle(color = color, radius = 3.dp.toPx(), center = offset)
     }
 }
 
