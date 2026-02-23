@@ -380,9 +380,10 @@ private fun CaloriesRingCard(current: Int, goal: Int, burned: Int, onBurnedClick
     )
 
     val ringColor = when {
-        current > goal -> Color(0xFFF44336)   // Red: exceeded goal
-        current > burned -> Color(0xFFFF9800)  // Orange: consumed > burned
-        else -> Color(0xFF4CAF50)              // Green: consumed <= burned
+        burned > 0 && current <= burned -> Color(0xFF4CAF50)  // Green: in caloric deficit
+        current > goal -> Color(0xFFF44336)                    // Red: exceeded goal
+        burned > 0 -> Color(0xFFFF9800)                        // Orange: under goal but in surplus
+        else -> Color(0xFF4CAF50)                              // Green: under goal (no burn data)
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -451,8 +452,9 @@ private fun CaloriesRingCard(current: Int, goal: Int, burned: Int, onBurnedClick
 
             val remaining = goal - current
             val remainingColor = when {
+                burned > 0 && current <= burned -> Color(0xFF4CAF50)
                 current > goal -> Color(0xFFF44336)
-                current > burned -> Color(0xFFFF9800)
+                burned > 0 -> Color(0xFFFF9800)
                 else -> Color(0xFF4CAF50)
             }
             Text(
