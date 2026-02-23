@@ -97,6 +97,10 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         mealDao.updateMealNutrition(id, calories, proteins, carbs, fats, fiber, ingredientsJson)
     }
 
+    override suspend fun getRecentEmojis(): List<String> {
+        return mealDao.getRecentEmojis()
+    }
+
     private fun daysAgoDate(days: Int): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -days)

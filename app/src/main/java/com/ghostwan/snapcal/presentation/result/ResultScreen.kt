@@ -90,6 +90,7 @@ fun ResultScreen(
     val readOnly by viewModel.readOnly.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
     val quantity by viewModel.quantity.collectAsState()
+    val recentEmojis by viewModel.recentEmojis.collectAsState()
     val isEditing = viewModel.isEditing()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -143,6 +144,7 @@ fun ResultScreen(
                     readOnly = readOnly,
                     isEditing = isEditing,
                     quantity = quantity,
+                    recentEmojis = recentEmojis,
                     onQuantityChange = { viewModel.updateQuantity(it) },
                     onSave = { viewModel.saveMeal(state.result) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
@@ -194,6 +196,7 @@ private fun SuccessContent(
     readOnly: Boolean = false,
     isEditing: Boolean = false,
     quantity: Int = 1,
+    recentEmojis: List<String> = emptyList(),
     onQuantityChange: (Int) -> Unit = {},
     onSave: () -> Unit,
     onCorrect: (String) -> Unit,
@@ -211,6 +214,7 @@ private fun SuccessContent(
         EmojiPickerDialog(
             dishName = result.dishName,
             currentEmoji = result.emoji ?: "🍽️",
+            recentEmojis = recentEmojis,
             onEmojiSelected = { emoji ->
                 onEmojiChange(emoji)
                 showEmojiPicker = false
@@ -974,11 +978,12 @@ private fun IngredientEditDialog(
 private fun EmojiPickerDialog(
     dishName: String,
     currentEmoji: String,
+    recentEmojis: List<String> = emptyList(),
     onEmojiSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var emojiText by remember { mutableStateOf(currentEmoji) }
-    val suggestions = listOf("🍕", "🥗", "🍣", "🍔", "🥩", "🍝", "🍲", "🥘", "🍜", "🍱", "🍛", "🥐", "🍰", "🍎", "🥤")
+    val defaultSuggestions = listOf("🍕", "🥗", "🍣", "🍔", "🥩", "🍝", "🍲", "🥘", "🍜", "🍱", "🍛", "🥐", "🍰", "🍎", "🥤")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1000,44 +1005,51 @@ private fun EmojiPickerDialog(
                     singleLine = true,
                     textStyle = MaterialTheme.typography.headlineMedium
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    suggestions.take(5).forEach { emoji ->
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { emojiText = emoji }
-                        )
+                if (recentEmojis.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.emoji_recent),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    recentEmojis.chunked(5).forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            row.forEach { emoji ->
+                                Text(
+                                    text = emoji,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.clickable { emojiText = emoji }
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.emoji_suggestions),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    suggestions.drop(5).take(5).forEach { emoji ->
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { emojiText = emoji }
-                        )
+                defaultSuggestions.chunked(5).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        row.forEach { emoji ->
+                            Text(
+                                text = emoji,
+                                style = MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier.clickable { emojiText = emoji }
+                            )
+                        }
                     }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    suggestions.drop(10).forEach { emoji ->
-                        Text(
-                            text = emoji,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.clickable { emojiText = emoji }
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         },

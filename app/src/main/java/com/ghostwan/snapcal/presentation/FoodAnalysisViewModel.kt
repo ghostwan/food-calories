@@ -49,14 +49,27 @@ class FoodAnalysisViewModel(
     private val _quantity = MutableStateFlow(1)
     val quantity: StateFlow<Int> = _quantity
 
+    private val _recentEmojis = MutableStateFlow<List<String>>(emptyList())
+    val recentEmojis: StateFlow<List<String>> = _recentEmojis
+
     private var lastImageData: ByteArray? = null
     private var editingMealId: Long? = null
     private var editingMealIds: List<Long>? = null
     private var editingMealDate: String? = null
     private var targetDate: String? = null
 
+    init {
+        loadRecentEmojis()
+    }
+
     fun setTargetDate(date: String?) {
         targetDate = date
+    }
+
+    private fun loadRecentEmojis() {
+        viewModelScope.launch {
+            _recentEmojis.value = mealRepository.getRecentEmojis()
+        }
     }
 
     fun getApiKey(): String = settingsRepository.getApiKey()
@@ -150,6 +163,7 @@ class FoodAnalysisViewModel(
                     saveMealUseCase(analysis, qty, targetDate)
                 }
                 _mealSaved.value = true
+                loadRecentEmojis()
             } catch (_: Exception) {
                 // silently fail
             }

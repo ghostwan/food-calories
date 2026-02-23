@@ -182,6 +182,8 @@
 
     <!-- Emoji Picker -->
     <string name="emoji_picker_title">Choose an emoji</string>
+    <string name="emoji_recent">Recent</string>
+    <string name="emoji_suggestions">Suggestions</string>
 
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Shopping list</string>

@@ -183,6 +183,8 @@
 
     <!-- Emoji Picker -->
     <string name="emoji_picker_title">Choisir un emoji</string>
+    <string name="emoji_recent">Récents</string>
+    <string name="emoji_suggestions">Suggestions</string>
 
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Liste de courses</string>
