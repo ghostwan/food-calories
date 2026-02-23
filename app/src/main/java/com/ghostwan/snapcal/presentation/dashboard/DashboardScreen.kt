@@ -480,13 +480,13 @@ private fun CaloriesRingCard(current: Int, goal: Int, burned: Int, onBurnedClick
                         Icons.Default.LocalFireDepartment,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = Color(0xFFFF9800)
+                        tint = Color(0xFF9C27B0)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = stringResource(R.string.dashboard_burned, burned),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFFF9800)
+                        color = Color(0xFF9C27B0)
                     )
                 }
             }
