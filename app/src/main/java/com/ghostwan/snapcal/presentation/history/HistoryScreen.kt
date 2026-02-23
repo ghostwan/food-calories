@@ -237,9 +237,11 @@ fun HistoryScreen(
 
                 items(history) { day ->
                     val isExpanded = selectedDate == day.date
+                    val burned = burnedCaloriesHistory[day.date]?.toInt() ?: 0
                     DayCard(
                         day = day,
                         goal = goal,
+                        burned = burned,
                         isExpanded = isExpanded,
                         meals = if (isExpanded) selectedDayMeals else emptyList(),
                         onClick = { viewModel.selectDay(day.date) },
@@ -255,6 +257,7 @@ fun HistoryScreen(
 private fun DayCard(
     day: DailyNutrition,
     goal: NutritionGoal,
+    burned: Int,
     isExpanded: Boolean,
     meals: List<MealEntry>,
     onClick: () -> Unit,
@@ -271,9 +274,11 @@ private fun DayCard(
     val calRatio = if (goal.calories > 0) day.totalCalories.toFloat() / goal.calories else 0f
     val calProgress = calRatio.coerceIn(0f, 1f)
     val calColor = when {
-        calRatio <= 0.9f -> Color(0xFF4CAF50)
-        calRatio <= 1.0f -> Color(0xFFFF9800)
-        else -> Color(0xFFF44336)
+        burned > 0 && day.totalCalories > burned -> Color(0xFFF44336)    // Red: surplus
+        day.totalCalories > goal.calories -> Color(0xFFFF9800)            // Orange: over goal but in deficit
+        burned > 0 && day.totalCalories <= burned -> Color(0xFF4CAF50)    // Green: in deficit and under goal
+        day.totalCalories <= goal.calories -> Color(0xFF4CAF50)           // Green: under goal (no burn data)
+        else -> Color(0xFFF44336)                                         // Red: over goal (no burn data)
     }
 
     Card(
