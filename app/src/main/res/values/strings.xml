@@ -90,6 +90,7 @@
     <string name="dashboard_note_placeholder">Add a comment about your day…</string>
     <string name="dashboard_note_title">Daily note</string>
     <string name="dashboard_note_hint">e.g. "family dinner", "stressful day"…</string>
+    <string name="dashboard_note_voice_prompt">Describe your day…</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>

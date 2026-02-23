@@ -7,9 +7,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +36,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.MergeType
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -83,6 +88,7 @@ import org.json.JSONArray
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import java.time.Instant
+import java.util.Locale
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -721,6 +727,18 @@ private fun DailyNoteDialog(
     onSave: (String) -> Unit
 ) {
     var text by remember { mutableStateOf(currentNote) }
+    val context = LocalContext.current
+
+    val speechLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!matches.isNullOrEmpty()) {
+                text = if (text.isBlank()) matches[0] else "$text ${matches[0]}"
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -732,7 +750,22 @@ private fun DailyNoteDialog(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.dashboard_note_hint)) },
                 minLines = 3,
-                maxLines = 6
+                maxLines = 6,
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                            putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.dashboard_note_voice_prompt))
+                        }
+                        speechLauncher.launch(intent)
+                    }) {
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = stringResource(R.string.home_button_voice)
+                        )
+                    }
+                }
             )
         },
         confirmButton = {

@@ -27,12 +27,13 @@ A free, open-source alternative to [Foodvisor](https://www.foodvisor.io/). Take 
 - **Meal history & trends**: View past meals and nutrition trends over 1 week, 1 month, 3 months or 1 year
 - **Meal merge**: Long-press to select multiple meals and combine them into one
 - **Favorites**: Star your frequent meals and re-add them with one tap
+- **Daily notes**: Add a daily comment on your dashboard (e.g. "family dinner", "stressful day") — one note per day, editable
 - **Nutritional goals**: Set manual calorie goals or let AI compute personalized targets based on your profile
 - **Home screen widget**: Glanceable calories widget showing consumed / goal with a progress bar
 - **Shopping list**: Add meal ingredients to a persistent shopping list — check off, delete or clear items as you shop (opt-in via Profile)
 - **Meal reminders**: Configurable notifications for breakfast (08:00), lunch (12:30) and dinner (20:30) with adjustable times
 - **Health Connect**: Sync weight data and burned calories from Google Health Connect
-- **Google Drive backup**: Back up and restore all your data (meals, profile, weight history)
+- **Google Drive backup**: Back up and restore all your data (meals, profile, weight history, daily notes)
 - **Multilingual**: Supports English and French (adapts to your device language)
 - **No account required**: Just bring your own Gemini API key — no sign-up, no subscription, no tracking
 - **AI correction**: Not happy with the analysis? Describe what's different and let AI correct it
