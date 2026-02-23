@@ -47,6 +47,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,6 +65,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
@@ -92,6 +94,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var photoVersion by remember { mutableIntStateOf(0) }
     var foodDescription by remember { mutableStateOf("") }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showQuotaWarning by remember { mutableStateOf(false) }
@@ -115,6 +118,7 @@ fun HomeScreen(
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
+            photoVersion++
             photoUri = fileProviderUri
         }
     }
@@ -216,7 +220,12 @@ fun HomeScreen(
                 ) {
                     if (photoUri != null) {
                         Image(
-                            painter = rememberAsyncImagePainter(photoUri),
+                            painter = rememberAsyncImagePainter(
+                                ImageRequest.Builder(context)
+                                    .data(photoUri)
+                                    .memoryCacheKey("${photoUri}_${photoVersion}")
+                                    .build()
+                            ),
                             contentDescription = stringResource(R.string.home_photo_description),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
