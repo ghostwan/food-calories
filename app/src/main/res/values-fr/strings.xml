@@ -87,6 +87,9 @@
     <string name="dashboard_add_meal">Ajouter un repas</string>
     <string name="dashboard_merge">Fusionner</string>
     <string name="dashboard_selection_cancel">Annuler</string>
+    <string name="dashboard_note_placeholder">Ajouter un commentaire sur la journée…</string>
+    <string name="dashboard_note_title">Note du jour</string>
+    <string name="dashboard_note_hint">ex : "repas de famille", "journée stressante"…</string>
 
     <!-- Profile -->
     <string name="profile_title">Profil</string>

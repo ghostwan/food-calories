@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.MergeType
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,6 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
@@ -101,12 +104,14 @@ fun DashboardScreen(
     val selectionMode by viewModel.selectionMode.collectAsState()
     val selectedMealIds by viewModel.selectedMealIds.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val dailyNote by viewModel.dailyNote.collectAsState()
 
     val context = LocalContext.current
     val isToday = selectedDate == LocalDate.now()
     val isYesterday = selectedDate == LocalDate.now().minusDays(1)
 
     var showDatePicker by remember { mutableStateOf(false) }
+    var showNoteDialog by remember { mutableStateOf(false) }
 
     val dateLabel = when {
         isToday -> stringResource(R.string.dashboard_today)
@@ -115,6 +120,17 @@ fun DashboardScreen(
     }
 
     SideEffect { viewModel.refresh() }
+
+    if (showNoteDialog) {
+        DailyNoteDialog(
+            currentNote = dailyNote ?: "",
+            onDismiss = { showNoteDialog = false },
+            onSave = { note ->
+                viewModel.saveDailyNote(note)
+                showNoteDialog = false
+            }
+        )
+    }
 
     if (showDatePicker) {
         val todayMillis = LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
@@ -254,6 +270,13 @@ fun DashboardScreen(
 
             item {
                 MacrosProgressCard(nutrition, goal)
+            }
+
+            item {
+                DailyNoteCard(
+                    note = dailyNote,
+                    onClick = { showNoteDialog = true }
+                )
             }
 
             item {
@@ -642,6 +665,82 @@ private fun MealCard(
             }
         }
     }
+}
+
+@Composable
+private fun DailyNoteCard(note: String?, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (note != null)
+                MaterialTheme.colorScheme.secondaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.EditNote,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = if (note != null)
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = note ?: stringResource(R.string.dashboard_note_placeholder),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (note != null)
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun DailyNoteDialog(
+    currentNote: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(currentNote) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.dashboard_note_title)) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.dashboard_note_hint)) },
+                minLines = 3,
+                maxLines = 6
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(text) }) {
+                Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
 }
 
 private data class HealthInfo(val emoji: String, val color: Color)

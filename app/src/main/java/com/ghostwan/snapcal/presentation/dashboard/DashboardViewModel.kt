@@ -8,6 +8,7 @@ import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.WeightRecord
+import com.ghostwan.snapcal.domain.repository.DailyNoteRepository
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.GetDailyNutritionUseCase
@@ -24,7 +25,8 @@ class DashboardViewModel(
     private val getDailyNutritionUseCase: GetDailyNutritionUseCase,
     private val userProfileRepository: UserProfileRepository,
     private val mealRepository: MealRepository,
-    private val healthConnectManager: HealthConnectManager
+    private val healthConnectManager: HealthConnectManager,
+    private val dailyNoteRepository: DailyNoteRepository
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -48,6 +50,9 @@ class DashboardViewModel(
     private val _caloriesBurned = MutableStateFlow(0)
     val caloriesBurned: StateFlow<Int> = _caloriesBurned
 
+    private val _dailyNote = MutableStateFlow<String?>(null)
+    val dailyNote: StateFlow<String?> = _dailyNote
+
     private val _selectionMode = MutableStateFlow(false)
     val selectionMode: StateFlow<Boolean> = _selectionMode
 
@@ -59,6 +64,7 @@ class DashboardViewModel(
         observeNutrition()
         observeMeals()
         observeFavorites()
+        observeDailyNote()
         loadCaloriesBurned()
         loadLatestWeight()
     }
@@ -86,6 +92,7 @@ class DashboardViewModel(
     private fun onDateChanged() {
         observeNutrition()
         observeMeals()
+        observeDailyNote()
         loadCaloriesBurned()
     }
 
@@ -95,6 +102,7 @@ class DashboardViewModel(
 
     private var nutritionJob: Job? = null
     private var mealsJob: Job? = null
+    private var dailyNoteJob: Job? = null
 
     private fun observeNutrition() {
         nutritionJob?.cancel()
@@ -110,6 +118,26 @@ class DashboardViewModel(
         mealsJob = viewModelScope.launch {
             getDailyNutritionUseCase.getMeals(_selectedDate.value.toString()).collect {
                 _meals.value = it
+            }
+        }
+    }
+
+    private fun observeDailyNote() {
+        dailyNoteJob?.cancel()
+        dailyNoteJob = viewModelScope.launch {
+            dailyNoteRepository.getNoteForDate(_selectedDate.value.toString()).collect {
+                _dailyNote.value = it
+            }
+        }
+    }
+
+    fun saveDailyNote(note: String) {
+        viewModelScope.launch {
+            val trimmed = note.trim()
+            if (trimmed.isEmpty()) {
+                dailyNoteRepository.deleteNote(_selectedDate.value.toString())
+            } else {
+                dailyNoteRepository.saveNote(_selectedDate.value.toString(), trimmed)
             }
         }
     }
@@ -225,11 +253,12 @@ class DashboardViewModel(
             getDailyNutritionUseCase: GetDailyNutritionUseCase,
             userProfileRepository: UserProfileRepository,
             mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
-            healthConnectManager: HealthConnectManager
+            healthConnectManager: HealthConnectManager,
+            dailyNoteRepository: DailyNoteRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager) as T
+                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository) as T
             }
         }
     }

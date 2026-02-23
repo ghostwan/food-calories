@@ -87,6 +87,9 @@
     <string name="dashboard_add_meal">Add a meal</string>
     <string name="dashboard_merge">Merge</string>
     <string name="dashboard_selection_cancel">Cancel</string>
+    <string name="dashboard_note_placeholder">Add a comment about your day…</string>
+    <string name="dashboard_note_title">Daily note</string>
+    <string name="dashboard_note_hint">e.g. "family dinner", "stressful day"…</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>

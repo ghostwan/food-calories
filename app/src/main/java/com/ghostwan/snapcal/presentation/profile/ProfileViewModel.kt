@@ -14,6 +14,7 @@ import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
+import com.ghostwan.snapcal.domain.repository.DailyNoteRepository
 import com.ghostwan.snapcal.domain.repository.MealRepository
 import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
@@ -34,7 +35,8 @@ class ProfileViewModel(
     private val driveBackupManager: DriveBackupManager,
     private val mealRepository: MealRepository,
     private val mealReminderManager: MealReminderManager,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val dailyNoteRepository: DailyNoteRepository
 ) : ViewModel() {
 
     private val _profile = MutableStateFlow(UserProfile())
@@ -231,11 +233,13 @@ class ProfileViewModel(
             try {
                 val meals = mealRepository.getAllMeals()
                 val weightRecords = userProfileRepository.getWeightHistory(9999)
+                val dailyNotes = dailyNoteRepository.getAllNotes()
                 val success = driveBackupManager.backup(
                     profile = _profile.value,
                     goal = _goal.value,
                     meals = meals,
-                    weightRecords = weightRecords
+                    weightRecords = weightRecords,
+                    dailyNotes = dailyNotes
                 )
                 if (success) {
                     _backupDone.value = true
@@ -269,6 +273,7 @@ class ProfileViewModel(
                     for (record in data.weightRecords) {
                         userProfileRepository.saveWeightRecord(record)
                     }
+                    dailyNoteRepository.saveNotes(data.dailyNotes)
 
                     _restoreDone.value = true
                 } else {
@@ -339,7 +344,8 @@ class ProfileViewModel(
             driveBackupManager: DriveBackupManager,
             mealRepository: MealRepository,
             mealReminderManager: MealReminderManager,
-            settingsRepository: SettingsRepository
+            settingsRepository: SettingsRepository,
+            dailyNoteRepository: DailyNoteRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -352,7 +358,8 @@ class ProfileViewModel(
                     driveBackupManager,
                     mealRepository,
                     mealReminderManager,
-                    settingsRepository
+                    settingsRepository,
+                    dailyNoteRepository
                 ) as T
             }
         }

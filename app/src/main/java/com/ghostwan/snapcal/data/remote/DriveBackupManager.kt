@@ -44,7 +44,8 @@ class DriveBackupManager(private val context: Context) {
         profile: UserProfile,
         goal: NutritionGoal,
         meals: List<MealEntry>,
-        weightRecords: List<WeightRecord>
+        weightRecords: List<WeightRecord>,
+        dailyNotes: List<Pair<String, String>> = emptyList()
     ): Boolean = withContext(Dispatchers.IO) {
         val drive = getDriveService() ?: return@withContext false
 
@@ -54,6 +55,7 @@ class DriveBackupManager(private val context: Context) {
             put("goal", goalToJson(goal))
             put("meals", mealsToJson(meals))
             put("weightRecords", weightRecordsToJson(weightRecords))
+            put("dailyNotes", dailyNotesToJson(dailyNotes))
         }
 
         val content = ByteArrayContent.fromString("application/json", json.toString())
@@ -89,7 +91,8 @@ class DriveBackupManager(private val context: Context) {
                 profile = jsonToProfile(json.getJSONObject("profile")),
                 goal = jsonToGoal(json.getJSONObject("goal")),
                 meals = jsonToMeals(json.getJSONArray("meals")),
-                weightRecords = jsonToWeightRecords(json.optJSONArray("weightRecords") ?: JSONArray())
+                weightRecords = jsonToWeightRecords(json.optJSONArray("weightRecords") ?: JSONArray()),
+                dailyNotes = jsonToDailyNotes(json.optJSONArray("dailyNotes") ?: JSONArray())
             )
         } catch (_: Exception) {
             null
@@ -218,13 +221,32 @@ class DriveBackupManager(private val context: Context) {
         }
         return list
     }
+
+    private fun dailyNotesToJson(notes: List<Pair<String, String>>) = JSONArray().apply {
+        notes.forEach { (date, note) ->
+            put(JSONObject().apply {
+                put("date", date)
+                put("note", note)
+            })
+        }
+    }
+
+    private fun jsonToDailyNotes(json: JSONArray): List<Pair<String, String>> {
+        val list = mutableListOf<Pair<String, String>>()
+        for (i in 0 until json.length()) {
+            val obj = json.getJSONObject(i)
+            list.add(obj.getString("date") to obj.getString("note"))
+        }
+        return list
+    }
 }
 
 data class BackupData(
     val profile: UserProfile,
     val goal: NutritionGoal,
     val meals: List<MealEntry>,
-    val weightRecords: List<WeightRecord>
+    val weightRecords: List<WeightRecord>,
+    val dailyNotes: List<Pair<String, String>> = emptyList()
 )
 
 data class BackupInfo(

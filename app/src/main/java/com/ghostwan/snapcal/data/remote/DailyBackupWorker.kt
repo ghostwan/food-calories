@@ -21,12 +21,14 @@ class DailyBackupWorker(
             val profile = app.userProfileRepository.getProfile()
             val goal = app.userProfileRepository.getGoal()
             val weightRecords = app.userProfileRepository.getWeightHistory(9999)
+            val dailyNotes = app.dailyNoteRepository.getAllNotes()
 
             val success = app.driveBackupManager.backup(
                 profile = profile,
                 goal = goal,
                 meals = meals,
-                weightRecords = weightRecords
+                weightRecords = weightRecords,
+                dailyNotes = dailyNotes
             )
 
             if (success) Result.success() else Result.retry()

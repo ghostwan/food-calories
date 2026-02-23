@@ -93,7 +93,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             getDailyNutritionUseCase = app.getDailyNutritionUseCase,
             userProfileRepository = app.userProfileRepository,
             mealRepository = app.mealRepository,
-            healthConnectManager = app.healthConnectManager
+            healthConnectManager = app.healthConnectManager,
+            dailyNoteRepository = app.dailyNoteRepository
         )
     )
 
@@ -241,7 +242,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         driveBackupManager = app.driveBackupManager,
                         mealRepository = app.mealRepository,
                         mealReminderManager = app.mealReminderManager,
-                        settingsRepository = app.settingsRepository
+                        settingsRepository = app.settingsRepository,
+                        dailyNoteRepository = app.dailyNoteRepository
                     )
                 )
                 ProfileScreen(
