@@ -191,7 +191,8 @@
 
     <!-- Dynamic Calorie Goal -->
     <string name="profile_dynamic_calorie_goal">Dynamic calorie goal</string>
-    <string name="profile_dynamic_calorie_goal_desc">Adjust goal based on calories burned</string>
+    <string name="profile_dynamic_calorie_goal_desc">Goal = calories burned − daily deficit</string>
+    <string name="profile_daily_calorie_deficit">Daily calorie deficit</string>
 
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Shopping list</string>

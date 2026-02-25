@@ -9,4 +9,6 @@ interface SettingsRepository {
     fun setBackupFrequencyDays(days: Int)
     fun isDynamicCalorieGoalEnabled(): Boolean
     fun setDynamicCalorieGoalEnabled(enabled: Boolean)
+    fun getDailyCalorieDeficit(): Int
+    fun setDailyCalorieDeficit(deficit: Int)
 }

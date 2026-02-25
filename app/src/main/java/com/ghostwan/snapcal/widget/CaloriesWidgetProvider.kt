@@ -66,8 +66,10 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
                                 map.values.firstOrNull()?.toInt() ?: 0
                             } else 0
                         }
-                        val extra = (burned - goal).coerceAtLeast(0)
-                        goal += extra
+                        if (burned > 0) {
+                            val deficit = settingsPrefs.getInt("daily_calorie_deficit", 500)
+                            goal = (burned - deficit).coerceAtLeast(0)
+                        }
                     }
                 } catch (_: Exception) { }
             }

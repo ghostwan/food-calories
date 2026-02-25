@@ -105,6 +105,9 @@ class ProfileViewModel(
     private val _dynamicCalorieGoal = MutableStateFlow(false)
     val dynamicCalorieGoal: StateFlow<Boolean> = _dynamicCalorieGoal
 
+    private val _dailyCalorieDeficit = MutableStateFlow(500)
+    val dailyCalorieDeficit: StateFlow<Int> = _dailyCalorieDeficit
+
     init {
         loadProfile()
         checkHealthConnect()
@@ -114,6 +117,7 @@ class ProfileViewModel(
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
         _backupFrequencyDays.value = settingsRepository.getBackupFrequencyDays()
         _dynamicCalorieGoal.value = settingsRepository.isDynamicCalorieGoalEnabled()
+        _dailyCalorieDeficit.value = settingsRepository.getDailyCalorieDeficit()
     }
 
     private fun loadProfile() {
@@ -324,6 +328,11 @@ class ProfileViewModel(
     fun toggleDynamicCalorieGoal(enabled: Boolean) {
         _dynamicCalorieGoal.value = enabled
         settingsRepository.setDynamicCalorieGoalEnabled(enabled)
+    }
+
+    fun updateDailyCalorieDeficit(deficit: Int) {
+        _dailyCalorieDeficit.value = deficit
+        settingsRepository.setDailyCalorieDeficit(deficit)
     }
 
     fun toggleShoppingList(enabled: Boolean) {

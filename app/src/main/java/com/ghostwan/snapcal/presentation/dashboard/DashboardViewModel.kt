@@ -113,9 +113,9 @@ class DashboardViewModel(
     private fun observeEffectiveGoal() {
         viewModelScope.launch {
             combine(_goal, _caloriesBurned) { goal, burned ->
-                if (settingsRepository.isDynamicCalorieGoalEnabled()) {
-                    val extra = (burned - goal.calories).coerceAtLeast(0)
-                    goal.copy(calories = goal.calories + extra)
+                if (settingsRepository.isDynamicCalorieGoalEnabled() && burned > 0) {
+                    val deficit = settingsRepository.getDailyCalorieDeficit()
+                    goal.copy(calories = (burned - deficit).coerceAtLeast(0))
                 } else {
                     goal
                 }

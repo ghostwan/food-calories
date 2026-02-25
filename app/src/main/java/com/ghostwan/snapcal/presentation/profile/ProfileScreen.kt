@@ -99,6 +99,7 @@ fun ProfileScreen(
     val shoppingListEnabled by viewModel.shoppingListEnabled.collectAsState()
     val backupFrequencyDays by viewModel.backupFrequencyDays.collectAsState()
     val dynamicCalorieGoal by viewModel.dynamicCalorieGoal.collectAsState()
+    val dailyCalorieDeficit by viewModel.dailyCalorieDeficit.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -318,6 +319,21 @@ fun ProfileScreen(
                 Switch(
                     checked = dynamicCalorieGoal,
                     onCheckedChange = { viewModel.toggleDynamicCalorieGoal(it) }
+                )
+            }
+
+            if (dynamicCalorieGoal) {
+                OutlinedTextField(
+                    value = dailyCalorieDeficit.toString(),
+                    onValueChange = {
+                        val deficit = it.toIntOrNull() ?: return@OutlinedTextField
+                        viewModel.updateDailyCalorieDeficit(deficit)
+                    },
+                    label = { Text(stringResource(R.string.profile_daily_calorie_deficit)) },
+                    suffix = { Text("kcal") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 

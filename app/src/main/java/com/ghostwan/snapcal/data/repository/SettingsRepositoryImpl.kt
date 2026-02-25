@@ -42,10 +42,19 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putBoolean(KEY_DYNAMIC_CALORIE_GOAL, enabled).apply()
     }
 
+    override fun getDailyCalorieDeficit(): Int {
+        return prefs.getInt(KEY_DAILY_CALORIE_DEFICIT, 500)
+    }
+
+    override fun setDailyCalorieDeficit(deficit: Int) {
+        prefs.edit().putInt(KEY_DAILY_CALORIE_DEFICIT, deficit).apply()
+    }
+
     private companion object {
         const val KEY_API = "gemini_api_key_v2"
         const val KEY_SHOPPING_LIST = "shopping_list_enabled"
         const val KEY_BACKUP_FREQUENCY = "backup_frequency_days"
         const val KEY_DYNAMIC_CALORIE_GOAL = "dynamic_calorie_goal"
+        const val KEY_DAILY_CALORIE_DEFICIT = "daily_calorie_deficit"
     }
 }
