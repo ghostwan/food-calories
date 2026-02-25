@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tail:*)",
+      "Bash(git add:*)",
+      "Bash(./build.sh build:*)",
+      "Bash(./build.sh run:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebSearch",
+      "WebFetch(domain:android-developers.googleblog.com)",
+      "WebFetch(domain:www.androidpolice.com)"
+    ]
+  }
+}

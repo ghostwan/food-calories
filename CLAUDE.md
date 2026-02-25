@@ -58,4 +58,7 @@ Kotlin 2.0.0, AGP 8.7.3, Gradle 8.9, Compose BOM 2024.06.00, Room 2.6.1, compile
 
 ## Working Process
 
-After each task, build, install, run, commit and push 
+- Find and connect an adb device through the wifi
+- After each task, build, install, run, commit and push 
+- Build in release and run by using the script ./build.sh -r run 
+- 
