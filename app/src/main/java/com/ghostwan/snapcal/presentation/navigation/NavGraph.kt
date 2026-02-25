@@ -94,7 +94,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             userProfileRepository = app.userProfileRepository,
             mealRepository = app.mealRepository,
             healthConnectManager = app.healthConnectManager,
-            dailyNoteRepository = app.dailyNoteRepository
+            dailyNoteRepository = app.dailyNoteRepository,
+            appContext = app.applicationContext
         )
     )
 

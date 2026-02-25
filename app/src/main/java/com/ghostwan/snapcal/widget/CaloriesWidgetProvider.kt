@@ -3,6 +3,7 @@ package com.ghostwan.snapcal.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -29,6 +30,15 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        fun refreshAll(context: Context) {
+            val manager = AppWidgetManager.getInstance(context)
+            val component = ComponentName(context, CaloriesWidgetProvider::class.java)
+            val ids = manager.getAppWidgetIds(component)
+            for (id in ids) {
+                updateWidget(context, manager, id)
+            }
+        }
+
         fun updateWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,

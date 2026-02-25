@@ -1,9 +1,11 @@
 package com.ghostwan.snapcal.presentation.dashboard
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.widget.CaloriesWidgetProvider
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -26,7 +28,8 @@ class DashboardViewModel(
     private val userProfileRepository: UserProfileRepository,
     private val mealRepository: MealRepository,
     private val healthConnectManager: HealthConnectManager,
-    private val dailyNoteRepository: DailyNoteRepository
+    private val dailyNoteRepository: DailyNoteRepository,
+    private val appContext: Context
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -189,6 +192,8 @@ class DashboardViewModel(
         observeNutrition()
         observeMeals()
         loadCaloriesBurned()
+        loadLatestWeight()
+        viewModelScope.launch { CaloriesWidgetProvider.refreshAll(appContext) }
     }
 
     private fun observeFavorites() {
@@ -202,6 +207,7 @@ class DashboardViewModel(
     fun deleteMeal(id: Long) {
         viewModelScope.launch {
             mealRepository.deleteMeal(id)
+            CaloriesWidgetProvider.refreshAll(appContext)
         }
     }
 
@@ -254,11 +260,12 @@ class DashboardViewModel(
             userProfileRepository: UserProfileRepository,
             mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
             healthConnectManager: HealthConnectManager,
-            dailyNoteRepository: DailyNoteRepository
+            dailyNoteRepository: DailyNoteRepository,
+            appContext: Context
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository) as T
+                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository, appContext) as T
             }
         }
     }

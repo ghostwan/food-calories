@@ -1,7 +1,5 @@
 package com.ghostwan.snapcal.domain.usecase
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.MealEntry
@@ -33,12 +31,7 @@ class SaveMealUseCase(
     }
 
     private fun refreshWidget() {
-        val manager = AppWidgetManager.getInstance(appContext)
-        val component = ComponentName(appContext, CaloriesWidgetProvider::class.java)
-        val ids = manager.getAppWidgetIds(component)
-        for (id in ids) {
-            CaloriesWidgetProvider.updateWidget(appContext, manager, id)
-        }
+        CaloriesWidgetProvider.refreshAll(appContext)
     }
 
     private suspend fun saveMeal(analysis: FoodAnalysis, date: String, quantity: Int = 1) {
