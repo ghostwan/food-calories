@@ -379,12 +379,11 @@ private fun CaloriesRingCard(current: Int, goal: Int, burned: Int, onBurnedClick
         label = "calories_progress"
     )
 
+    val progressFraction = if (goal > 0) current.toFloat() / goal else 0f
     val ringColor = when {
-        current > burned && burned > 0 -> Color(0xFFF44336)              // Red: consumed > burned (surplus)
-        current > goal -> Color(0xFFFF9800)                               // Orange: consumed > goal but in deficit
-        burned > 0 && current <= burned -> Color(0xFF4CAF50)              // Green: in deficit and under goal
-        current <= goal -> Color(0xFF4CAF50)                              // Green: under goal (no burn data)
-        else -> Color(0xFFF44336)                                         // Red: over goal (no burn data)
+        progressFraction <= 0.9f -> Color(0xFF4CAF50)  // Green
+        progressFraction <= 1.0f -> Color(0xFFFF9800)   // Orange
+        else -> Color(0xFFF44336)                        // Red
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
