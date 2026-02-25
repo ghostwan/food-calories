@@ -64,7 +64,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -125,7 +125,7 @@ fun DashboardScreen(
         else -> selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
     }
 
-    SideEffect { viewModel.refresh() }
+    LaunchedEffect(Unit) { viewModel.refresh() }
 
     if (showNoteDialog) {
         DailyNoteDialog(
