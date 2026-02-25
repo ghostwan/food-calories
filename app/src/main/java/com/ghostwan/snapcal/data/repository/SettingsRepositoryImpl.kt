@@ -34,9 +34,18 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putInt(KEY_BACKUP_FREQUENCY, days).apply()
     }
 
+    override fun isDynamicCalorieGoalEnabled(): Boolean {
+        return prefs.getBoolean(KEY_DYNAMIC_CALORIE_GOAL, false)
+    }
+
+    override fun setDynamicCalorieGoalEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DYNAMIC_CALORIE_GOAL, enabled).apply()
+    }
+
     private companion object {
         const val KEY_API = "gemini_api_key_v2"
         const val KEY_SHOPPING_LIST = "shopping_list_enabled"
         const val KEY_BACKUP_FREQUENCY = "backup_frequency_days"
+        const val KEY_DYNAMIC_CALORIE_GOAL = "dynamic_calorie_goal"
     }
 }

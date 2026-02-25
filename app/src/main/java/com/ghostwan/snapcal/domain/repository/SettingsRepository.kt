@@ -7,4 +7,6 @@ interface SettingsRepository {
     fun setShoppingListEnabled(enabled: Boolean)
     fun getBackupFrequencyDays(): Int
     fun setBackupFrequencyDays(days: Int)
+    fun isDynamicCalorieGoalEnabled(): Boolean
+    fun setDynamicCalorieGoalEnabled(enabled: Boolean)
 }

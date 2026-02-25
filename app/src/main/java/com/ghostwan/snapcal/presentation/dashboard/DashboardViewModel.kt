@@ -12,11 +12,13 @@ import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.DailyNoteRepository
 import com.ghostwan.snapcal.domain.repository.MealRepository
+import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.GetDailyNutritionUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -29,6 +31,7 @@ class DashboardViewModel(
     private val mealRepository: MealRepository,
     private val healthConnectManager: HealthConnectManager,
     private val dailyNoteRepository: DailyNoteRepository,
+    private val settingsRepository: SettingsRepository,
     private val appContext: Context
 ) : ViewModel() {
 
@@ -53,6 +56,9 @@ class DashboardViewModel(
     private val _caloriesBurned = MutableStateFlow(0)
     val caloriesBurned: StateFlow<Int> = _caloriesBurned
 
+    private val _effectiveGoal = MutableStateFlow(NutritionGoal())
+    val effectiveGoal: StateFlow<NutritionGoal> = _effectiveGoal
+
     private val _dailyNote = MutableStateFlow<String?>(null)
     val dailyNote: StateFlow<String?> = _dailyNote
 
@@ -70,6 +76,7 @@ class DashboardViewModel(
         observeDailyNote()
         loadCaloriesBurned()
         loadLatestWeight()
+        observeEffectiveGoal()
     }
 
     fun goToPreviousDay() {
@@ -101,6 +108,18 @@ class DashboardViewModel(
 
     private fun loadGoal() {
         _goal.value = userProfileRepository.getGoal()
+    }
+
+    private fun observeEffectiveGoal() {
+        viewModelScope.launch {
+            combine(_goal, _caloriesBurned) { goal, burned ->
+                if (settingsRepository.isDynamicCalorieGoalEnabled()) {
+                    goal.copy(calories = goal.calories + burned)
+                } else {
+                    goal
+                }
+            }.collect { _effectiveGoal.value = it }
+        }
     }
 
     private var nutritionJob: Job? = null
@@ -193,6 +212,7 @@ class DashboardViewModel(
         observeMeals()
         loadCaloriesBurned()
         loadLatestWeight()
+        observeEffectiveGoal()
         viewModelScope.launch { CaloriesWidgetProvider.refreshAll(appContext) }
     }
 
@@ -261,11 +281,12 @@ class DashboardViewModel(
             mealRepository: com.ghostwan.snapcal.domain.repository.MealRepository,
             healthConnectManager: HealthConnectManager,
             dailyNoteRepository: DailyNoteRepository,
+            settingsRepository: SettingsRepository,
             appContext: Context
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository, appContext) as T
+                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository, settingsRepository, appContext) as T
             }
         }
     }

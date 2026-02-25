@@ -102,6 +102,9 @@ class ProfileViewModel(
     private val _backupFrequencyDays = MutableStateFlow(1)
     val backupFrequencyDays: StateFlow<Int> = _backupFrequencyDays
 
+    private val _dynamicCalorieGoal = MutableStateFlow(false)
+    val dynamicCalorieGoal: StateFlow<Boolean> = _dynamicCalorieGoal
+
     init {
         loadProfile()
         checkHealthConnect()
@@ -110,6 +113,7 @@ class ProfileViewModel(
         loadBackupInfo()
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
         _backupFrequencyDays.value = settingsRepository.getBackupFrequencyDays()
+        _dynamicCalorieGoal.value = settingsRepository.isDynamicCalorieGoalEnabled()
     }
 
     private fun loadProfile() {
@@ -315,6 +319,11 @@ class ProfileViewModel(
             MealReminderManager.MealType.LUNCH -> _lunchTime.value = Pair(hour, minute)
             MealReminderManager.MealType.DINNER -> _dinnerTime.value = Pair(hour, minute)
         }
+    }
+
+    fun toggleDynamicCalorieGoal(enabled: Boolean) {
+        _dynamicCalorieGoal.value = enabled
+        settingsRepository.setDynamicCalorieGoalEnabled(enabled)
     }
 
     fun toggleShoppingList(enabled: Boolean) {

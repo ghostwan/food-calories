@@ -105,7 +105,7 @@ fun DashboardScreen(
 ) {
     val nutrition by viewModel.nutrition.collectAsState()
     val meals by viewModel.meals.collectAsState()
-    val goal by viewModel.goal.collectAsState()
+    val effectiveGoal by viewModel.effectiveGoal.collectAsState()
     val caloriesBurned by viewModel.caloriesBurned.collectAsState()
     val selectionMode by viewModel.selectionMode.collectAsState()
     val selectedMealIds by viewModel.selectedMealIds.collectAsState()
@@ -254,7 +254,7 @@ fun DashboardScreen(
             item {
                 CaloriesRingCard(
                     current = nutrition?.totalCalories ?: 0,
-                    goal = goal.calories,
+                    goal = effectiveGoal.calories,
                     burned = caloriesBurned,
                     onBurnedClick = {
                         try {
@@ -275,7 +275,7 @@ fun DashboardScreen(
             }
 
             item {
-                MacrosProgressCard(nutrition, goal)
+                MacrosProgressCard(nutrition, effectiveGoal)
             }
 
             item {

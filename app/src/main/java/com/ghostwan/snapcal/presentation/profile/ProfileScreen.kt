@@ -98,6 +98,7 @@ fun ProfileScreen(
 
     val shoppingListEnabled by viewModel.shoppingListEnabled.collectAsState()
     val backupFrequencyDays by viewModel.backupFrequencyDays.collectAsState()
+    val dynamicCalorieGoal by viewModel.dynamicCalorieGoal.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -296,6 +297,29 @@ fun ProfileScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // Dynamic calorie goal toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.profile_dynamic_calorie_goal),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = stringResource(R.string.profile_dynamic_calorie_goal_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = dynamicCalorieGoal,
+                    onCheckedChange = { viewModel.toggleDynamicCalorieGoal(it) }
+                )
+            }
 
             // Compute goals with AI
             OutlinedButton(

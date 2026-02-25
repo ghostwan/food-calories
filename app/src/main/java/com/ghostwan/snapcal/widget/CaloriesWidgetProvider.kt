@@ -12,8 +12,10 @@ import android.widget.RemoteViews
 import com.ghostwan.snapcal.MainActivity
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.data.local.AppDatabase
+import com.ghostwan.snapcal.data.local.HealthConnectManager
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -49,7 +51,25 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
             val consumed = runBlocking { dao.getDailyCalories(today) } ?: 0
 
             val prefs = context.getSharedPreferences("user_profile", Context.MODE_PRIVATE)
-            val goal = prefs.getInt("goal_calories", 2000)
+            var goal = prefs.getInt("goal_calories", 2000)
+
+            val settingsPrefs = context.getSharedPreferences("food_calories_settings", Context.MODE_PRIVATE)
+            val dynamicGoalEnabled = settingsPrefs.getBoolean("dynamic_calorie_goal", false)
+            if (dynamicGoalEnabled) {
+                try {
+                    val hcManager = HealthConnectManager(context)
+                    if (hcManager.isAvailable()) {
+                        val burned = runBlocking {
+                            if (hcManager.hasPermissions()) {
+                                val today = LocalDate.now()
+                                val map = hcManager.readCaloriesBurnedForDateRange(today, today)
+                                map.values.firstOrNull()?.toInt() ?: 0
+                            } else 0
+                        }
+                        goal += burned
+                    }
+                } catch (_: Exception) { }
+            }
 
             val remaining = (goal - consumed).coerceAtLeast(0)
             val progress = if (goal > 0) ((consumed * 100) / goal).coerceIn(0, 100) else 0

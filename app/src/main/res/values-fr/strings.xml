@@ -190,6 +190,10 @@
     <string name="emoji_recent">Récents</string>
     <string name="emoji_suggestions">Suggestions</string>
 
+    <!-- Dynamic Calorie Goal -->
+    <string name="profile_dynamic_calorie_goal">Objectif calorique dynamique</string>
+    <string name="profile_dynamic_calorie_goal_desc">Ajuster l\'objectif selon les dépenses</string>
+
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Liste de courses</string>
     <string name="profile_shopping_list_enable">Activer la liste de courses</string>

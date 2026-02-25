@@ -189,6 +189,10 @@
     <string name="emoji_recent">Recent</string>
     <string name="emoji_suggestions">Suggestions</string>
 
+    <!-- Dynamic Calorie Goal -->
+    <string name="profile_dynamic_calorie_goal">Dynamic calorie goal</string>
+    <string name="profile_dynamic_calorie_goal_desc">Adjust goal based on calories burned</string>
+
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Shopping list</string>
     <string name="profile_shopping_list_enable">Enable shopping list</string>
