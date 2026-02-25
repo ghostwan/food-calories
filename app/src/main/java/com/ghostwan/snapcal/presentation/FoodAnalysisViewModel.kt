@@ -170,6 +170,58 @@ class FoodAnalysisViewModel(
         }
     }
 
+    fun splitMeal(originalAnalysis: FoodAnalysis, meal2IngredientIndices: Set<Int>) {
+        viewModelScope.launch {
+            try {
+                val allIngredients = originalAnalysis.ingredients
+                val meal1Ingredients = allIngredients.filterIndexed { index, _ -> index !in meal2IngredientIndices }
+                val meal2Ingredients = allIngredients.filterIndexed { index, _ -> index in meal2IngredientIndices }
+
+                val meal1Calories = meal1Ingredients.sumOf { it.calories }
+                val meal2Calories = meal2Ingredients.sumOf { it.calories }
+                val totalCalories = originalAnalysis.totalCalories
+
+                val analysis1 = FoodAnalysis(
+                    dishName = if (meal1Ingredients.size == 1) meal1Ingredients[0].name
+                               else originalAnalysis.dishName,
+                    totalCalories = meal1Calories,
+                    ingredients = meal1Ingredients,
+                    macros = scaleMacros(originalAnalysis.macros, totalCalories, meal1Calories),
+                    notes = originalAnalysis.notes,
+                    emoji = originalAnalysis.emoji
+                )
+
+                val analysis2 = FoodAnalysis(
+                    dishName = if (meal2Ingredients.size == 1) meal2Ingredients[0].name
+                               else meal2Ingredients.joinToString(" + ") { it.name },
+                    totalCalories = meal2Calories,
+                    ingredients = meal2Ingredients,
+                    macros = scaleMacros(originalAnalysis.macros, totalCalories, meal2Calories),
+                    notes = null,
+                    emoji = originalAnalysis.emoji
+                )
+
+                val qty = _quantity.value
+                val mealDate = editingMealDate
+                    ?: targetDate
+                    ?: java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+
+                val mealIds = editingMealIds
+                val mealId = editingMealId
+                if (mealIds != null) {
+                    saveMealUseCase.splitAndSaveMultiple(mealIds, analysis1, analysis2, mealDate, qty)
+                } else {
+                    saveMealUseCase.splitAndSave(mealId, analysis1, analysis2, mealDate, qty)
+                }
+
+                _mealSaved.value = true
+                loadRecentEmojis()
+            } catch (_: Exception) {
+                // silently fail
+            }
+        }
+    }
+
     fun viewMealDetail(meal: MealEntry) {
         val ingredients = try {
             val array = JSONArray(meal.ingredientsJson)

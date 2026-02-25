@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.CallSplit
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Star
@@ -40,6 +41,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -147,6 +149,7 @@ fun ResultScreen(
                     recentEmojis = recentEmojis,
                     onQuantityChange = { viewModel.updateQuantity(it) },
                     onSave = { viewModel.saveMeal(state.result) },
+                    onSplit = { meal2Indices -> viewModel.splitMeal(state.result, meal2Indices) },
                     onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
                     onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) },
                     onDishNameChange = { name -> viewModel.updateDishName(name) },
@@ -199,6 +202,7 @@ private fun SuccessContent(
     recentEmojis: List<String> = emptyList(),
     onQuantityChange: (Int) -> Unit = {},
     onSave: () -> Unit,
+    onSplit: (Set<Int>) -> Unit = {},
     onCorrect: (String) -> Unit,
     onEmojiChange: (String) -> Unit = {},
     onDishNameChange: (String) -> Unit = {},
@@ -209,6 +213,7 @@ private fun SuccessContent(
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showDishNameEditor by remember { mutableStateOf(false) }
     var editingIngredientIndex by remember { mutableStateOf<Int?>(null) }
+    var showSplitDialog by remember { mutableStateOf(false) }
 
     if (showEmojiPicker) {
         EmojiPickerDialog(
@@ -231,6 +236,17 @@ private fun SuccessContent(
                 showDishNameEditor = false
             },
             onDismiss = { showDishNameEditor = false }
+        )
+    }
+
+    if (showSplitDialog && result.ingredients.size >= 2) {
+        SplitMealDialog(
+            ingredients = result.ingredients,
+            onConfirm = { meal2Indices ->
+                onSplit(meal2Indices)
+                showSplitDialog = false
+            },
+            onDismiss = { showSplitDialog = false }
         )
     }
 
@@ -326,6 +342,20 @@ private fun SuccessContent(
         if (!mealSaved) {
             item {
                 CorrectionSection(onCorrect = onCorrect)
+            }
+        }
+
+        // Split meal button
+        if (!readOnly && !mealSaved && result.ingredients.size >= 2) {
+            item {
+                OutlinedButton(
+                    onClick = { showSplitDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.CallSplit, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.split_meal_button))
+                }
             }
         }
 
@@ -1092,6 +1122,114 @@ private fun DishNameEditDialog(
                 onClick = { if (name.isNotBlank()) onConfirm(name) }
             ) {
                 Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun SplitMealDialog(
+    ingredients: List<Ingredient>,
+    onConfirm: (Set<Int>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var meal2Indices by remember { mutableStateOf(setOf<Int>()) }
+
+    val meal1Calories = ingredients.filterIndexed { i, _ -> i !in meal2Indices }.sumOf { it.calories }
+    val meal2Calories = ingredients.filterIndexed { i, _ -> i in meal2Indices }.sumOf { it.calories }
+    val isValid = meal2Indices.isNotEmpty() && meal2Indices.size < ingredients.size
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.split_meal_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.split_meal_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ingredients.forEachIndexed { index, ingredient ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                meal2Indices = if (index in meal2Indices)
+                                    meal2Indices - index
+                                else
+                                    meal2Indices + index
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = index in meal2Indices,
+                            onCheckedChange = { checked ->
+                                meal2Indices = if (checked)
+                                    meal2Indices + index
+                                else
+                                    meal2Indices - index
+                            }
+                        )
+                        Text(
+                            text = ingredient.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = stringResource(R.string.result_kcal, ingredient.calories),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.split_meal_1_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.result_kcal, meal1Calories),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = stringResource(R.string.split_meal_2_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.result_kcal, meal2Calories),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(meal2Indices) },
+                enabled = isValid
+            ) {
+                Text(stringResource(R.string.split_meal_confirm))
             }
         },
         dismissButton = {

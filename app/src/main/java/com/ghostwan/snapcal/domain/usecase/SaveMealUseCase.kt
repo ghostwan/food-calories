@@ -30,6 +30,34 @@ class SaveMealUseCase(
         refreshWidget()
     }
 
+    suspend fun splitAndSave(
+        originalMealId: Long?,
+        analysis1: FoodAnalysis,
+        analysis2: FoodAnalysis,
+        date: String,
+        quantity: Int = 1
+    ) {
+        if (originalMealId != null) {
+            mealRepository.deleteMeal(originalMealId)
+        }
+        saveMeal(analysis1, date, quantity)
+        saveMeal(analysis2, date, quantity)
+        refreshWidget()
+    }
+
+    suspend fun splitAndSaveMultiple(
+        originalMealIds: List<Long>,
+        analysis1: FoodAnalysis,
+        analysis2: FoodAnalysis,
+        date: String,
+        quantity: Int = 1
+    ) {
+        originalMealIds.forEach { mealRepository.deleteMeal(it) }
+        saveMeal(analysis1, date, quantity)
+        saveMeal(analysis2, date, quantity)
+        refreshWidget()
+    }
+
     private fun refreshWidget() {
         CaloriesWidgetProvider.refreshAll(appContext)
     }

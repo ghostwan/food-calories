@@ -233,6 +233,14 @@
     <string name="shortcut_scan_long">Scan a meal</string>
     <string name="tile_scan_meal">Scan meal</string>
 
+    <!-- Split Meal -->
+    <string name="split_meal_button">Split</string>
+    <string name="split_meal_title">Split meal</string>
+    <string name="split_meal_description">Select ingredients for the second meal</string>
+    <string name="split_meal_1_label">Meal 1</string>
+    <string name="split_meal_2_label">Meal 2</string>
+    <string name="split_meal_confirm">Split and save</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>

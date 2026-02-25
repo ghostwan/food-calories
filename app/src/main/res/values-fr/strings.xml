@@ -234,6 +234,14 @@
     <string name="shortcut_scan_long">Scanner un repas</string>
     <string name="tile_scan_meal">Scanner repas</string>
 
+    <!-- Split Meal -->
+    <string name="split_meal_button">Séparer</string>
+    <string name="split_meal_title">Séparer le repas</string>
+    <string name="split_meal_description">Cochez les ingrédients du deuxième repas</string>
+    <string name="split_meal_1_label">Repas 1</string>
+    <string name="split_meal_2_label">Repas 2</string>
+    <string name="split_meal_confirm">Séparer et sauvegarder</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>
