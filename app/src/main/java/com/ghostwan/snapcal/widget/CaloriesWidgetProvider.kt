@@ -61,12 +61,13 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
                     if (hcManager.isAvailable()) {
                         val burned = runBlocking {
                             if (hcManager.hasPermissions()) {
-                                val today = LocalDate.now()
-                                val map = hcManager.readCaloriesBurnedForDateRange(today, today)
+                                val todayDate = LocalDate.now()
+                                val map = hcManager.readCaloriesBurnedForDateRange(todayDate, todayDate)
                                 map.values.firstOrNull()?.toInt() ?: 0
                             } else 0
                         }
-                        goal += burned
+                        val extra = (burned - goal).coerceAtLeast(0)
+                        goal += extra
                     }
                 } catch (_: Exception) { }
             }
