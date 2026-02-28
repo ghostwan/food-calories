@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
@@ -45,7 +46,8 @@ class DriveBackupManager(private val context: Context) {
         goal: NutritionGoal,
         meals: List<MealEntry>,
         weightRecords: List<WeightRecord>,
-        dailyNotes: List<Pair<String, String>> = emptyList()
+        dailyNotes: List<Pair<String, String>> = emptyList(),
+        bodyMeasurements: List<BodyMeasurement> = emptyList()
     ): Boolean = withContext(Dispatchers.IO) {
         val drive = getDriveService() ?: return@withContext false
 
@@ -56,6 +58,7 @@ class DriveBackupManager(private val context: Context) {
             put("meals", mealsToJson(meals))
             put("weightRecords", weightRecordsToJson(weightRecords))
             put("dailyNotes", dailyNotesToJson(dailyNotes))
+            put("bodyMeasurements", bodyMeasurementsToJson(bodyMeasurements))
         }
 
         val content = ByteArrayContent.fromString("application/json", json.toString())
@@ -92,7 +95,8 @@ class DriveBackupManager(private val context: Context) {
                 goal = jsonToGoal(json.getJSONObject("goal")),
                 meals = jsonToMeals(json.getJSONArray("meals")),
                 weightRecords = jsonToWeightRecords(json.optJSONArray("weightRecords") ?: JSONArray()),
-                dailyNotes = jsonToDailyNotes(json.optJSONArray("dailyNotes") ?: JSONArray())
+                dailyNotes = jsonToDailyNotes(json.optJSONArray("dailyNotes") ?: JSONArray()),
+                bodyMeasurements = jsonToBodyMeasurements(json.optJSONArray("bodyMeasurements") ?: JSONArray())
             )
         } catch (_: Exception) {
             null
@@ -239,6 +243,37 @@ class DriveBackupManager(private val context: Context) {
         }
         return list
     }
+
+    private fun bodyMeasurementsToJson(measurements: List<BodyMeasurement>) = JSONArray().apply {
+        measurements.forEach { m ->
+            put(JSONObject().apply {
+                put("date", m.date)
+                if (m.waist != null) put("waist", m.waist.toDouble()) else put("waist", JSONObject.NULL)
+                if (m.hips != null) put("hips", m.hips.toDouble()) else put("hips", JSONObject.NULL)
+                if (m.chest != null) put("chest", m.chest.toDouble()) else put("chest", JSONObject.NULL)
+                if (m.arms != null) put("arms", m.arms.toDouble()) else put("arms", JSONObject.NULL)
+                if (m.thighs != null) put("thighs", m.thighs.toDouble()) else put("thighs", JSONObject.NULL)
+            })
+        }
+    }
+
+    private fun jsonToBodyMeasurements(json: JSONArray): List<BodyMeasurement> {
+        val list = mutableListOf<BodyMeasurement>()
+        for (i in 0 until json.length()) {
+            val obj = json.getJSONObject(i)
+            list.add(
+                BodyMeasurement(
+                    date = obj.getString("date"),
+                    waist = if (obj.isNull("waist")) null else obj.getDouble("waist").toFloat(),
+                    hips = if (obj.isNull("hips")) null else obj.getDouble("hips").toFloat(),
+                    chest = if (obj.isNull("chest")) null else obj.getDouble("chest").toFloat(),
+                    arms = if (obj.isNull("arms")) null else obj.getDouble("arms").toFloat(),
+                    thighs = if (obj.isNull("thighs")) null else obj.getDouble("thighs").toFloat()
+                )
+            )
+        }
+        return list
+    }
 }
 
 data class BackupData(
@@ -246,7 +281,8 @@ data class BackupData(
     val goal: NutritionGoal,
     val meals: List<MealEntry>,
     val weightRecords: List<WeightRecord>,
-    val dailyNotes: List<Pair<String, String>> = emptyList()
+    val dailyNotes: List<Pair<String, String>> = emptyList(),
+    val bodyMeasurements: List<BodyMeasurement> = emptyList()
 )
 
 data class BackupInfo(

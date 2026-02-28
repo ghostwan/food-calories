@@ -1,5 +1,6 @@
 package com.ghostwan.snapcal.domain.repository
 
+import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
@@ -12,6 +13,11 @@ interface UserProfileRepository {
     suspend fun saveWeightRecord(record: WeightRecord)
     suspend fun getLatestWeight(): WeightRecord?
     suspend fun getWeightHistory(days: Int = 90): List<WeightRecord>
+    suspend fun saveBodyMeasurement(measurement: BodyMeasurement)
+    suspend fun getLatestBodyMeasurement(): BodyMeasurement?
+    suspend fun getBodyMeasurementHistory(days: Int = 90): List<BodyMeasurement>
+    fun getChartShowMeasurements(): Boolean
+    fun setChartShowMeasurements(value: Boolean)
     fun getChartCaloriesOrigin(): Int
     fun setChartCaloriesOrigin(value: Int)
     fun getChartWeightOrigin(): Int

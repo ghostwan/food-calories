@@ -1,9 +1,12 @@
 package com.ghostwan.snapcal.data.repository
 
 import android.content.Context
+import com.ghostwan.snapcal.data.local.BodyMeasurementDao
+import com.ghostwan.snapcal.data.local.BodyMeasurementEntity
 import com.ghostwan.snapcal.data.local.WeightDao
 import com.ghostwan.snapcal.data.local.WeightEntity
 import com.ghostwan.snapcal.domain.model.ActivityLevel
+import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.Gender
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
@@ -15,7 +18,8 @@ import java.util.Locale
 
 class UserProfileRepositoryImpl(
     context: Context,
-    private val weightDao: WeightDao
+    private val weightDao: WeightDao,
+    private val bodyMeasurementDao: BodyMeasurementDao
 ) : UserProfileRepository {
 
     private val prefs = context.getSharedPreferences("user_profile", Context.MODE_PRIVATE)
@@ -89,6 +93,37 @@ class UserProfileRepositoryImpl(
             WeightRecord(id = it.id, weight = it.weight, date = it.date)
         }
     }
+
+    override suspend fun saveBodyMeasurement(measurement: BodyMeasurement) {
+        val existing = bodyMeasurementDao.getByDate(measurement.date)
+        bodyMeasurementDao.insert(
+            BodyMeasurementEntity(
+                id = existing?.id ?: 0,
+                waist = measurement.waist,
+                hips = measurement.hips,
+                chest = measurement.chest,
+                arms = measurement.arms,
+                thighs = measurement.thighs,
+                date = measurement.date
+            )
+        )
+    }
+
+    override suspend fun getLatestBodyMeasurement(): BodyMeasurement? {
+        return bodyMeasurementDao.getLatest()?.let {
+            BodyMeasurement(id = it.id, waist = it.waist, hips = it.hips, chest = it.chest, arms = it.arms, thighs = it.thighs, date = it.date)
+        }
+    }
+
+    override suspend fun getBodyMeasurementHistory(days: Int): List<BodyMeasurement> {
+        val startDate = daysAgoDate(days)
+        return bodyMeasurementDao.getHistory(startDate).map {
+            BodyMeasurement(id = it.id, waist = it.waist, hips = it.hips, chest = it.chest, arms = it.arms, thighs = it.thighs, date = it.date)
+        }
+    }
+
+    override fun getChartShowMeasurements(): Boolean = prefs.getBoolean("chart_show_measurements", false)
+    override fun setChartShowMeasurements(value: Boolean) { prefs.edit().putBoolean("chart_show_measurements", value).apply() }
 
     override fun getChartCaloriesOrigin(): Int = prefs.getInt("chart_calories_origin", 0)
 

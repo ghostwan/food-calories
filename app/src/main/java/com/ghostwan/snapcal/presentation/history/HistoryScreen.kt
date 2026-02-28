@@ -69,6 +69,8 @@ fun HistoryScreen(
     val showCalories by viewModel.showCalories.collectAsState()
     val showWeight by viewModel.showWeight.collectAsState()
     val showBurned by viewModel.showBurned.collectAsState()
+    val showMeasurements by viewModel.showMeasurements.collectAsState()
+    val measurementHistory by viewModel.measurementHistory.collectAsState()
 
     val rangeLabels = mapOf(
         7 to stringResource(R.string.history_range_week),
@@ -200,6 +202,12 @@ fun HistoryScreen(
                                 label = { Text(stringResource(R.string.history_burned)) },
                                 modifier = Modifier.weight(1f)
                             )
+                            FilterChip(
+                                selected = showMeasurements,
+                                onClick = { viewModel.toggleShowMeasurements() },
+                                label = { Text(stringResource(R.string.history_measurements)) },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(
@@ -230,6 +238,28 @@ fun HistoryScreen(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 textStyle = MaterialTheme.typography.bodySmall
                             )
+                        }
+                        if (showMeasurements && measurementHistory.isNotEmpty()) {
+                            val dateFormat2 = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                            val shortFormat2 = SimpleDateFormat("dd/MM", Locale.US)
+                            val measurementChartData = measurementHistory
+                                .sortedBy { it.date }
+                                .map { m ->
+                                    val lbl = try {
+                                        shortFormat2.format(dateFormat2.parse(m.date)!!)
+                                    } catch (_: Exception) {
+                                        m.date.takeLast(5)
+                                    }
+                                    MeasurementChartPoint(
+                                        label = lbl,
+                                        waist = m.waist,
+                                        hips = m.hips,
+                                        chest = m.chest,
+                                        arms = m.arms,
+                                        thighs = m.thighs
+                                    )
+                                }
+                            MeasurementsChart(data = measurementChartData)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }

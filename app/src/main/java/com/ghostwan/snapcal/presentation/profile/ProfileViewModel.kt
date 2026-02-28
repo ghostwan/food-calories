@@ -11,6 +11,7 @@ import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.data.remote.BackupInfo
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
+import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
@@ -108,12 +109,19 @@ class ProfileViewModel(
     private val _dailyCalorieDeficit = MutableStateFlow(500)
     val dailyCalorieDeficit: StateFlow<Int> = _dailyCalorieDeficit
 
+    private val _currentMeasurement = MutableStateFlow(BodyMeasurement())
+    val currentMeasurement: StateFlow<BodyMeasurement> = _currentMeasurement
+
+    private val _measurementSaved = MutableStateFlow(false)
+    val measurementSaved: StateFlow<Boolean> = _measurementSaved
+
     init {
         loadProfile()
         checkHealthConnect()
         checkGoogleSignIn()
         loadReminderSettings()
         loadBackupInfo()
+        loadLatestMeasurement()
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
         _backupFrequencyDays.value = settingsRepository.getBackupFrequencyDays()
         _dynamicCalorieGoal.value = settingsRepository.isDynamicCalorieGoalEnabled()
@@ -202,6 +210,31 @@ class ProfileViewModel(
         }
     }
 
+    private fun loadLatestMeasurement() {
+        viewModelScope.launch {
+            val latest = userProfileRepository.getLatestBodyMeasurement()
+            if (latest != null) {
+                _currentMeasurement.value = latest
+            }
+        }
+    }
+
+    fun updateMeasurement(measurement: BodyMeasurement) {
+        _currentMeasurement.value = measurement
+    }
+
+    fun saveBodyMeasurement() {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        val measurement = _currentMeasurement.value.copy(date = today)
+        viewModelScope.launch {
+            userProfileRepository.saveBodyMeasurement(measurement)
+            _currentMeasurement.value = measurement
+            _measurementSaved.value = true
+        }
+    }
+
+    fun clearMeasurementSaved() { _measurementSaved.value = false }
+
     fun syncWeightFromHealthConnect() {
         viewModelScope.launch {
             _isSyncingWeight.value = true
@@ -242,12 +275,14 @@ class ProfileViewModel(
                 val meals = mealRepository.getAllMeals()
                 val weightRecords = userProfileRepository.getWeightHistory(9999)
                 val dailyNotes = dailyNoteRepository.getAllNotes()
+                val bodyMeasurements = userProfileRepository.getBodyMeasurementHistory(9999)
                 val success = driveBackupManager.backup(
                     profile = _profile.value,
                     goal = _goal.value,
                     meals = meals,
                     weightRecords = weightRecords,
-                    dailyNotes = dailyNotes
+                    dailyNotes = dailyNotes,
+                    bodyMeasurements = bodyMeasurements
                 )
                 if (success) {
                     _backupDone.value = true
@@ -281,8 +316,12 @@ class ProfileViewModel(
                     for (record in data.weightRecords) {
                         userProfileRepository.saveWeightRecord(record)
                     }
+                    for (measurement in data.bodyMeasurements) {
+                        userProfileRepository.saveBodyMeasurement(measurement)
+                    }
                     dailyNoteRepository.saveNotes(data.dailyNotes)
 
+                    loadLatestMeasurement()
                     _restoreDone.value = true
                 } else {
                     _error.value = "No backup found"

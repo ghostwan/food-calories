@@ -242,6 +242,22 @@
     <string name="split_meal_2_label">Repas 2</string>
     <string name="split_meal_confirm">Séparer et sauvegarder</string>
 
+    <!-- Body Measurements -->
+    <string name="profile_measurements_title">Mensurations</string>
+    <string name="profile_measurement_waist">Tour de taille (cm)</string>
+    <string name="profile_measurement_hips">Hanches (cm)</string>
+    <string name="profile_measurement_chest">Poitrine (cm)</string>
+    <string name="profile_measurement_arms">Bras (cm)</string>
+    <string name="profile_measurement_thighs">Cuisses (cm)</string>
+    <string name="profile_measurement_save">Enregistrer les mensurations</string>
+    <string name="profile_measurement_saved">Mensurations enregistrées !</string>
+    <string name="history_measurements">Mensurations</string>
+    <string name="history_waist">Taille</string>
+    <string name="history_hips">Hanches</string>
+    <string name="history_chest">Poitrine</string>
+    <string name="history_arms">Bras</string>
+    <string name="history_thighs">Cuisses</string>
+
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>

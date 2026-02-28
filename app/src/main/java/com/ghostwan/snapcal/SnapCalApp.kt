@@ -84,12 +84,13 @@ class SnapCalApp : Application() {
         val database = AppDatabase.getInstance(this)
         val mealDao = database.mealDao()
         val weightDao = database.weightDao()
+        val bodyMeasurementDao = database.bodyMeasurementDao()
         val mealRepo = MealRepositoryImpl(mealDao)
         mealRepository = mealRepo
         shoppingRepository = ShoppingRepositoryImpl(database.shoppingItemDao())
         dailyNoteRepository = DailyNoteRepositoryImpl(database.dailyNoteDao())
 
-        val userProfileRepo = UserProfileRepositoryImpl(this, weightDao)
+        val userProfileRepo = UserProfileRepositoryImpl(this, weightDao, bodyMeasurementDao)
         userProfileRepository = userProfileRepo
 
         healthConnectManager = HealthConnectManager(this)

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -64,6 +65,12 @@ class HistoryViewModel(
     private val _showBurned = MutableStateFlow(true)
     val showBurned: StateFlow<Boolean> = _showBurned
 
+    private val _showMeasurements = MutableStateFlow(false)
+    val showMeasurements: StateFlow<Boolean> = _showMeasurements
+
+    private val _measurementHistory = MutableStateFlow<List<BodyMeasurement>>(emptyList())
+    val measurementHistory: StateFlow<List<BodyMeasurement>> = _measurementHistory
+
     private var historyJob: Job? = null
     private var selectedDayJob: Job? = null
 
@@ -75,6 +82,7 @@ class HistoryViewModel(
         _showCalories.value = userProfileRepository.getChartShowCalories()
         _showWeight.value = userProfileRepository.getChartShowWeight()
         _showBurned.value = userProfileRepository.getChartShowBurned()
+        _showMeasurements.value = userProfileRepository.getChartShowMeasurements()
         val savedRange = userProfileRepository.getChartRange()
         _selectedRange.value = savedRange
         loadForRange(savedRange)
@@ -108,6 +116,12 @@ class HistoryViewModel(
         userProfileRepository.setChartShowBurned(v)
     }
 
+    fun toggleShowMeasurements() {
+        val v = !_showMeasurements.value
+        _showMeasurements.value = v
+        userProfileRepository.setChartShowMeasurements(v)
+    }
+
     fun setRange(days: Int) {
         _selectedRange.value = days
         userProfileRepository.setChartRange(days)
@@ -123,6 +137,9 @@ class HistoryViewModel(
         }
         viewModelScope.launch {
             _weightHistory.value = userProfileRepository.getWeightHistory(days)
+        }
+        viewModelScope.launch {
+            _measurementHistory.value = userProfileRepository.getBodyMeasurementHistory(days)
         }
         loadBurnedCalories(days)
     }
