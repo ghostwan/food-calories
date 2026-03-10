@@ -6,4 +6,8 @@
     android:initialLayout="@layout/widget_calories"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:previewImage="@mipmap/ic_launcher" />
+    android:previewImage="@mipmap/ic_launcher"
+    android:previewLayout="@layout/widget_calories_preview"
+    android:description="@string/widget_calories_description"
+    android:targetCellWidth="3"
+    android:targetCellHeight="1" />

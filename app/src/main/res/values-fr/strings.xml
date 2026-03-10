@@ -165,6 +165,12 @@
     <!-- Widget -->
     <string name="widget_name">SnapCal Calories</string>
     <string name="widget_remaining">%d kcal restantes</string>
+    <string name="widget_calories_description">Suivez votre apport calorique quotidien en un coup d\'oeil</string>
+    <string name="widget_shopping_description">Consultez et cochez les articles de votre liste de courses</string>
+    <string name="widget_preview_remaining">750 kcal restantes</string>
+    <string name="widget_preview_item_1">Blanc de poulet</string>
+    <string name="widget_preview_item_2">Riz</string>
+    <string name="widget_preview_item_3">Brocoli</string>
 
     <!-- Meal Reminders -->
     <string name="profile_reminders_title">Rappels repas</string>

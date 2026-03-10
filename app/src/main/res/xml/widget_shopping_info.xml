@@ -6,4 +6,8 @@
     android:initialLayout="@layout/widget_shopping"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:previewImage="@mipmap/ic_launcher" />
+    android:previewImage="@mipmap/ic_launcher"
+    android:previewLayout="@layout/widget_shopping_preview"
+    android:description="@string/widget_shopping_description"
+    android:targetCellWidth="3"
+    android:targetCellHeight="3" />

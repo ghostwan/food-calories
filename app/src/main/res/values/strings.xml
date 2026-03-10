@@ -164,6 +164,12 @@
     <!-- Widget -->
     <string name="widget_name">SnapCal Calories</string>
     <string name="widget_remaining">%d kcal remaining</string>
+    <string name="widget_calories_description">Track your daily calorie intake at a glance</string>
+    <string name="widget_shopping_description">View and check off your shopping list items</string>
+    <string name="widget_preview_remaining">750 kcal remaining</string>
+    <string name="widget_preview_item_1">Chicken breast</string>
+    <string name="widget_preview_item_2">Rice</string>
+    <string name="widget_preview_item_3">Broccoli</string>
 
     <!-- Meal Reminders -->
     <string name="profile_reminders_title">Meal reminders</string>
