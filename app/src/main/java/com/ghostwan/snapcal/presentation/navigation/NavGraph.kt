@@ -261,7 +261,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         historyUseCase = app.getNutritionHistoryUseCase,
                         userProfileRepository = app.userProfileRepository,
                         mealRepository = app.mealRepository,
-                        healthConnectManager = app.healthConnectManager
+                        healthConnectManager = app.healthConnectManager,
+                        settingsRepository = app.settingsRepository
                     )
                 )
                 HistoryScreen(

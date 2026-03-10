@@ -50,11 +50,20 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putInt(KEY_DAILY_CALORIE_DEFICIT, deficit).apply()
     }
 
+    override fun isMeasurementsEnabled(): Boolean {
+        return prefs.getBoolean(KEY_MEASUREMENTS_ENABLED, false)
+    }
+
+    override fun setMeasurementsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_MEASUREMENTS_ENABLED, enabled).apply()
+    }
+
     private companion object {
         const val KEY_API = "gemini_api_key_v2"
         const val KEY_SHOPPING_LIST = "shopping_list_enabled"
         const val KEY_BACKUP_FREQUENCY = "backup_frequency_days"
         const val KEY_DYNAMIC_CALORIE_GOAL = "dynamic_calorie_goal"
         const val KEY_DAILY_CALORIE_DEFICIT = "daily_calorie_deficit"
+        const val KEY_MEASUREMENTS_ENABLED = "measurements_enabled"
     }
 }

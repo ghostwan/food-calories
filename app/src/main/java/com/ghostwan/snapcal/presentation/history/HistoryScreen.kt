@@ -69,6 +69,7 @@ fun HistoryScreen(
     val showCalories by viewModel.showCalories.collectAsState()
     val showWeight by viewModel.showWeight.collectAsState()
     val showBurned by viewModel.showBurned.collectAsState()
+    val measurementsEnabled by viewModel.measurementsEnabled.collectAsState()
     val showMeasurements by viewModel.showMeasurements.collectAsState()
     val measurementHistory by viewModel.measurementHistory.collectAsState()
 
@@ -202,12 +203,14 @@ fun HistoryScreen(
                                 label = { Text(stringResource(R.string.history_burned)) },
                                 modifier = Modifier.weight(1f)
                             )
-                            FilterChip(
-                                selected = showMeasurements,
-                                onClick = { viewModel.toggleShowMeasurements() },
-                                label = { Text(stringResource(R.string.history_measurements)) },
-                                modifier = Modifier.weight(1f)
-                            )
+                            if (measurementsEnabled) {
+                                FilterChip(
+                                    selected = showMeasurements,
+                                    onClick = { viewModel.toggleShowMeasurements() },
+                                    label = { Text(stringResource(R.string.history_measurements)) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(

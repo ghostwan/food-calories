@@ -244,6 +244,7 @@
 
     <!-- Body Measurements -->
     <string name="profile_measurements_title">Mensurations</string>
+    <string name="profile_measurements_enable">Activer le suivi des mensurations</string>
     <string name="profile_measurement_waist">Tour de taille (cm)</string>
     <string name="profile_measurement_hips">Hanches (cm)</string>
     <string name="profile_measurement_chest">Poitrine (cm)</string>

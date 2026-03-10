@@ -243,6 +243,7 @@
 
     <!-- Body Measurements -->
     <string name="profile_measurements_title">Body measurements</string>
+    <string name="profile_measurements_enable">Enable body measurements tracking</string>
     <string name="profile_measurement_waist">Waist (cm)</string>
     <string name="profile_measurement_hips">Hips (cm)</string>
     <string name="profile_measurement_chest">Chest (cm)</string>

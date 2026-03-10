@@ -11,6 +11,7 @@ import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.UserProfile
 import com.ghostwan.snapcal.domain.model.WeightRecord
 import com.ghostwan.snapcal.domain.repository.MealRepository
+import com.ghostwan.snapcal.domain.repository.SettingsRepository
 import com.ghostwan.snapcal.domain.repository.UserProfileRepository
 import com.ghostwan.snapcal.domain.usecase.GetNutritionHistoryUseCase
 import java.time.LocalDate
@@ -23,7 +24,8 @@ class HistoryViewModel(
     private val historyUseCase: GetNutritionHistoryUseCase,
     private val userProfileRepository: UserProfileRepository,
     private val mealRepository: MealRepository,
-    private val healthConnectManager: HealthConnectManager
+    private val healthConnectManager: HealthConnectManager,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _history = MutableStateFlow<List<DailyNutrition>>(emptyList())
@@ -65,6 +67,9 @@ class HistoryViewModel(
     private val _showBurned = MutableStateFlow(true)
     val showBurned: StateFlow<Boolean> = _showBurned
 
+    private val _measurementsEnabled = MutableStateFlow(false)
+    val measurementsEnabled: StateFlow<Boolean> = _measurementsEnabled
+
     private val _showMeasurements = MutableStateFlow(false)
     val showMeasurements: StateFlow<Boolean> = _showMeasurements
 
@@ -82,7 +87,8 @@ class HistoryViewModel(
         _showCalories.value = userProfileRepository.getChartShowCalories()
         _showWeight.value = userProfileRepository.getChartShowWeight()
         _showBurned.value = userProfileRepository.getChartShowBurned()
-        _showMeasurements.value = userProfileRepository.getChartShowMeasurements()
+        _measurementsEnabled.value = settingsRepository.isMeasurementsEnabled()
+        _showMeasurements.value = _measurementsEnabled.value && userProfileRepository.getChartShowMeasurements()
         val savedRange = userProfileRepository.getChartRange()
         _selectedRange.value = savedRange
         loadForRange(savedRange)
@@ -138,8 +144,10 @@ class HistoryViewModel(
         viewModelScope.launch {
             _weightHistory.value = userProfileRepository.getWeightHistory(days)
         }
-        viewModelScope.launch {
-            _measurementHistory.value = userProfileRepository.getBodyMeasurementHistory(days)
+        if (_measurementsEnabled.value) {
+            viewModelScope.launch {
+                _measurementHistory.value = userProfileRepository.getBodyMeasurementHistory(days)
+            }
         }
         loadBurnedCalories(days)
     }
@@ -181,11 +189,12 @@ class HistoryViewModel(
             historyUseCase: GetNutritionHistoryUseCase,
             userProfileRepository: UserProfileRepository,
             mealRepository: MealRepository,
-            healthConnectManager: HealthConnectManager
+            healthConnectManager: HealthConnectManager,
+            settingsRepository: SettingsRepository
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HistoryViewModel(historyUseCase, userProfileRepository, mealRepository, healthConnectManager) as T
+                return HistoryViewModel(historyUseCase, userProfileRepository, mealRepository, healthConnectManager, settingsRepository) as T
             }
         }
     }

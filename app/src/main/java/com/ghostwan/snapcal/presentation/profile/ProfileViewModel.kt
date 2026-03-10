@@ -109,6 +109,9 @@ class ProfileViewModel(
     private val _dailyCalorieDeficit = MutableStateFlow(500)
     val dailyCalorieDeficit: StateFlow<Int> = _dailyCalorieDeficit
 
+    private val _measurementsEnabled = MutableStateFlow(false)
+    val measurementsEnabled: StateFlow<Boolean> = _measurementsEnabled
+
     private val _currentMeasurement = MutableStateFlow(BodyMeasurement())
     val currentMeasurement: StateFlow<BodyMeasurement> = _currentMeasurement
 
@@ -121,11 +124,14 @@ class ProfileViewModel(
         checkGoogleSignIn()
         loadReminderSettings()
         loadBackupInfo()
-        loadLatestMeasurement()
+        if (settingsRepository.isMeasurementsEnabled()) {
+            loadLatestMeasurement()
+        }
         _shoppingListEnabled.value = settingsRepository.isShoppingListEnabled()
         _backupFrequencyDays.value = settingsRepository.getBackupFrequencyDays()
         _dynamicCalorieGoal.value = settingsRepository.isDynamicCalorieGoalEnabled()
         _dailyCalorieDeficit.value = settingsRepository.getDailyCalorieDeficit()
+        _measurementsEnabled.value = settingsRepository.isMeasurementsEnabled()
     }
 
     private fun loadProfile() {
@@ -377,6 +383,14 @@ class ProfileViewModel(
     fun toggleShoppingList(enabled: Boolean) {
         _shoppingListEnabled.value = enabled
         settingsRepository.setShoppingListEnabled(enabled)
+    }
+
+    fun toggleMeasurements(enabled: Boolean) {
+        _measurementsEnabled.value = enabled
+        settingsRepository.setMeasurementsEnabled(enabled)
+        if (enabled) {
+            loadLatestMeasurement()
+        }
     }
 
     fun setBackupFrequency(days: Int) {

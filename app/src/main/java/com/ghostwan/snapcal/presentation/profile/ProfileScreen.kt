@@ -101,6 +101,7 @@ fun ProfileScreen(
     val dynamicCalorieGoal by viewModel.dynamicCalorieGoal.collectAsState()
     val dailyCalorieDeficit by viewModel.dailyCalorieDeficit.collectAsState()
 
+    val measurementsEnabled by viewModel.measurementsEnabled.collectAsState()
     val currentMeasurement by viewModel.currentMeasurement.collectAsState()
     val measurementSaved by viewModel.measurementSaved.collectAsState()
 
@@ -297,66 +298,83 @@ fun ProfileScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            OutlinedTextField(
-                value = currentMeasurement.waist?.toString() ?: "",
-                onValueChange = {
-                    viewModel.updateMeasurement(currentMeasurement.copy(waist = it.toFloatOrNull()))
-                },
-                label = { Text(stringResource(R.string.profile_measurement_waist)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = currentMeasurement.hips?.toString() ?: "",
-                onValueChange = {
-                    viewModel.updateMeasurement(currentMeasurement.copy(hips = it.toFloatOrNull()))
-                },
-                label = { Text(stringResource(R.string.profile_measurement_hips)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = currentMeasurement.chest?.toString() ?: "",
-                onValueChange = {
-                    viewModel.updateMeasurement(currentMeasurement.copy(chest = it.toFloatOrNull()))
-                },
-                label = { Text(stringResource(R.string.profile_measurement_chest)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = currentMeasurement.arms?.toString() ?: "",
-                onValueChange = {
-                    viewModel.updateMeasurement(currentMeasurement.copy(arms = it.toFloatOrNull()))
-                },
-                label = { Text(stringResource(R.string.profile_measurement_arms)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = currentMeasurement.thighs?.toString() ?: "",
-                onValueChange = {
-                    viewModel.updateMeasurement(currentMeasurement.copy(thighs = it.toFloatOrNull()))
-                },
-                label = { Text(stringResource(R.string.profile_measurement_thighs)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-                onClick = { viewModel.saveBodyMeasurement() },
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.profile_measurement_save))
+                Text(
+                    text = stringResource(R.string.profile_measurements_enable),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Switch(
+                    checked = measurementsEnabled,
+                    onCheckedChange = { viewModel.toggleMeasurements(it) }
+                )
+            }
+
+            if (measurementsEnabled) {
+                OutlinedTextField(
+                    value = currentMeasurement.waist?.toString() ?: "",
+                    onValueChange = {
+                        viewModel.updateMeasurement(currentMeasurement.copy(waist = it.toFloatOrNull()))
+                    },
+                    label = { Text(stringResource(R.string.profile_measurement_waist)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = currentMeasurement.hips?.toString() ?: "",
+                    onValueChange = {
+                        viewModel.updateMeasurement(currentMeasurement.copy(hips = it.toFloatOrNull()))
+                    },
+                    label = { Text(stringResource(R.string.profile_measurement_hips)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = currentMeasurement.chest?.toString() ?: "",
+                    onValueChange = {
+                        viewModel.updateMeasurement(currentMeasurement.copy(chest = it.toFloatOrNull()))
+                    },
+                    label = { Text(stringResource(R.string.profile_measurement_chest)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = currentMeasurement.arms?.toString() ?: "",
+                    onValueChange = {
+                        viewModel.updateMeasurement(currentMeasurement.copy(arms = it.toFloatOrNull()))
+                    },
+                    label = { Text(stringResource(R.string.profile_measurement_arms)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = currentMeasurement.thighs?.toString() ?: "",
+                    onValueChange = {
+                        viewModel.updateMeasurement(currentMeasurement.copy(thighs = it.toFloatOrNull()))
+                    },
+                    label = { Text(stringResource(R.string.profile_measurement_thighs)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Button(
+                    onClick = { viewModel.saveBodyMeasurement() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.profile_measurement_save))
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

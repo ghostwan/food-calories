@@ -11,4 +11,6 @@ interface SettingsRepository {
     fun setDynamicCalorieGoalEnabled(enabled: Boolean)
     fun getDailyCalorieDeficit(): Int
     fun setDailyCalorieDeficit(deficit: Int)
+    fun isMeasurementsEnabled(): Boolean
+    fun setMeasurementsEnabled(enabled: Boolean)
 }
