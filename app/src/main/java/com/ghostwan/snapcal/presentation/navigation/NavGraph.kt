@@ -166,15 +166,21 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         }
                     },
                     onProfile = {
-                        navController.navigate("profile")
+                        navController.navigate("profile") {
+                            launchSingleTop = true
+                        }
                     },
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
-                        navController.navigate("result")
+                        navController.navigate("result") {
+                            launchSingleTop = true
+                        }
                     },
                     onMergeMeals = { meals ->
                         foodAnalysisViewModel.viewMergedMeals(meals)
-                        navController.navigate("result")
+                        navController.navigate("result") {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -184,7 +190,9 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                 HomeScreen(
                     viewModel = foodAnalysisViewModel,
                     onAnalysisStarted = {
-                        navController.navigate("result")
+                        navController.navigate("result") {
+                            launchSingleTop = true
+                        }
                     },
                     favorites = favorites,
                     onQuickAddFavorite = { meal ->
@@ -197,7 +205,9 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     },
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
-                        navController.navigate("result")
+                        navController.navigate("result") {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -269,7 +279,9 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                     viewModel = historyViewModel,
                     onMealClick = { meal ->
                         foodAnalysisViewModel.viewMealDetail(meal)
-                        navController.navigate("result")
+                        navController.navigate("result") {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }

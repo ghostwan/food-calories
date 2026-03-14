@@ -224,6 +224,7 @@ fun HomeScreen(
                                 ImageRequest.Builder(context)
                                     .data(photoUri)
                                     .memoryCacheKey("${photoUri}_${photoVersion}")
+                                    .diskCacheKey("${photoUri}_${photoVersion}")
                                     .build()
                             ),
                             contentDescription = stringResource(R.string.home_photo_description),

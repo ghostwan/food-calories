@@ -128,6 +128,19 @@ class HistoryViewModel(
         userProfileRepository.setChartShowMeasurements(v)
     }
 
+    fun refresh() {
+        _goal.value = userProfileRepository.getGoal()
+        _profile.value = userProfileRepository.getProfile()
+        _chartCaloriesOrigin.value = userProfileRepository.getChartCaloriesOrigin()
+        _chartWeightOrigin.value = userProfileRepository.getChartWeightOrigin()
+        _showCalories.value = userProfileRepository.getChartShowCalories()
+        _showWeight.value = userProfileRepository.getChartShowWeight()
+        _showBurned.value = userProfileRepository.getChartShowBurned()
+        _measurementsEnabled.value = settingsRepository.isMeasurementsEnabled()
+        _showMeasurements.value = _measurementsEnabled.value && userProfileRepository.getChartShowMeasurements()
+        loadForRange(_selectedRange.value)
+    }
+
     fun setRange(days: Int) {
         _selectedRange.value = days
         userProfileRepository.setChartRange(days)
