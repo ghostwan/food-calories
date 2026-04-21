@@ -38,6 +38,9 @@ class DashboardViewModel(
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     val isToday: Boolean
         get() = _selectedDate.value == LocalDate.now()
 
@@ -100,6 +103,7 @@ class DashboardViewModel(
     }
 
     private fun onDateChanged() {
+        _isLoading.value = true
         observeNutrition()
         observeMeals()
         observeDailyNote()
@@ -132,6 +136,7 @@ class DashboardViewModel(
         nutritionJob = viewModelScope.launch {
             getDailyNutritionUseCase.getNutrition(_selectedDate.value.toString()).collect {
                 _nutrition.value = it
+                _isLoading.value = false
             }
         }
     }

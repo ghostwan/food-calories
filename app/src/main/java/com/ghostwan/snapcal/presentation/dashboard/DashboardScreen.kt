@@ -72,6 +72,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -84,6 +85,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.DailyNutrition
+import com.ghostwan.snapcal.presentation.common.ShimmerCaloriesRingCard
+import com.ghostwan.snapcal.presentation.common.ShimmerMacrosCard
+import com.ghostwan.snapcal.presentation.common.ShimmerMealCard
+import com.ghostwan.snapcal.presentation.common.shimmerBrush
 import org.json.JSONArray
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -111,6 +116,7 @@ fun DashboardScreen(
     val selectedMealIds by viewModel.selectedMealIds.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val context = LocalContext.current
     val isToday = selectedDate == LocalDate.now()
@@ -251,6 +257,20 @@ fun DashboardScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (isLoading) {
+                item { ShimmerCaloriesRingCard() }
+                item { ShimmerMacrosCard() }
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.3f)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(shimmerBrush())
+                    )
+                }
+                items(3) { ShimmerMealCard() }
+            } else {
             item {
                 CaloriesRingCard(
                     current = nutrition?.totalCalories ?: 0,
@@ -366,6 +386,7 @@ fun DashboardScreen(
                     )
                 }
             }
+            } // end else
         }
     }
 }
