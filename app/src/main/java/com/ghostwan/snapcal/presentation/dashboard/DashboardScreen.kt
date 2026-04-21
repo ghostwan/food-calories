@@ -62,6 +62,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -72,6 +74,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +95,7 @@ import com.ghostwan.snapcal.presentation.common.ShimmerCaloriesRingCard
 import com.ghostwan.snapcal.presentation.common.ShimmerMacrosCard
 import com.ghostwan.snapcal.presentation.common.ShimmerMealCard
 import com.ghostwan.snapcal.presentation.common.shimmerBrush
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -127,10 +131,19 @@ fun DashboardScreen(
     val context = LocalContext.current
     val isToday = selectedDate == LocalDate.now()
     val isYesterday = selectedDate == LocalDate.now().minusDays(1)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showNoteDialog by remember { mutableStateOf(false) }
     var showSuggestions by remember { mutableStateOf(false) }
+
+    // Auto-show suggestions dialog when results arrive (background pattern)
+    LaunchedEffect(suggestions) {
+        if (suggestions.isNotEmpty() && !showSuggestions) {
+            showSuggestions = true
+        }
+    }
 
     val dateLabel = when {
         isToday -> stringResource(R.string.dashboard_today)
@@ -151,10 +164,9 @@ fun DashboardScreen(
         )
     }
 
-    if (showSuggestions) {
+    if (showSuggestions && suggestions.isNotEmpty()) {
         MealSuggestionsDialog(
             suggestions = suggestions,
-            isLoading = suggestionsLoading,
             onDismiss = {
                 showSuggestions = false
                 viewModel.clearSuggestions()
@@ -199,6 +211,7 @@ fun DashboardScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -399,12 +412,24 @@ fun DashboardScreen(
             item {
                 androidx.compose.material3.OutlinedButton(
                     onClick = {
-                        showSuggestions = true
                         viewModel.requestMealSuggestions()
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                context.getString(R.string.dashboard_suggest_loading)
+                            )
+                        }
                     },
+                    enabled = !suggestionsLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Lightbulb, contentDescription = null)
+                    if (suggestionsLoading) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null)
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.dashboard_suggest_meal))
                 }
@@ -867,23 +892,13 @@ private data class HealthInfo(val emoji: String, val color: Color)
 @Composable
 private fun MealSuggestionsDialog(
     suggestions: List<MealSuggestion>,
-    isLoading: Boolean,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dashboard_suggest_meal)) },
         text = {
-            if (isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    androidx.compose.material3.CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(stringResource(R.string.dashboard_suggest_loading))
-                }
-            } else if (suggestions.isEmpty()) {
+            if (suggestions.isEmpty()) {
                 Text(stringResource(R.string.dashboard_suggest_empty))
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

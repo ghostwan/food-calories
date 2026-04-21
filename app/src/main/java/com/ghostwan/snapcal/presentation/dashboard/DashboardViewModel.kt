@@ -1,12 +1,19 @@
 package com.ghostwan.snapcal.presentation.dashboard
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import androidx.core.app.NotificationCompat
+import android.app.NotificationManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.widget.CaloriesWidgetProvider
+import com.ghostwan.snapcal.R
+import com.ghostwan.snapcal.MainActivity
+import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -374,12 +381,35 @@ class DashboardViewModel(
                     ))
                 }
                 _suggestions.value = list
+                postSuggestionsNotification(list)
             } catch (_: Exception) {
                 _suggestions.value = emptyList()
             } finally {
                 _suggestionsLoading.value = false
             }
         }
+    }
+
+    private fun postSuggestionsNotification(suggestions: List<MealSuggestion>) {
+        if (suggestions.isEmpty()) return
+        val intent = Intent(appContext, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            appContext, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val text = suggestions.joinToString(" | ") { "${it.emoji} ${it.dishName} (${it.estimatedCalories} kcal)" }
+        val notification = NotificationCompat.Builder(appContext, SnapCalApp.AI_INSIGHTS_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(appContext.getString(R.string.dashboard_suggest_meal))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+        val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(SnapCalApp.NOTIFICATION_ID_SUGGESTIONS, notification)
     }
 
     fun clearSuggestions() {

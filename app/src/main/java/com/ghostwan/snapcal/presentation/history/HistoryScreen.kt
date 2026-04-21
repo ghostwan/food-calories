@@ -35,6 +35,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.foundation.text.KeyboardOptions
@@ -45,11 +47,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -57,6 +61,7 @@ import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -91,6 +96,16 @@ fun HistoryScreen(
     val weeklyReport by viewModel.weeklyReport.collectAsState()
     val reportLoading by viewModel.reportLoading.collectAsState()
     var showReport by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    // Auto-show report dialog when result arrives
+    LaunchedEffect(weeklyReport) {
+        if (weeklyReport != null && !showReport) {
+            showReport = true
+        }
+    }
 
     val rangeLabels = mapOf(
         7 to stringResource(R.string.history_range_week),
@@ -99,10 +114,9 @@ fun HistoryScreen(
         365 to stringResource(R.string.history_range_year)
     )
 
-    if (showReport) {
+    if (showReport && weeklyReport != null) {
         WeeklyReportDialog(
             report = weeklyReport,
-            isLoading = reportLoading,
             onDismiss = {
                 showReport = false
                 viewModel.clearReport()
@@ -111,6 +125,7 @@ fun HistoryScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.history_title)) },
@@ -301,12 +316,24 @@ fun HistoryScreen(
                 item {
                     OutlinedButton(
                         onClick = {
-                            showReport = true
                             viewModel.generateWeeklyReport()
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    context.getString(R.string.history_report_loading)
+                                )
+                            }
                         },
+                        enabled = !reportLoading,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+                        if (reportLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.history_weekly_report))
                     }
@@ -470,23 +497,13 @@ private fun MealRow(meal: MealEntry, onClick: () -> Unit = {}) {
 @Composable
 private fun WeeklyReportDialog(
     report: WeeklyReport?,
-    isLoading: Boolean,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.history_weekly_report)) },
         text = {
-            if (isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(stringResource(R.string.history_report_loading))
-                }
-            } else if (report == null) {
+            if (report == null) {
                 Text(stringResource(R.string.history_report_empty))
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

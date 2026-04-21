@@ -282,7 +282,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         mealRepository = app.mealRepository,
                         healthConnectManager = app.healthConnectManager,
                         settingsRepository = app.settingsRepository,
-                        geminiApiService = app.geminiApiService
+                        geminiApiService = app.geminiApiService,
+                        appContext = context.applicationContext
                     )
                 )
                 HistoryScreen(

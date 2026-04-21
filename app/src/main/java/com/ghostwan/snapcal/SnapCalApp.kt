@@ -1,6 +1,9 @@
 package com.ghostwan.snapcal
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -112,8 +115,21 @@ class SnapCalApp : Application() {
 
         mealReminderManager = MealReminderManager(this)
         mealReminderManager.createNotificationChannel()
+        createAiInsightsChannel()
 
         scheduleBackup()
+    }
+
+    private fun createAiInsightsChannel() {
+        val channel = NotificationChannel(
+            AI_INSIGHTS_CHANNEL_ID,
+            "AI Insights",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Notifications for AI-generated meal suggestions and reports"
+        }
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(channel)
     }
 
     fun scheduleBackup() {
@@ -150,5 +166,11 @@ class SnapCalApp : Application() {
             ExistingPeriodicWorkPolicy.UPDATE,
             backupRequest
         )
+    }
+
+    companion object {
+        const val AI_INSIGHTS_CHANNEL_ID = "ai_insights"
+        const val NOTIFICATION_ID_SUGGESTIONS = 2001
+        const val NOTIFICATION_ID_WEEKLY_REPORT = 2002
     }
 }

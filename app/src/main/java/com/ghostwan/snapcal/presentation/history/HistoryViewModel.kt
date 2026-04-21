@@ -1,8 +1,16 @@
 package com.ghostwan.snapcal.presentation.history
 
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.app.NotificationManager
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ghostwan.snapcal.MainActivity
+import com.ghostwan.snapcal.R
+import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.domain.model.BodyMeasurement
@@ -29,7 +37,8 @@ class HistoryViewModel(
     private val mealRepository: MealRepository,
     private val healthConnectManager: HealthConnectManager,
     private val settingsRepository: SettingsRepository,
-    private val geminiApiService: GeminiApiService
+    private val geminiApiService: GeminiApiService,
+    private val appContext: Context
 ) : ViewModel() {
 
     private val _history = MutableStateFlow<List<DailyNutrition>>(emptyList())
@@ -263,6 +272,7 @@ class HistoryViewModel(
                     improvements = improvements,
                     tip = report.getString("tip")
                 )
+                postReportNotification(_weeklyReport.value!!)
             } catch (_: Exception) {
                 _weeklyReport.value = null
             } finally {
@@ -275,6 +285,26 @@ class HistoryViewModel(
         _weeklyReport.value = null
     }
 
+    private fun postReportNotification(report: WeeklyReport) {
+        val intent = Intent(appContext, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            appContext, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val notification = NotificationCompat.Builder(appContext, SnapCalApp.AI_INSIGHTS_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(appContext.getString(R.string.history_weekly_report))
+            .setContentText(report.summary)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(report.summary))
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+        val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(SnapCalApp.NOTIFICATION_ID_WEEKLY_REPORT, notification)
+    }
+
     companion object {
         val RANGE_OPTIONS = listOf(7, 30, 90, 365)
 
@@ -284,11 +314,12 @@ class HistoryViewModel(
             mealRepository: MealRepository,
             healthConnectManager: HealthConnectManager,
             settingsRepository: SettingsRepository,
-            geminiApiService: GeminiApiService
+            geminiApiService: GeminiApiService,
+            appContext: Context
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HistoryViewModel(historyUseCase, userProfileRepository, mealRepository, healthConnectManager, settingsRepository, geminiApiService) as T
+                return HistoryViewModel(historyUseCase, userProfileRepository, mealRepository, healthConnectManager, settingsRepository, geminiApiService, appContext) as T
             }
         }
     }
