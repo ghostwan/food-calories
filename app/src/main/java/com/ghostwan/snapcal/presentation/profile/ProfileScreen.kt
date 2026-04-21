@@ -64,6 +64,7 @@ import androidx.health.connect.client.PermissionController
 import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.data.local.HealthConnectManager
 import com.ghostwan.snapcal.data.local.MealReminderManager
+import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.domain.model.ActivityLevel
 import com.ghostwan.snapcal.domain.model.Gender
 
@@ -104,6 +105,7 @@ fun ProfileScreen(
     val measurementsEnabled by viewModel.measurementsEnabled.collectAsState()
     val currentMeasurement by viewModel.currentMeasurement.collectAsState()
     val measurementSaved by viewModel.measurementSaved.collectAsState()
+    val geminiModel by viewModel.geminiModel.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -568,6 +570,20 @@ fun ProfileScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // AI Model section
+            Text(
+                text = stringResource(R.string.profile_ai_model_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            GeminiModelSelector(
+                selected = geminiModel,
+                onSelect = { viewModel.setGeminiModel(it) }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
             // Shopping List section
             Text(
                 text = stringResource(R.string.profile_shopping_list_title),
@@ -738,6 +754,31 @@ private fun GoalsCard(goal: com.ghostwan.snapcal.domain.model.NutritionGoal) {
             Text(stringResource(R.string.profile_carbs_goal, goal.carbs))
             Text(stringResource(R.string.profile_fats_goal, goal.fats))
             Text(stringResource(R.string.profile_fiber_goal, goal.fiber))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GeminiModelSelector(selected: String, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.profile_ai_model_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            GeminiApiService.AVAILABLE_MODELS.forEach { model ->
+                DropdownMenuItem(
+                    text = { Text(model) },
+                    onClick = { onSelect(model); expanded = false }
+                )
+            }
         }
     }
 }

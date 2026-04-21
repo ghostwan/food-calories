@@ -200,6 +200,10 @@
     <string name="profile_dynamic_calorie_goal_desc">Goal = calories burned − daily deficit</string>
     <string name="profile_daily_calorie_deficit">Daily calorie deficit</string>
 
+    <!-- AI Model -->
+    <string name="profile_ai_model_title">AI Model</string>
+    <string name="profile_ai_model_label">Gemini model</string>
+
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Shopping list</string>
     <string name="profile_shopping_list_enable">Enable shopping list</string>

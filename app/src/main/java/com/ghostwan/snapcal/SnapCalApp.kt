@@ -70,6 +70,8 @@ class SnapCalApp : Application() {
     lateinit var shoppingRepository: ShoppingRepository
         private set
     lateinit var dailyNoteRepository: DailyNoteRepository
+
+    lateinit var geminiApiService: GeminiApiService
         private set
 
     override fun onCreate() {
@@ -78,6 +80,8 @@ class SnapCalApp : Application() {
         val apiService = GeminiApiService()
         val mapper = FoodAnalysisMapper()
         val settingsRepo = SettingsRepositoryImpl(this)
+        apiService.model = settingsRepo.getGeminiModel()
+        geminiApiService = apiService
         settingsRepository = settingsRepo
         usageRepository = UsageRepositoryImpl(this)
 

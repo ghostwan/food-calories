@@ -13,4 +13,6 @@ interface SettingsRepository {
     fun setDailyCalorieDeficit(deficit: Int)
     fun isMeasurementsEnabled(): Boolean
     fun setMeasurementsEnabled(enabled: Boolean)
+    fun getGeminiModel(): String
+    fun setGeminiModel(model: String)
 }

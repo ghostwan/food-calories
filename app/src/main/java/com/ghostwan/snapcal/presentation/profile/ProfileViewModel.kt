@@ -10,6 +10,7 @@ import com.ghostwan.snapcal.data.local.MealReminderManager
 import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.data.remote.BackupInfo
 import com.ghostwan.snapcal.data.remote.DriveBackupManager
+import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.data.remote.GoogleAuthManager
 import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.NutritionGoal
@@ -37,7 +38,8 @@ class ProfileViewModel(
     private val mealRepository: MealRepository,
     private val mealReminderManager: MealReminderManager,
     private val settingsRepository: SettingsRepository,
-    private val dailyNoteRepository: DailyNoteRepository
+    private val dailyNoteRepository: DailyNoteRepository,
+    private val geminiApiService: GeminiApiService
 ) : ViewModel() {
 
     private val _profile = MutableStateFlow(UserProfile())
@@ -112,6 +114,9 @@ class ProfileViewModel(
     private val _measurementsEnabled = MutableStateFlow(false)
     val measurementsEnabled: StateFlow<Boolean> = _measurementsEnabled
 
+    private val _geminiModel = MutableStateFlow("")
+    val geminiModel: StateFlow<String> = _geminiModel
+
     private val _currentMeasurement = MutableStateFlow(BodyMeasurement())
     val currentMeasurement: StateFlow<BodyMeasurement> = _currentMeasurement
 
@@ -132,6 +137,7 @@ class ProfileViewModel(
         _dynamicCalorieGoal.value = settingsRepository.isDynamicCalorieGoalEnabled()
         _dailyCalorieDeficit.value = settingsRepository.getDailyCalorieDeficit()
         _measurementsEnabled.value = settingsRepository.isMeasurementsEnabled()
+        _geminiModel.value = settingsRepository.getGeminiModel()
     }
 
     private fun loadProfile() {
@@ -393,6 +399,12 @@ class ProfileViewModel(
         }
     }
 
+    fun setGeminiModel(model: String) {
+        _geminiModel.value = model
+        settingsRepository.setGeminiModel(model)
+        geminiApiService.model = model
+    }
+
     fun setBackupFrequency(days: Int) {
         _backupFrequencyDays.value = days
         settingsRepository.setBackupFrequencyDays(days)
@@ -416,7 +428,8 @@ class ProfileViewModel(
             mealRepository: MealRepository,
             mealReminderManager: MealReminderManager,
             settingsRepository: SettingsRepository,
-            dailyNoteRepository: DailyNoteRepository
+            dailyNoteRepository: DailyNoteRepository,
+            geminiApiService: GeminiApiService
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -430,7 +443,8 @@ class ProfileViewModel(
                     mealRepository,
                     mealReminderManager,
                     settingsRepository,
-                    dailyNoteRepository
+                    dailyNoteRepository,
+                    geminiApiService
                 ) as T
             }
         }

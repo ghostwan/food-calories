@@ -255,7 +255,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         mealRepository = app.mealRepository,
                         mealReminderManager = app.mealReminderManager,
                         settingsRepository = app.settingsRepository,
-                        dailyNoteRepository = app.dailyNoteRepository
+                        dailyNoteRepository = app.dailyNoteRepository,
+                        geminiApiService = app.geminiApiService
                     )
                 )
                 ProfileScreen(

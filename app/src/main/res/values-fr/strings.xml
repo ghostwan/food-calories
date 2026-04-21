@@ -201,6 +201,10 @@
     <string name="profile_dynamic_calorie_goal_desc">Objectif = dépenses − déficit journalier</string>
     <string name="profile_daily_calorie_deficit">Déficit calorique journalier</string>
 
+    <!-- AI Model -->
+    <string name="profile_ai_model_title">Mod\u00e8le IA</string>
+    <string name="profile_ai_model_label">Mod\u00e8le Gemini</string>
+
     <!-- Shopping List -->
     <string name="profile_shopping_list_title">Liste de courses</string>
     <string name="profile_shopping_list_enable">Activer la liste de courses</string>

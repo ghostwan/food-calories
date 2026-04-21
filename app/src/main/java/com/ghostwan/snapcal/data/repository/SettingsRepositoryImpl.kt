@@ -58,12 +58,22 @@ class SettingsRepositoryImpl(context: Context) : SettingsRepository {
         prefs.edit().putBoolean(KEY_MEASUREMENTS_ENABLED, enabled).apply()
     }
 
+    override fun getGeminiModel(): String {
+        return prefs.getString(KEY_GEMINI_MODEL, null) ?: DEFAULT_MODEL
+    }
+
+    override fun setGeminiModel(model: String) {
+        prefs.edit().putString(KEY_GEMINI_MODEL, model).apply()
+    }
+
     private companion object {
+        const val DEFAULT_MODEL = "gemini-2.5-flash"
         const val KEY_API = "gemini_api_key_v2"
         const val KEY_SHOPPING_LIST = "shopping_list_enabled"
         const val KEY_BACKUP_FREQUENCY = "backup_frequency_days"
         const val KEY_DYNAMIC_CALORIE_GOAL = "dynamic_calorie_goal"
         const val KEY_DAILY_CALORIE_DEFICIT = "daily_calorie_deficit"
         const val KEY_MEASUREMENTS_ENABLED = "measurements_enabled"
+        const val KEY_GEMINI_MODEL = "gemini_model"
     }
 }

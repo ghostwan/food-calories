@@ -13,10 +13,18 @@ class GeminiApiService {
 
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-        private const val MODEL = "gemini-2.0-flash"
         private const val MAX_RETRIES = 3
         private val RETRY_DELAYS_MS = longArrayOf(2_000, 5_000, 10_000)
+
+        val AVAILABLE_MODELS = listOf(
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite"
+        )
     }
+
+    var model: String = AVAILABLE_MODELS.first()
 
     suspend fun analyzeImage(imageData: ByteArray, apiKey: String, language: String): String {
         val base64Image = Base64.encodeToString(imageData, Base64.NO_WRAP)
@@ -155,7 +163,7 @@ class GeminiApiService {
             for (attempt in 0..MAX_RETRIES) {
                 if (attempt > 0) Thread.sleep(RETRY_DELAYS_MS[attempt - 1])
 
-                val url = URL("$BASE_URL/$MODEL:generateContent?key=$apiKey")
+                val url = URL("$BASE_URL/$model:generateContent?key=$apiKey")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.setRequestProperty("Content-Type", "application/json")

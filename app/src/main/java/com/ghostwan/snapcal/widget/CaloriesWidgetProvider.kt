@@ -94,7 +94,7 @@ class CaloriesWidgetProvider : AppWidgetProvider() {
             )
 
             val intent = Intent(context, MainActivity::class.java).apply {
-                putExtra("navigate_to", "home")
+                putExtra("navigate_to", "dashboard")
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 data = Uri.parse("snapcal://widget/calories")
             }
