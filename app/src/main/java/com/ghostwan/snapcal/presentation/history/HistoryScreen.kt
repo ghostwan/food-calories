@@ -518,13 +518,13 @@ private fun WeeklyReportDialog(
                             text = stringResource(R.string.history_report_strengths),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4CAF50)
+                            color = MaterialTheme.colorScheme.primary
                         )
                         report.strengths.forEach { strength ->
                             Text(
                                 text = "+ $strength",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF4CAF50)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -534,20 +534,20 @@ private fun WeeklyReportDialog(
                             text = stringResource(R.string.history_report_improvements),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF9800)
+                            color = MaterialTheme.colorScheme.error
                         )
                         report.improvements.forEach { improvement ->
                             Text(
                                 text = "- $improvement",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFFF9800)
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }
 
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFE3F2FD)
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
                         )
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -555,12 +555,12 @@ private fun WeeklyReportDialog(
                                 text = stringResource(R.string.history_report_tip),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1976D2)
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             Text(
                                 text = report.tip,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF1976D2)
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }
