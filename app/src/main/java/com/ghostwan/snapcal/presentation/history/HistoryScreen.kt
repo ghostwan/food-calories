@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
@@ -95,17 +97,10 @@ fun HistoryScreen(
     val measurementHistory by viewModel.measurementHistory.collectAsState()
     val weeklyReport by viewModel.weeklyReport.collectAsState()
     val reportLoading by viewModel.reportLoading.collectAsState()
-    var showReport by remember { mutableStateOf(false) }
+    val showReport by viewModel.showReportDialog.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    // Auto-show report dialog when result arrives
-    LaunchedEffect(weeklyReport) {
-        if (weeklyReport != null && !showReport) {
-            showReport = true
-        }
-    }
 
     val rangeLabels = mapOf(
         7 to stringResource(R.string.history_range_week),
@@ -117,10 +112,7 @@ fun HistoryScreen(
     if (showReport && weeklyReport != null) {
         WeeklyReportDialog(
             report = weeklyReport,
-            onDismiss = {
-                showReport = false
-                viewModel.clearReport()
-            }
+            onDismiss = { viewModel.clearReport() }
         )
     }
 
@@ -506,7 +498,10 @@ private fun WeeklyReportDialog(
             if (report == null) {
                 Text(stringResource(R.string.history_report_empty))
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
                     Text(
                         text = report.summary,
                         style = MaterialTheme.typography.bodyMedium

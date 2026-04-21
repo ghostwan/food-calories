@@ -214,6 +214,9 @@ class HistoryViewModel(
     private val _reportLoading = MutableStateFlow(false)
     val reportLoading: StateFlow<Boolean> = _reportLoading
 
+    private val _showReportDialog = MutableStateFlow(false)
+    val showReportDialog: StateFlow<Boolean> = _showReportDialog
+
     fun generateWeeklyReport() {
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) return
@@ -273,6 +276,7 @@ class HistoryViewModel(
                     tip = report.getString("tip")
                 )
                 postReportNotification(_weeklyReport.value!!)
+                _showReportDialog.value = true
             } catch (_: Exception) {
                 _weeklyReport.value = null
             } finally {
@@ -283,6 +287,7 @@ class HistoryViewModel(
 
     fun clearReport() {
         _weeklyReport.value = null
+        _showReportDialog.value = false
     }
 
     private fun postReportNotification(report: WeeklyReport) {

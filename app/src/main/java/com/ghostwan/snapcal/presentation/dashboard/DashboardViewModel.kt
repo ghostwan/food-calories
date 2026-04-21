@@ -90,6 +90,9 @@ class DashboardViewModel(
     private val _suggestionsLoading = MutableStateFlow(false)
     val suggestionsLoading: StateFlow<Boolean> = _suggestionsLoading
 
+    private val _showSuggestionsDialog = MutableStateFlow(false)
+    val showSuggestionsDialog: StateFlow<Boolean> = _showSuggestionsDialog
+
     init {
         loadGoal()
         observeNutrition()
@@ -381,6 +384,7 @@ class DashboardViewModel(
                     ))
                 }
                 _suggestions.value = list
+                _showSuggestionsDialog.value = true
                 postSuggestionsNotification(list)
             } catch (_: Exception) {
                 _suggestions.value = emptyList()
@@ -414,6 +418,7 @@ class DashboardViewModel(
 
     fun clearSuggestions() {
         _suggestions.value = emptyList()
+        _showSuggestionsDialog.value = false
     }
 
     fun quickAddFavorite(meal: MealEntry) {

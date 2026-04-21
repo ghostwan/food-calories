@@ -27,9 +27,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -127,6 +129,7 @@ fun DashboardScreen(
     val streak by viewModel.streak.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
     val suggestionsLoading by viewModel.suggestionsLoading.collectAsState()
+    val showSuggestions by viewModel.showSuggestionsDialog.collectAsState()
 
     val context = LocalContext.current
     val isToday = selectedDate == LocalDate.now()
@@ -136,14 +139,6 @@ fun DashboardScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showNoteDialog by remember { mutableStateOf(false) }
-    var showSuggestions by remember { mutableStateOf(false) }
-
-    // Auto-show suggestions dialog when results arrive (background pattern)
-    LaunchedEffect(suggestions) {
-        if (suggestions.isNotEmpty() && !showSuggestions) {
-            showSuggestions = true
-        }
-    }
 
     val dateLabel = when {
         isToday -> stringResource(R.string.dashboard_today)
@@ -167,10 +162,7 @@ fun DashboardScreen(
     if (showSuggestions && suggestions.isNotEmpty()) {
         MealSuggestionsDialog(
             suggestions = suggestions,
-            onDismiss = {
-                showSuggestions = false
-                viewModel.clearSuggestions()
-            }
+            onDismiss = { viewModel.clearSuggestions() }
         )
     }
 
@@ -901,7 +893,10 @@ private fun MealSuggestionsDialog(
             if (suggestions.isEmpty()) {
                 Text(stringResource(R.string.dashboard_suggest_empty))
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
                     suggestions.forEach { suggestion ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
