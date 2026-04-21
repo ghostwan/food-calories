@@ -5,6 +5,7 @@ import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.widget.CaloriesWidgetProvider
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -74,9 +75,20 @@ class SaveMealUseCase(
             date = date,
             ingredientsJson = ingredientsJson,
             emoji = analysis.emoji,
-            quantity = quantity
+            quantity = quantity,
+            mealType = detectMealType()
         )
         mealRepository.saveMeal(meal)
+    }
+
+    private fun detectMealType(): String {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        return when {
+            hour in 5..10 -> "breakfast"
+            hour in 11..14 -> "lunch"
+            hour in 15..17 -> "snack"
+            else -> "dinner"
+        }
     }
 
     private fun parseGrams(value: String?): Float {

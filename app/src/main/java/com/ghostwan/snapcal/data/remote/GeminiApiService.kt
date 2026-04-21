@@ -130,6 +130,97 @@ class GeminiApiService {
         return emojiRegex.find(text)?.value ?: "🍽️"
     }
 
+    suspend fun generateWeeklyReport(
+        dailySummaries: String,
+        profile: UserProfile,
+        goal: String,
+        apiKey: String,
+        language: String
+    ): String {
+        val prompt = """
+            You are a nutrition coach. Analyze this user's weekly nutrition data and provide a helpful summary.
+
+            User profile:
+            - Height: ${profile.height} cm, Weight: ${profile.weight} kg, Target: ${profile.targetWeight} kg
+            - Gender: ${profile.gender.name.lowercase()}, Activity: ${profile.activityLevel.name.lowercase().replace("_", " ")}
+
+            Daily goals: $goal
+
+            Daily nutrition data for the past week:
+            $dailySummaries
+
+            IMPORTANT: Write everything in $language.
+
+            Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
+            {
+                "summary": "Brief overview of the week (2-3 sentences)",
+                "avgCalories": 1800,
+                "avgProteins": 90,
+                "avgCarbs": 200,
+                "avgFats": 60,
+                "strengths": ["Strength 1", "Strength 2"],
+                "improvements": ["Area to improve 1", "Area to improve 2"],
+                "tip": "One practical tip for next week"
+            }
+        """.trimIndent()
+
+        return executeRequest(buildTextRequestBody(prompt), apiKey)
+    }
+
+    suspend fun suggestMeals(
+        profile: UserProfile,
+        remainingCalories: Int,
+        remainingProteins: Float,
+        remainingCarbs: Float,
+        remainingFats: Float,
+        mealType: String,
+        recentDishes: List<String>,
+        apiKey: String,
+        language: String
+    ): String {
+        val recentList = if (recentDishes.isNotEmpty()) {
+            "\nRecent dishes the user has eaten (for variety, suggest different things): ${recentDishes.joinToString(", ")}"
+        } else ""
+
+        val prompt = """
+            You are a nutrition advisor. A user needs meal suggestions for their next $mealType.
+
+            User profile:
+            - Height: ${profile.height} cm
+            - Weight: ${profile.weight} kg
+            - Target weight: ${profile.targetWeight} kg
+            - Gender: ${profile.gender.name.lowercase()}
+            - Activity level: ${profile.activityLevel.name.lowercase().replace("_", " ")}
+
+            Remaining daily budget:
+            - Calories: $remainingCalories kcal
+            - Proteins: ${remainingProteins.toInt()}g
+            - Carbs: ${remainingCarbs.toInt()}g
+            - Fats: ${remainingFats.toInt()}g
+            $recentList
+
+            Suggest exactly 3 meal options that fit within the remaining budget.
+            IMPORTANT: All text MUST be in $language.
+
+            Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
+            {
+                "suggestions": [
+                    {
+                        "emoji": "🥗",
+                        "dishName": "Dish name",
+                        "estimatedCalories": 400,
+                        "proteins": "30g",
+                        "carbs": "40g",
+                        "fats": "12g",
+                        "description": "Brief description of why this is a good choice"
+                    }
+                ]
+            }
+        """.trimIndent()
+
+        return executeRequest(buildTextRequestBody(prompt), apiKey)
+    }
+
     suspend fun computeNutritionGoal(profile: UserProfile, apiKey: String, language: String): String {
         val prompt = """
             Given a person with the following characteristics:

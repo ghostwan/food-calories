@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.CallSplit
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Star
@@ -85,6 +86,7 @@ fun ResultScreen(
     viewModel: FoodAnalysisViewModel,
     onBack: () -> Unit,
     onMealSaved: () -> Unit = {},
+    onScanAnother: (() -> Unit)? = null,
     onAddToShoppingList: ((Ingredient) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -99,8 +101,9 @@ fun ResultScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    // Only auto-navigate if no scanAnother option (i.e. for readOnly/editing mode)
     androidx.compose.runtime.LaunchedEffect(mealSaved) {
-        if (mealSaved) {
+        if (mealSaved && onScanAnother == null) {
             onMealSaved()
         }
     }
@@ -164,7 +167,9 @@ fun ResultScreen(
                                 )
                             }
                         }
-                    }
+                    },
+                    onScanAnother = onScanAnother,
+                    onMealSaved = onMealSaved
                 )
                 is AnalysisUiState.Error -> ErrorContent(state.message, onBack)
             }
@@ -208,7 +213,9 @@ private fun SuccessContent(
     onDishNameChange: (String) -> Unit = {},
     onRemoveIngredient: (Int) -> Unit = {},
     onUpdateIngredient: (Int, String, Int) -> Unit = { _, _, _ -> },
-    onAddToShoppingList: ((Ingredient) -> Unit)? = null
+    onAddToShoppingList: ((Ingredient) -> Unit)? = null,
+    onScanAnother: (() -> Unit)? = null,
+    onMealSaved: () -> Unit = {}
 ) {
     var showEmojiPicker by remember { mutableStateOf(false) }
     var showDishNameEditor by remember { mutableStateOf(false) }
@@ -363,22 +370,55 @@ private fun SuccessContent(
         if (!readOnly) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
-                Button(
-                    onClick = onSave,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !mealSaved
-                ) {
-                    if (mealSaved) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.result_meal_saved))
-                    } else {
-                        Icon(Icons.Default.Save, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(
-                            if (isEditing) R.string.result_update_meal
-                            else R.string.result_save_meal
-                        ))
+                if (mealSaved && onScanAnother != null) {
+                    // Multi-scan: show scan another + dashboard buttons
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                stringResource(R.string.result_meal_saved),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Button(
+                            onClick = onScanAnother,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.result_scan_another))
+                        }
+                        OutlinedButton(
+                            onClick = onMealSaved,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.result_go_dashboard))
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !mealSaved
+                    ) {
+                        if (mealSaved) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.result_meal_saved))
+                        } else {
+                            Icon(Icons.Default.Save, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(
+                                if (isEditing) R.string.result_update_meal
+                                else R.string.result_save_meal
+                            ))
+                        }
                     }
                 }
             }

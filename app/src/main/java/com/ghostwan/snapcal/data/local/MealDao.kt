@@ -54,6 +54,12 @@ interface MealDao {
 
     @Query("SELECT DISTINCT emoji FROM meals WHERE emoji IS NOT NULL ORDER BY id DESC LIMIT :limit")
     suspend fun getRecentEmojis(limit: Int = 15): List<String>
+
+    @Query("UPDATE meals SET mealType = :mealType WHERE id = :id")
+    suspend fun updateMealType(id: Long, mealType: String)
+
+    @Query("SELECT DISTINCT date FROM meals ORDER BY date DESC")
+    suspend fun getAllMealDates(): List<String>
 }
 
 data class DailyNutritionTuple(

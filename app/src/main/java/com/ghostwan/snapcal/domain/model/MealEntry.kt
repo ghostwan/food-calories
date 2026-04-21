@@ -12,5 +12,6 @@ data class MealEntry(
     val ingredientsJson: String,
     val emoji: String? = null,
     val isFavorite: Boolean = false,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val mealType: String? = null // "breakfast", "lunch", "dinner", "snack"
 )

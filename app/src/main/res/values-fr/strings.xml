@@ -272,4 +272,36 @@
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>
+
+    <!-- Meal Types -->
+    <string name="meal_type_breakfast">Petit-déj</string>
+    <string name="meal_type_lunch">Déjeuner</string>
+    <string name="meal_type_dinner">Dîner</string>
+    <string name="meal_type_snack">Snack</string>
+    <string name="meal_type_picker_title">Catégorie du repas</string>
+
+    <!-- Streak -->
+    <string name="streak_days">Série de %d jours !</string>
+    <string name="streak_milestone_7">1 semaine ! Continue !</string>
+    <string name="streak_milestone_30">1 mois ! Incroyable !</string>
+    <string name="streak_milestone_100">100 jours ! Extraordinaire !</string>
+    <string name="streak_milestone_365">1 an ! Légendaire !</string>
+
+    <!-- Meal Suggestions -->
+    <string name="dashboard_suggest_meal">Que manger ?</string>
+    <string name="dashboard_suggest_loading">Recherche d\'idées de repas…</string>
+    <string name="dashboard_suggest_empty">Aucune suggestion disponible</string>
+
+    <!-- Multi-scan -->
+    <string name="result_scan_another">Scanner un autre repas</string>
+    <string name="result_go_dashboard">Retour au tableau de bord</string>
+
+    <!-- Weekly Report -->
+    <string name="history_weekly_report">Bilan hebdomadaire IA</string>
+    <string name="history_report_loading">Génération du bilan…</string>
+    <string name="history_report_empty">Impossible de générer le bilan</string>
+    <string name="history_report_averages">Moyennes journalières</string>
+    <string name="history_report_strengths">Points forts</string>
+    <string name="history_report_improvements">Axes d\'amélioration</string>
+    <string name="history_report_tip">Conseil pour la semaine prochaine</string>
 </resources>

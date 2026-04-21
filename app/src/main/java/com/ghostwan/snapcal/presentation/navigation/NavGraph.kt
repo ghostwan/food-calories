@@ -96,6 +96,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             healthConnectManager = app.healthConnectManager,
             dailyNoteRepository = app.dailyNoteRepository,
             settingsRepository = app.settingsRepository,
+            geminiApiService = app.geminiApiService,
             appContext = app.applicationContext
         )
     )
@@ -227,6 +228,13 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                             launchSingleTop = true
                         }
                     },
+                    onScanAnother = {
+                        foodAnalysisViewModel.resetState()
+                        navController.navigate("home") {
+                            popUpTo("result") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     onAddToShoppingList = if (shoppingListEnabled) { ingredient ->
                         val today = java.time.LocalDate.now().toString()
                         kotlinx.coroutines.MainScope().launch {
@@ -273,7 +281,8 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         userProfileRepository = app.userProfileRepository,
                         mealRepository = app.mealRepository,
                         healthConnectManager = app.healthConnectManager,
-                        settingsRepository = app.settingsRepository
+                        settingsRepository = app.settingsRepository,
+                        geminiApiService = app.geminiApiService
                     )
                 )
                 HistoryScreen(

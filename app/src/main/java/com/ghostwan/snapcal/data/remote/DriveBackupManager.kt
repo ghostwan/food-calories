@@ -158,6 +158,7 @@ class DriveBackupManager(private val context: Context) {
                 if (meal.emoji != null) put("emoji", meal.emoji)
                 put("isFavorite", meal.isFavorite)
                 put("quantity", meal.quantity)
+                if (meal.mealType != null) put("mealType", meal.mealType)
             })
         }
     }
@@ -205,7 +206,8 @@ class DriveBackupManager(private val context: Context) {
                     ingredientsJson = obj.optString("ingredientsJson", ""),
                     emoji = if (obj.has("emoji")) obj.getString("emoji") else null,
                     isFavorite = obj.optBoolean("isFavorite", false),
-                    quantity = obj.optInt("quantity", 1)
+                    quantity = obj.optInt("quantity", 1),
+                    mealType = if (obj.has("mealType")) obj.getString("mealType") else null
                 )
             )
         }

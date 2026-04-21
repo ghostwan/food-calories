@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.widget.CaloriesWidgetProvider
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.Date
@@ -32,6 +34,7 @@ class DashboardViewModel(
     private val healthConnectManager: HealthConnectManager,
     private val dailyNoteRepository: DailyNoteRepository,
     private val settingsRepository: SettingsRepository,
+    private val geminiApiService: GeminiApiService,
     private val appContext: Context
 ) : ViewModel() {
 
@@ -71,6 +74,15 @@ class DashboardViewModel(
     private val _selectedMealIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMealIds: StateFlow<Set<Long>> = _selectedMealIds
 
+    private val _streak = MutableStateFlow(0)
+    val streak: StateFlow<Int> = _streak
+
+    private val _suggestions = MutableStateFlow<List<MealSuggestion>>(emptyList())
+    val suggestions: StateFlow<List<MealSuggestion>> = _suggestions
+
+    private val _suggestionsLoading = MutableStateFlow(false)
+    val suggestionsLoading: StateFlow<Boolean> = _suggestionsLoading
+
     init {
         loadGoal()
         observeNutrition()
@@ -80,6 +92,7 @@ class DashboardViewModel(
         loadCaloriesBurned()
         loadLatestWeight()
         observeEffectiveGoal()
+        loadStreak()
     }
 
     fun goToPreviousDay() {
@@ -208,10 +221,7 @@ class DashboardViewModel(
 
     fun refresh() {
         val now = LocalDate.now()
-        // Auto-advance to today if user was viewing today and the day changed
         if (_selectedDate.value != now && _selectedDate.value == now.minusDays(1)) {
-            // Only auto-advance if the user was on "today" (which became yesterday)
-            // We can't distinguish this reliably, so just reload data for the current date
         }
         loadGoal()
         observeNutrition()
@@ -219,7 +229,37 @@ class DashboardViewModel(
         loadCaloriesBurned()
         loadLatestWeight()
         observeEffectiveGoal()
+        loadStreak()
         viewModelScope.launch { CaloriesWidgetProvider.refreshAll(appContext) }
+    }
+
+    private fun loadStreak() {
+        viewModelScope.launch {
+            try {
+                val dates = mealRepository.getAllMealDates()
+                    .map { LocalDate.parse(it) }
+                    .toSortedSet(compareByDescending { it })
+                var streak = 0
+                var checkDate = LocalDate.now()
+                for (date in dates) {
+                    if (date == checkDate) {
+                        streak++
+                        checkDate = checkDate.minusDays(1)
+                    } else if (date.isBefore(checkDate)) {
+                        // Gap found - but if today has no meals yet, start from yesterday
+                        if (streak == 0 && date == LocalDate.now().minusDays(1)) {
+                            streak++
+                            checkDate = date.minusDays(1)
+                        } else {
+                            break
+                        }
+                    }
+                }
+                _streak.value = streak
+            } catch (_: Exception) {
+                _streak.value = 0
+            }
+        }
     }
 
     private fun observeFavorites() {
@@ -249,6 +289,12 @@ class DashboardViewModel(
         }
     }
 
+    fun updateMealType(mealId: Long, mealType: String) {
+        viewModelScope.launch {
+            mealRepository.updateMealType(mealId, mealType)
+        }
+    }
+
     fun enterSelectionMode(mealId: Long) {
         _selectionMode.value = true
         _selectedMealIds.value = setOf(mealId)
@@ -269,12 +315,91 @@ class DashboardViewModel(
         return _meals.value.filter { it.id in ids }
     }
 
+    fun requestMealSuggestions() {
+        val apiKey = settingsRepository.getApiKey()
+        if (apiKey.isBlank()) return
+
+        _suggestionsLoading.value = true
+        _suggestions.value = emptyList()
+
+        viewModelScope.launch {
+            try {
+                val profile = userProfileRepository.getProfile()
+                val goal = _effectiveGoal.value
+                val nutrition = _nutrition.value
+                val remainingCal = goal.calories - (nutrition?.totalCalories ?: 0)
+                val remainingProt = goal.proteins - (nutrition?.totalProteins ?: 0f)
+                val remainingCarbs = goal.carbs - (nutrition?.totalCarbs ?: 0f)
+                val remainingFats = goal.fats - (nutrition?.totalFats ?: 0f)
+
+                val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                val mealType = when {
+                    hour in 5..10 -> "breakfast"
+                    hour in 11..14 -> "lunch"
+                    hour in 15..17 -> "snack"
+                    else -> "dinner"
+                }
+
+                val recentDishes = _meals.value.map { it.dishName }.take(5)
+
+                val language = Locale.getDefault().displayLanguage
+                val rawResponse = geminiApiService.suggestMeals(
+                    profile, remainingCal.coerceAtLeast(0), remainingProt.coerceAtLeast(0f),
+                    remainingCarbs.coerceAtLeast(0f), remainingFats.coerceAtLeast(0f),
+                    mealType, recentDishes, apiKey, language
+                )
+
+                val json = JSONObject(rawResponse)
+                val text = json.getJSONArray("candidates")
+                    .getJSONObject(0)
+                    .getJSONObject("content")
+                    .getJSONArray("parts")
+                    .getJSONObject(0)
+                    .getString("text")
+                    .trim()
+
+                val cleanJson = text.removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+                val suggestionsJson = JSONObject(cleanJson).getJSONArray("suggestions")
+                val list = mutableListOf<MealSuggestion>()
+                for (i in 0 until suggestionsJson.length()) {
+                    val obj = suggestionsJson.getJSONObject(i)
+                    list.add(MealSuggestion(
+                        emoji = obj.optString("emoji", "\uD83C\uDF7D\uFE0F"),
+                        dishName = obj.getString("dishName"),
+                        estimatedCalories = obj.getInt("estimatedCalories"),
+                        proteins = obj.optString("proteins", ""),
+                        carbs = obj.optString("carbs", ""),
+                        fats = obj.optString("fats", ""),
+                        description = obj.optString("description", "")
+                    ))
+                }
+                _suggestions.value = list
+            } catch (_: Exception) {
+                _suggestions.value = emptyList()
+            } finally {
+                _suggestionsLoading.value = false
+            }
+        }
+    }
+
+    fun clearSuggestions() {
+        _suggestions.value = emptyList()
+    }
+
     fun quickAddFavorite(meal: MealEntry) {
         viewModelScope.launch {
+            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            val mealType = when {
+                hour in 5..10 -> "breakfast"
+                hour in 11..14 -> "lunch"
+                hour in 15..17 -> "snack"
+                else -> "dinner"
+            }
             val targetMeal = meal.copy(
                 id = 0,
                 date = _selectedDate.value.toString(),
-                isFavorite = false
+                isFavorite = false,
+                mealType = mealType
             )
             mealRepository.saveMeal(targetMeal)
         }
@@ -288,12 +413,23 @@ class DashboardViewModel(
             healthConnectManager: HealthConnectManager,
             dailyNoteRepository: DailyNoteRepository,
             settingsRepository: SettingsRepository,
+            geminiApiService: GeminiApiService,
             appContext: Context
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository, settingsRepository, appContext) as T
+                return DashboardViewModel(getDailyNutritionUseCase, userProfileRepository, mealRepository, healthConnectManager, dailyNoteRepository, settingsRepository, geminiApiService, appContext) as T
             }
         }
     }
 }
+
+data class MealSuggestion(
+    val emoji: String,
+    val dishName: String,
+    val estimatedCalories: Int,
+    val proteins: String,
+    val carbs: String,
+    val fats: String,
+    val description: String
+)

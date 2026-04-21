@@ -271,4 +271,36 @@
     <!-- Units -->
     <string name="unit_grams">%.0f g</string>
     <string name="unit_kcal">%d kcal</string>
+
+    <!-- Meal Types -->
+    <string name="meal_type_breakfast">Breakfast</string>
+    <string name="meal_type_lunch">Lunch</string>
+    <string name="meal_type_dinner">Dinner</string>
+    <string name="meal_type_snack">Snack</string>
+    <string name="meal_type_picker_title">Meal category</string>
+
+    <!-- Streak -->
+    <string name="streak_days">%d-day streak!</string>
+    <string name="streak_milestone_7">1 week! Keep it up!</string>
+    <string name="streak_milestone_30">1 month! Amazing!</string>
+    <string name="streak_milestone_100">100 days! Incredible!</string>
+    <string name="streak_milestone_365">1 year! Legendary!</string>
+
+    <!-- Meal Suggestions -->
+    <string name="dashboard_suggest_meal">What should I eat?</string>
+    <string name="dashboard_suggest_loading">Thinking of meal ideas…</string>
+    <string name="dashboard_suggest_empty">No suggestions available</string>
+
+    <!-- Multi-scan -->
+    <string name="result_scan_another">Scan another meal</string>
+    <string name="result_go_dashboard">Back to dashboard</string>
+
+    <!-- Weekly Report -->
+    <string name="history_weekly_report">Weekly AI report</string>
+    <string name="history_report_loading">Generating your report…</string>
+    <string name="history_report_empty">Could not generate report</string>
+    <string name="history_report_averages">Daily averages</string>
+    <string name="history_report_strengths">Strengths</string>
+    <string name="history_report_improvements">Areas to improve</string>
+    <string name="history_report_tip">Tip for next week</string>
 </resources>

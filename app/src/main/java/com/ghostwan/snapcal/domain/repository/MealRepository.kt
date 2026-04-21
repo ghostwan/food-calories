@@ -17,4 +17,6 @@ interface MealRepository {
     suspend fun updateQuantity(id: Long, quantity: Int)
     suspend fun updateMealNutrition(id: Long, calories: Int, proteins: Float, carbs: Float, fats: Float, fiber: Float, ingredientsJson: String)
     suspend fun getRecentEmojis(): List<String>
+    suspend fun updateMealType(id: Long, mealType: String)
+    suspend fun getAllMealDates(): List<String>
 }

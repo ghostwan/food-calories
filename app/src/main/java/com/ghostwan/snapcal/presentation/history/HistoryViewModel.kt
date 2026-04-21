@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ghostwan.snapcal.data.local.HealthConnectManager
+import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.DailyNutrition
 import com.ghostwan.snapcal.domain.model.MealEntry
@@ -19,13 +20,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.util.Locale
 
 class HistoryViewModel(
     private val historyUseCase: GetNutritionHistoryUseCase,
     private val userProfileRepository: UserProfileRepository,
     private val mealRepository: MealRepository,
     private val healthConnectManager: HealthConnectManager,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val geminiApiService: GeminiApiService
 ) : ViewModel() {
 
     private val _history = MutableStateFlow<List<DailyNutrition>>(emptyList())
@@ -195,6 +199,82 @@ class HistoryViewModel(
         }
     }
 
+    private val _weeklyReport = MutableStateFlow<WeeklyReport?>(null)
+    val weeklyReport: StateFlow<WeeklyReport?> = _weeklyReport
+
+    private val _reportLoading = MutableStateFlow(false)
+    val reportLoading: StateFlow<Boolean> = _reportLoading
+
+    fun generateWeeklyReport() {
+        val apiKey = settingsRepository.getApiKey()
+        if (apiKey.isBlank()) return
+
+        _reportLoading.value = true
+        _weeklyReport.value = null
+
+        viewModelScope.launch {
+            try {
+                val profile = userProfileRepository.getProfile()
+                val goal = _goal.value
+                val goalStr = "${goal.calories} kcal, ${goal.proteins}g prot, ${goal.carbs}g carbs, ${goal.fats}g fats, ${goal.fiber}g fiber"
+
+                // Get last 7 days of nutrition data
+                val last7 = _history.value.take(7)
+                val summaries = last7.joinToString("\n") { day ->
+                    "${day.date}: ${day.totalCalories} kcal, P:${day.totalProteins.toInt()}g, C:${day.totalCarbs.toInt()}g, F:${day.totalFats.toInt()}g"
+                }
+
+                val language = Locale.getDefault().displayLanguage
+                val rawResponse = geminiApiService.generateWeeklyReport(
+                    summaries, profile, goalStr, apiKey, language
+                )
+
+                val json = JSONObject(rawResponse)
+                val text = json.getJSONArray("candidates")
+                    .getJSONObject(0)
+                    .getJSONObject("content")
+                    .getJSONArray("parts")
+                    .getJSONObject(0)
+                    .getString("text")
+                    .trim()
+
+                val cleanJson = text.removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+                val report = JSONObject(cleanJson)
+
+                val strengths = mutableListOf<String>()
+                val strengthsArr = report.optJSONArray("strengths")
+                if (strengthsArr != null) {
+                    for (i in 0 until strengthsArr.length()) strengths.add(strengthsArr.getString(i))
+                }
+
+                val improvements = mutableListOf<String>()
+                val improvementsArr = report.optJSONArray("improvements")
+                if (improvementsArr != null) {
+                    for (i in 0 until improvementsArr.length()) improvements.add(improvementsArr.getString(i))
+                }
+
+                _weeklyReport.value = WeeklyReport(
+                    summary = report.getString("summary"),
+                    avgCalories = report.getInt("avgCalories"),
+                    avgProteins = report.getInt("avgProteins"),
+                    avgCarbs = report.getInt("avgCarbs"),
+                    avgFats = report.getInt("avgFats"),
+                    strengths = strengths,
+                    improvements = improvements,
+                    tip = report.getString("tip")
+                )
+            } catch (_: Exception) {
+                _weeklyReport.value = null
+            } finally {
+                _reportLoading.value = false
+            }
+        }
+    }
+
+    fun clearReport() {
+        _weeklyReport.value = null
+    }
+
     companion object {
         val RANGE_OPTIONS = listOf(7, 30, 90, 365)
 
@@ -203,12 +283,24 @@ class HistoryViewModel(
             userProfileRepository: UserProfileRepository,
             mealRepository: MealRepository,
             healthConnectManager: HealthConnectManager,
-            settingsRepository: SettingsRepository
+            settingsRepository: SettingsRepository,
+            geminiApiService: GeminiApiService
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HistoryViewModel(historyUseCase, userProfileRepository, mealRepository, healthConnectManager, settingsRepository) as T
+                return HistoryViewModel(historyUseCase, userProfileRepository, mealRepository, healthConnectManager, settingsRepository, geminiApiService) as T
             }
         }
     }
 }
+
+data class WeeklyReport(
+    val summary: String,
+    val avgCalories: Int,
+    val avgProteins: Int,
+    val avgCarbs: Int,
+    val avgFats: Int,
+    val strengths: List<String>,
+    val improvements: List<String>,
+    val tip: String
+)

@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.automirrored.filled.MergeType
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -45,6 +46,8 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -117,6 +120,9 @@ fun DashboardScreen(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val streak by viewModel.streak.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsState()
+    val suggestionsLoading by viewModel.suggestionsLoading.collectAsState()
 
     val context = LocalContext.current
     val isToday = selectedDate == LocalDate.now()
@@ -124,6 +130,7 @@ fun DashboardScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showNoteDialog by remember { mutableStateOf(false) }
+    var showSuggestions by remember { mutableStateOf(false) }
 
     val dateLabel = when {
         isToday -> stringResource(R.string.dashboard_today)
@@ -140,6 +147,17 @@ fun DashboardScreen(
             onSave = { note ->
                 viewModel.saveDailyNote(note)
                 showNoteDialog = false
+            }
+        )
+    }
+
+    if (showSuggestions) {
+        MealSuggestionsDialog(
+            suggestions = suggestions,
+            isLoading = suggestionsLoading,
+            onDismiss = {
+                showSuggestions = false
+                viewModel.clearSuggestions()
             }
         )
     }
@@ -294,6 +312,10 @@ fun DashboardScreen(
                 )
             }
 
+            if (streak > 0) {
+                item { StreakCard(streak) }
+            }
+
             item {
                 MacrosProgressCard(nutrition, effectiveGoal)
             }
@@ -368,8 +390,23 @@ fun DashboardScreen(
                             }
                         },
                         onDelete = { viewModel.deleteMeal(meal.id) },
-                        onToggleFavorite = { viewModel.toggleFavorite(meal) }
+                        onToggleFavorite = { viewModel.toggleFavorite(meal) },
+                        onMealTypeChange = { type -> viewModel.updateMealType(meal.id, type) }
                     )
+                }
+            }
+
+            item {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = {
+                        showSuggestions = true
+                        viewModel.requestMealSuggestions()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Lightbulb, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.dashboard_suggest_meal))
                 }
             }
 
@@ -598,10 +635,23 @@ private fun MealCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
     onDelete: () -> Unit,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    onMealTypeChange: (String) -> Unit = {}
 ) {
     val healthInfo = remember(meal.ingredientsJson) {
         computeHealthInfo(meal.ingredientsJson)
+    }
+    var showMealTypePicker by remember { mutableStateOf(false) }
+
+    if (showMealTypePicker) {
+        MealTypePickerDialog(
+            currentType = meal.mealType,
+            onSelect = { type ->
+                onMealTypeChange(type)
+                showMealTypePicker = false
+            },
+            onDismiss = { showMealTypePicker = false }
+        )
     }
 
     Card(
@@ -677,6 +727,13 @@ private fun MealCard(
                             Text(
                                 text = " ${healthInfo.emoji}",
                                 style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        if (meal.mealType != null) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            MealTypeChip(
+                                mealType = meal.mealType,
+                                onClick = { if (!selectionMode) showMealTypePicker = true }
                             )
                         }
                     }
@@ -806,6 +863,198 @@ private fun DailyNoteDialog(
 }
 
 private data class HealthInfo(val emoji: String, val color: Color)
+
+@Composable
+private fun MealSuggestionsDialog(
+    suggestions: List<MealSuggestion>,
+    isLoading: Boolean,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.dashboard_suggest_meal)) },
+        text = {
+            if (isLoading) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(stringResource(R.string.dashboard_suggest_loading))
+                }
+            } else if (suggestions.isEmpty()) {
+                Text(stringResource(R.string.dashboard_suggest_empty))
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    suggestions.forEach { suggestion ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = suggestion.emoji,
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = suggestion.dishName,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.result_kcal, suggestion.estimatedCalories),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "${suggestion.proteins} P · ${suggestion.carbs} C · ${suggestion.fats} F",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (suggestion.description.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = suggestion.description,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun StreakCard(streak: Int) {
+    val milestone = when {
+        streak >= 365 -> stringResource(R.string.streak_milestone_365)
+        streak >= 100 -> stringResource(R.string.streak_milestone_100)
+        streak >= 30 -> stringResource(R.string.streak_milestone_30)
+        streak >= 7 -> stringResource(R.string.streak_milestone_7)
+        else -> null
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF3E0)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "\uD83D\uDD25",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.streak_days, streak),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFE65100)
+                )
+                if (milestone != null) {
+                    Text(
+                        text = milestone,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFFF6D00)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MealTypeChip(mealType: String, onClick: () -> Unit) {
+    val (label, chipColor) = when (mealType) {
+        "breakfast" -> stringResource(R.string.meal_type_breakfast) to Color(0xFFFF9800)
+        "lunch" -> stringResource(R.string.meal_type_lunch) to Color(0xFF4CAF50)
+        "dinner" -> stringResource(R.string.meal_type_dinner) to Color(0xFF2196F3)
+        "snack" -> stringResource(R.string.meal_type_snack) to Color(0xFF9C27B0)
+        else -> mealType to MaterialTheme.colorScheme.primary
+    }
+    AssistChip(
+        onClick = onClick,
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall
+            )
+        },
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = chipColor.copy(alpha = 0.15f),
+            labelColor = chipColor
+        ),
+        border = null,
+        modifier = Modifier.height(24.dp)
+    )
+}
+
+@Composable
+private fun MealTypePickerDialog(
+    currentType: String?,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val types = listOf("breakfast", "lunch", "dinner", "snack")
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.meal_type_picker_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                types.forEach { type ->
+                    val (label, chipColor) = when (type) {
+                        "breakfast" -> stringResource(R.string.meal_type_breakfast) to Color(0xFFFF9800)
+                        "lunch" -> stringResource(R.string.meal_type_lunch) to Color(0xFF4CAF50)
+                        "dinner" -> stringResource(R.string.meal_type_dinner) to Color(0xFF2196F3)
+                        "snack" -> stringResource(R.string.meal_type_snack) to Color(0xFF9C27B0)
+                        else -> type to MaterialTheme.colorScheme.primary
+                    }
+                    val isSelected = type == currentType
+                    Button(
+                        onClick = { onSelect(type) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected) chipColor else chipColor.copy(alpha = 0.15f),
+                            contentColor = if (isSelected) Color.White else chipColor
+                        )
+                    ) {
+                        Text(label)
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
 
 private fun computeHealthInfo(ingredientsJson: String): HealthInfo? {
     return try {

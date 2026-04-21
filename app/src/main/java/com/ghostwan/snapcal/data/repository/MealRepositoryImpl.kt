@@ -25,7 +25,8 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
                 date = meal.date,
                 ingredientsJson = meal.ingredientsJson,
                 emoji = meal.emoji,
-                quantity = meal.quantity
+                quantity = meal.quantity,
+                mealType = meal.mealType
             )
         )
     }
@@ -101,6 +102,14 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         return mealDao.getRecentEmojis()
     }
 
+    override suspend fun updateMealType(id: Long, mealType: String) {
+        mealDao.updateMealType(id, mealType)
+    }
+
+    override suspend fun getAllMealDates(): List<String> {
+        return mealDao.getAllMealDates()
+    }
+
     private fun daysAgoDate(days: Int): String {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -days)
@@ -119,6 +128,7 @@ class MealRepositoryImpl(private val mealDao: MealDao) : MealRepository {
         ingredientsJson = ingredientsJson,
         emoji = emoji,
         isFavorite = isFavorite,
-        quantity = quantity
+        quantity = quantity,
+        mealType = mealType
     )
 }
