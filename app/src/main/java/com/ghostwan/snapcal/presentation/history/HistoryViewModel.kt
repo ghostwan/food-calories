@@ -164,7 +164,7 @@ class HistoryViewModel(
         historyJob?.cancel()
         historyJob = viewModelScope.launch {
             historyUseCase(days).collect {
-                _history.value = it
+                _history.value = fillMissingDays(it, days)
             }
         }
         viewModelScope.launch {
@@ -176,6 +176,22 @@ class HistoryViewModel(
             }
         }
         loadBurnedCalories(days)
+    }
+
+    private fun fillMissingDays(history: List<DailyNutrition>, days: Int): List<DailyNutrition> {
+        val byDate = history.associateBy { it.date }
+        val endDate = LocalDate.now()
+        return (0 until days).map { offset ->
+            val date = endDate.minusDays(offset.toLong()).toString()
+            byDate[date] ?: DailyNutrition(
+                date = date,
+                totalCalories = 0,
+                totalProteins = 0f,
+                totalCarbs = 0f,
+                totalFats = 0f,
+                totalFiber = 0f
+            )
+        }
     }
 
     private fun loadBurnedCalories(days: Int) {
