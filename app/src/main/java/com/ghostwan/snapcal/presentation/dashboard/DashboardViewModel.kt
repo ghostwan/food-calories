@@ -314,18 +314,11 @@ class DashboardViewModel(
     }
 
     fun refresh() {
-        val now = LocalDate.now()
-        if (_selectedDate.value != now && _selectedDate.value == now.minusDays(1)) {
-        }
         loadGoal()
-        observeNutrition()
-        observeMeals()
         loadCaloriesBurned()
         loadLatestWeight()
         loadMorningCheckIn()
-        observeEffectiveGoal()
         loadStreak()
-        viewModelScope.launch { CaloriesWidgetProvider.refreshAll(appContext) }
     }
 
     private fun loadStreak() {

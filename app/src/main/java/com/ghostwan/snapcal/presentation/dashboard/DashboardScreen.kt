@@ -151,8 +151,6 @@ fun DashboardScreen(
         else -> selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
     }
 
-    LaunchedEffect(Unit) { viewModel.refresh() }
-
     LaunchedEffect(morningCheckInSaved) {
         if (morningCheckInSaved) {
             snackbarHostState.showSnackbar(context.getString(R.string.dashboard_check_in_saved))
