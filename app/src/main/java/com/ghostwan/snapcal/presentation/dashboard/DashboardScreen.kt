@@ -31,6 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -89,6 +90,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ghostwan.snapcal.R
@@ -130,6 +132,8 @@ fun DashboardScreen(
     val suggestions by viewModel.suggestions.collectAsState()
     val suggestionsLoading by viewModel.suggestionsLoading.collectAsState()
     val showSuggestions by viewModel.showSuggestionsDialog.collectAsState()
+    val morningCheckIn by viewModel.morningCheckIn.collectAsState()
+    val morningCheckInSaved by viewModel.morningCheckInSaved.collectAsState()
 
     val context = LocalContext.current
     val isToday = selectedDate == LocalDate.now()
@@ -139,6 +143,7 @@ fun DashboardScreen(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showNoteDialog by remember { mutableStateOf(false) }
+    var showMorningCheckInDialog by remember { mutableStateOf(false) }
 
     val dateLabel = when {
         isToday -> stringResource(R.string.dashboard_today)
@@ -147,6 +152,13 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
+
+    LaunchedEffect(morningCheckInSaved) {
+        if (morningCheckInSaved) {
+            snackbarHostState.showSnackbar(context.getString(R.string.dashboard_check_in_saved))
+            viewModel.clearMorningCheckInSaved()
+        }
+    }
 
     if (showNoteDialog) {
         DailyNoteDialog(
@@ -163,6 +175,17 @@ fun DashboardScreen(
         MealSuggestionsDialog(
             suggestions = suggestions,
             onDismiss = { viewModel.clearSuggestions() }
+        )
+    }
+
+    if (showMorningCheckInDialog) {
+        MorningCheckInDialog(
+            state = morningCheckIn,
+            onDismiss = { showMorningCheckInDialog = false },
+            onSave = { weight, waist, hips, chest, arms, thighs ->
+                viewModel.saveMorningCheckIn(weight, waist, hips, chest, arms, thighs)
+                showMorningCheckInDialog = false
+            }
         )
     }
 
@@ -319,6 +342,15 @@ fun DashboardScreen(
 
             if (streak > 0) {
                 item { StreakCard(streak) }
+            }
+
+            if (isToday) {
+                item {
+                    MorningCheckInCard(
+                        state = morningCheckIn,
+                        onClick = { showMorningCheckInDialog = true }
+                    )
+                }
             }
 
             item {
@@ -876,6 +908,172 @@ private fun DailyNoteDialog(
                 Text(stringResource(R.string.dialog_button_cancel))
             }
         }
+    )
+}
+
+@Composable
+private fun MorningCheckInCard(
+    state: MorningCheckInState,
+    onClick: () -> Unit
+) {
+    val summary = buildList {
+        state.weight?.let { add(stringResource(R.string.dashboard_check_in_weight_value, it)) }
+        state.waist?.let { add(stringResource(R.string.dashboard_check_in_waist_value, it)) }
+        state.hips?.let { add(stringResource(R.string.dashboard_check_in_hips_value, it)) }
+    }.joinToString(" · ")
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (state.savedToday) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.tertiaryContainer
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (state.savedToday) "✓" else "+",
+                style = MaterialTheme.typography.headlineSmall,
+                color = if (state.savedToday) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onTertiaryContainer
+                }
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.dashboard_check_in_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (summary.isBlank()) {
+                        stringResource(R.string.dashboard_check_in_prompt)
+                    } else {
+                        summary
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            TextButton(onClick = onClick) {
+                Text(
+                    if (state.savedToday) {
+                        stringResource(R.string.dashboard_check_in_edit)
+                    } else {
+                        stringResource(R.string.dashboard_check_in_start)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MorningCheckInDialog(
+    state: MorningCheckInState,
+    onDismiss: () -> Unit,
+    onSave: (Float?, Float?, Float?, Float?, Float?, Float?) -> Unit
+) {
+    var weight by remember(state) { mutableStateOf(state.weight?.toString() ?: "") }
+    var waist by remember(state) { mutableStateOf(state.waist?.toString() ?: "") }
+    var hips by remember(state) { mutableStateOf(state.hips?.toString() ?: "") }
+    var chest by remember(state) { mutableStateOf(state.chest?.toString() ?: "") }
+    var arms by remember(state) { mutableStateOf(state.arms?.toString() ?: "") }
+    var thighs by remember(state) { mutableStateOf(state.thighs?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.dashboard_check_in_title)) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = stringResource(R.string.dashboard_check_in_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                MorningCheckInField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = stringResource(R.string.profile_weight)
+                )
+                MorningCheckInField(
+                    value = waist,
+                    onValueChange = { waist = it },
+                    label = stringResource(R.string.profile_measurement_waist)
+                )
+                MorningCheckInField(
+                    value = hips,
+                    onValueChange = { hips = it },
+                    label = stringResource(R.string.profile_measurement_hips)
+                )
+                MorningCheckInField(
+                    value = chest,
+                    onValueChange = { chest = it },
+                    label = stringResource(R.string.profile_measurement_chest)
+                )
+                MorningCheckInField(
+                    value = arms,
+                    onValueChange = { arms = it },
+                    label = stringResource(R.string.profile_measurement_arms)
+                )
+                MorningCheckInField(
+                    value = thighs,
+                    onValueChange = { thighs = it },
+                    label = stringResource(R.string.profile_measurement_thighs)
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onSave(
+                        weight.toFloatOrNull(),
+                        waist.toFloatOrNull(),
+                        hips.toFloatOrNull(),
+                        chest.toFloatOrNull(),
+                        arms.toFloatOrNull(),
+                        thighs.toFloatOrNull()
+                    )
+                }
+            ) {
+                Text(stringResource(R.string.dialog_button_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_button_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun MorningCheckInField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth()
     )
 }
 

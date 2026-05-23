@@ -15,6 +15,7 @@ import com.ghostwan.snapcal.R
 import com.ghostwan.snapcal.MainActivity
 import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.domain.model.DailyNutrition
+import com.ghostwan.snapcal.domain.model.BodyMeasurement
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.domain.model.NutritionGoal
 import com.ghostwan.snapcal.domain.model.WeightRecord
@@ -93,6 +94,12 @@ class DashboardViewModel(
     private val _showSuggestionsDialog = MutableStateFlow(false)
     val showSuggestionsDialog: StateFlow<Boolean> = _showSuggestionsDialog
 
+    private val _morningCheckIn = MutableStateFlow(MorningCheckInState())
+    val morningCheckIn: StateFlow<MorningCheckInState> = _morningCheckIn
+
+    private val _morningCheckInSaved = MutableStateFlow(false)
+    val morningCheckInSaved: StateFlow<Boolean> = _morningCheckInSaved
+
     init {
         loadGoal()
         observeNutrition()
@@ -101,6 +108,7 @@ class DashboardViewModel(
         observeDailyNote()
         loadCaloriesBurned()
         loadLatestWeight()
+        loadMorningCheckIn()
         observeEffectiveGoal()
         loadStreak()
     }
@@ -216,6 +224,82 @@ class DashboardViewModel(
         }
     }
 
+    private fun loadMorningCheckIn() {
+        viewModelScope.launch {
+            val today = LocalDate.now().toString()
+            val profile = userProfileRepository.getProfile()
+            val latestWeight = userProfileRepository.getLatestWeight()
+            val todayWeight = userProfileRepository.getWeightHistory(2).firstOrNull { it.date == today }
+            val latestMeasurement = userProfileRepository.getLatestBodyMeasurement()
+            val todayMeasurement = userProfileRepository.getBodyMeasurementHistory(2).firstOrNull { it.date == today }
+            val measurement = todayMeasurement ?: latestMeasurement
+
+            _morningCheckIn.value = MorningCheckInState(
+                weight = todayWeight?.weight ?: latestWeight?.weight ?: profile.weight.takeIf { it > 0f },
+                waist = measurement?.waist,
+                hips = measurement?.hips,
+                chest = measurement?.chest,
+                arms = measurement?.arms,
+                thighs = measurement?.thighs,
+                savedToday = todayWeight != null || todayMeasurement != null
+            )
+        }
+    }
+
+    fun saveMorningCheckIn(
+        weight: Float?,
+        waist: Float?,
+        hips: Float?,
+        chest: Float?,
+        arms: Float?,
+        thighs: Float?
+    ) {
+        viewModelScope.launch {
+            val today = LocalDate.now().toString()
+            val current = _morningCheckIn.value
+            val nextWeight = weight ?: current.weight
+            val nextWaist = waist ?: current.waist
+            val nextHips = hips ?: current.hips
+            val nextChest = chest ?: current.chest
+            val nextArms = arms ?: current.arms
+            val nextThighs = thighs ?: current.thighs
+
+            nextWeight?.takeIf { it > 0f }?.let { value ->
+                userProfileRepository.saveWeightRecord(WeightRecord(weight = value, date = today))
+                val profile = userProfileRepository.getProfile()
+                userProfileRepository.saveProfile(profile.copy(weight = value))
+            }
+
+            val measurement = BodyMeasurement(
+                waist = nextWaist,
+                hips = nextHips,
+                chest = nextChest,
+                arms = nextArms,
+                thighs = nextThighs,
+                date = today
+            )
+            if (listOf(nextWaist, nextHips, nextChest, nextArms, nextThighs).any { it != null }) {
+                settingsRepository.setMeasurementsEnabled(true)
+                userProfileRepository.saveBodyMeasurement(measurement)
+            }
+
+            _morningCheckIn.value = MorningCheckInState(
+                weight = nextWeight,
+                waist = nextWaist,
+                hips = nextHips,
+                chest = nextChest,
+                arms = nextArms,
+                thighs = nextThighs,
+                savedToday = true
+            )
+            _morningCheckInSaved.value = true
+        }
+    }
+
+    fun clearMorningCheckInSaved() {
+        _morningCheckInSaved.value = false
+    }
+
     private fun loadCaloriesBurned() {
         if (!healthConnectManager.isAvailable()) return
         viewModelScope.launch {
@@ -238,6 +322,7 @@ class DashboardViewModel(
         observeMeals()
         loadCaloriesBurned()
         loadLatestWeight()
+        loadMorningCheckIn()
         observeEffectiveGoal()
         loadStreak()
         viewModelScope.launch { CaloriesWidgetProvider.refreshAll(appContext) }
@@ -467,4 +552,14 @@ data class MealSuggestion(
     val carbs: String,
     val fats: String,
     val description: String
+)
+
+data class MorningCheckInState(
+    val weight: Float? = null,
+    val waist: Float? = null,
+    val hips: Float? = null,
+    val chest: Float? = null,
+    val arms: Float? = null,
+    val thighs: Float? = null,
+    val savedToday: Boolean = false
 )

@@ -91,6 +91,15 @@
     <string name="dashboard_note_title">Daily note</string>
     <string name="dashboard_note_hint">e.g. "family dinner", "stressful day"…</string>
     <string name="dashboard_note_voice_prompt">Describe your day…</string>
+    <string name="dashboard_check_in_title">Morning check-in</string>
+    <string name="dashboard_check_in_prompt">Log weight and measurements in one tap</string>
+    <string name="dashboard_check_in_description">Update only what changed this morning. Empty fields are ignored.</string>
+    <string name="dashboard_check_in_start">Log</string>
+    <string name="dashboard_check_in_edit">Edit</string>
+    <string name="dashboard_check_in_saved">Morning check-in saved!</string>
+    <string name="dashboard_check_in_weight_value">%.1f kg</string>
+    <string name="dashboard_check_in_waist_value">Waist %.1f cm</string>
+    <string name="dashboard_check_in_hips_value">Hips %.1f cm</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>

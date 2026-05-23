@@ -91,6 +91,15 @@
     <string name="dashboard_note_title">Note du jour</string>
     <string name="dashboard_note_hint">ex : "repas de famille", "journée stressante"…</string>
     <string name="dashboard_note_voice_prompt">Décrivez votre journée…</string>
+    <string name="dashboard_check_in_title">Check-in du matin</string>
+    <string name="dashboard_check_in_prompt">Saisir poids et mensurations en un geste</string>
+    <string name="dashboard_check_in_description">Mettez à jour seulement ce qui a changé ce matin. Les champs vides sont ignorés.</string>
+    <string name="dashboard_check_in_start">Saisir</string>
+    <string name="dashboard_check_in_edit">Modifier</string>
+    <string name="dashboard_check_in_saved">Check-in du matin enregistré !</string>
+    <string name="dashboard_check_in_weight_value">%.1f kg</string>
+    <string name="dashboard_check_in_waist_value">Taille %.1f cm</string>
+    <string name="dashboard_check_in_hips_value">Hanches %.1f cm</string>
 
     <!-- Profile -->
     <string name="profile_title">Profil</string>
