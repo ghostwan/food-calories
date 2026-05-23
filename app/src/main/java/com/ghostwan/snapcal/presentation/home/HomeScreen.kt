@@ -163,12 +163,6 @@ fun HomeScreen(
         ActivityResultContracts.RequestPermission()
     ) { }
 
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
     val speechLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -193,6 +187,9 @@ fun HomeScreen(
                     pendingTextAnalysis = false
                     onAnalysisStarted()
                 } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
                     viewModel.startImageScan(context, photoUri!!)
                     photoUri = null
                 }
@@ -330,6 +327,9 @@ fun HomeScreen(
                                 showQuotaWarning = true
                             } else {
                                 viewModel.resetState()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
                                 viewModel.startImageScan(context, photoUri!!)
                                 photoUri = null
                             }
