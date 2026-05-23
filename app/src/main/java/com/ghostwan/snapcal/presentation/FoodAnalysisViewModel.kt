@@ -564,10 +564,21 @@ class FoodAnalysisViewModel(
 
     private fun postScanFailedNotification(context: Context) {
         if (!canPostNotifications(context)) return
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra("navigate_to", "result")
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            3002,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val notification = NotificationCompat.Builder(context, SnapCalApp.AI_INSIGHTS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(context.getString(R.string.scan_notification_failed_title))
             .setContentText(context.getString(R.string.scan_notification_failed_text))
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(SnapCalApp.NOTIFICATION_ID_SCAN_RESULT, notification)
