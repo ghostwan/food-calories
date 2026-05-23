@@ -15,6 +15,7 @@ class ComputeNutritionGoalUseCase(
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")
         }
+        apiService.model = settingsRepository.getGeminiModel()
         val rawResponse = apiService.computeNutritionGoal(profile, apiKey, language)
 
         val json = JSONObject(rawResponse)

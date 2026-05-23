@@ -413,6 +413,7 @@ class DashboardViewModel(
     fun requestMealSuggestions() {
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) return
+        geminiApiService.model = settingsRepository.getGeminiModel()
 
         _suggestionsLoading.value = true
         _suggestions.value = emptyList()

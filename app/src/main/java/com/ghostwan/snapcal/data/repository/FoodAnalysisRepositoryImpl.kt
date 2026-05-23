@@ -17,6 +17,7 @@ class FoodAnalysisRepositoryImpl(
 ) : FoodAnalysisRepository {
 
     private fun getApiKey(): String {
+        apiService.model = settingsRepository.getGeminiModel()
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) {
             throw IllegalStateException("Clé API Gemini non configurée")

@@ -27,6 +27,7 @@
     <string name="dialog_api_key_link">Obtenir une clé API gratuite</string>
     <string name="dialog_button_save">Enregistrer</string>
     <string name="dialog_button_cancel">Annuler</string>
+    <string name="settings_saved">Paramètres enregistrés</string>
 
     <!-- Result -->
     <string name="result_title">Résultats</string>
@@ -52,6 +53,12 @@
     <string name="result_correction_hint">Décrivez la différence (ex : "c\'est des pâtes pas du riz")</string>
     <string name="result_correct">Corriger avec l\'IA</string>
     <string name="result_edit_name_title">Modifier le nom du plat</string>
+    <string name="result_correction_started">Correction lancée…</string>
+    <string name="result_split_started">Séparation du repas…</string>
+    <string name="result_emoji_updated">Emoji mis à jour</string>
+    <string name="result_dish_name_updated">Nom du plat mis à jour</string>
+    <string name="result_ingredient_removed">Ingrédient supprimé</string>
+    <string name="result_ingredient_updated">Ingrédient mis à jour</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Quota gratuit dépassé</string>
@@ -100,6 +107,11 @@
     <string name="dashboard_check_in_weight_value">%.1f kg</string>
     <string name="dashboard_check_in_waist_value">Taille %.1f cm</string>
     <string name="dashboard_check_in_hips_value">Hanches %.1f cm</string>
+    <string name="dashboard_meal_deleted">Repas supprimé</string>
+    <string name="dashboard_favorite_added">Ajouté aux favoris</string>
+    <string name="dashboard_favorite_removed">Retiré des favoris</string>
+    <string name="dashboard_favorite_quick_added">Favori ajouté à aujourd\'hui</string>
+    <string name="dashboard_meal_type_updated">Catégorie du repas mise à jour</string>
 
     <!-- Profile -->
     <string name="profile_title">Profil</string>
@@ -211,7 +223,6 @@
     <string name="profile_daily_calorie_deficit">Déficit calorique journalier</string>
 
     <!-- AI Model -->
-    <string name="profile_ai_model_title">Mod\u00e8le IA</string>
     <string name="profile_ai_model_label">Mod\u00e8le Gemini</string>
 
     <!-- Shopping List -->
@@ -300,6 +311,14 @@
     <string name="dashboard_suggest_meal">Que manger ?</string>
     <string name="dashboard_suggest_loading">Recherche d\'idées de repas…</string>
     <string name="dashboard_suggest_empty">Aucune suggestion disponible</string>
+
+    <!-- Scan Notifications -->
+    <string name="home_analysis_started">Analyse lancée…</string>
+    <string name="home_scan_background_started">Scan lancé. Vous pouvez quitter cet écran ; une notification apparaîtra quand ce sera prêt.</string>
+    <string name="scan_notification_done_title">Scan terminé</string>
+    <string name="scan_notification_done_text">%1$s estimé à %2$d kcal</string>
+    <string name="scan_notification_failed_title">Scan échoué</string>
+    <string name="scan_notification_failed_text">Ouvrez SnapCal pour réessayer.</string>
 
     <!-- Multi-scan -->
     <string name="result_scan_another">Scanner un autre repas</string>

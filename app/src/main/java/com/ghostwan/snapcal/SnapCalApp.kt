@@ -172,5 +172,6 @@ class SnapCalApp : Application() {
         const val AI_INSIGHTS_CHANNEL_ID = "ai_insights"
         const val NOTIFICATION_ID_SUGGESTIONS = 2001
         const val NOTIFICATION_ID_WEEKLY_REPORT = 2002
+        const val NOTIFICATION_ID_SCAN_RESULT = 2003
     }
 }

@@ -4,6 +4,8 @@ import android.content.Context
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.widget.CaloriesWidgetProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -14,21 +16,27 @@ class SaveMealUseCase(
     private val appContext: Context
 ) {
     suspend operator fun invoke(analysis: FoodAnalysis, quantity: Int = 1, date: String? = null) {
-        val mealDate = date ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        saveMeal(analysis, mealDate, quantity)
-        refreshWidget()
+        withContext(Dispatchers.IO) {
+            val mealDate = date ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+            saveMeal(analysis, mealDate, quantity)
+            refreshWidget()
+        }
     }
 
     suspend fun replaceAndSave(oldMealId: Long, analysis: FoodAnalysis, date: String, quantity: Int = 1) {
-        mealRepository.deleteMeal(oldMealId)
-        saveMeal(analysis, date, quantity)
-        refreshWidget()
+        withContext(Dispatchers.IO) {
+            mealRepository.deleteMeal(oldMealId)
+            saveMeal(analysis, date, quantity)
+            refreshWidget()
+        }
     }
 
     suspend fun replaceMultipleAndSave(oldMealIds: List<Long>, analysis: FoodAnalysis, date: String, quantity: Int = 1) {
-        oldMealIds.forEach { mealRepository.deleteMeal(it) }
-        saveMeal(analysis, date, quantity)
-        refreshWidget()
+        withContext(Dispatchers.IO) {
+            oldMealIds.forEach { mealRepository.deleteMeal(it) }
+            saveMeal(analysis, date, quantity)
+            refreshWidget()
+        }
     }
 
     suspend fun splitAndSave(
@@ -38,12 +46,14 @@ class SaveMealUseCase(
         date: String,
         quantity: Int = 1
     ) {
-        if (originalMealId != null) {
-            mealRepository.deleteMeal(originalMealId)
+        withContext(Dispatchers.IO) {
+            if (originalMealId != null) {
+                mealRepository.deleteMeal(originalMealId)
+            }
+            saveMeal(analysis1, date, quantity)
+            saveMeal(analysis2, date, quantity)
+            refreshWidget()
         }
-        saveMeal(analysis1, date, quantity)
-        saveMeal(analysis2, date, quantity)
-        refreshWidget()
     }
 
     suspend fun splitAndSaveMultiple(
@@ -53,10 +63,12 @@ class SaveMealUseCase(
         date: String,
         quantity: Int = 1
     ) {
-        originalMealIds.forEach { mealRepository.deleteMeal(it) }
-        saveMeal(analysis1, date, quantity)
-        saveMeal(analysis2, date, quantity)
-        refreshWidget()
+        withContext(Dispatchers.IO) {
+            originalMealIds.forEach { mealRepository.deleteMeal(it) }
+            saveMeal(analysis1, date, quantity)
+            saveMeal(analysis2, date, quantity)
+            refreshWidget()
+        }
     }
 
     private fun refreshWidget() {

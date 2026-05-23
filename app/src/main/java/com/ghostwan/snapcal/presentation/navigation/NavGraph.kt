@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -202,6 +203,11 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                             app.mealRepository.saveMeal(
                                 meal.copy(id = 0, date = date, isFavorite = false)
                             )
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.dashboard_favorite_quick_added),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     },
                     onMealClick = { meal ->
@@ -263,8 +269,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
                         mealRepository = app.mealRepository,
                         mealReminderManager = app.mealReminderManager,
                         settingsRepository = app.settingsRepository,
-                        dailyNoteRepository = app.dailyNoteRepository,
-                        geminiApiService = app.geminiApiService
+                        dailyNoteRepository = app.dailyNoteRepository
                     )
                 )
                 ProfileScreen(

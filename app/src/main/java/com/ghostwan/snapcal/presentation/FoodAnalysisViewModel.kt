@@ -4,9 +4,19 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.app.PendingIntent
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ghostwan.snapcal.MainActivity
+import com.ghostwan.snapcal.R
+import com.ghostwan.snapcal.SnapCalApp
 import com.ghostwan.snapcal.domain.model.FoodAnalysis
 import com.ghostwan.snapcal.domain.model.Ingredient
 import com.ghostwan.snapcal.domain.model.Macros
@@ -39,6 +49,12 @@ class FoodAnalysisViewModel(
 
     private val _mealSaved = MutableStateFlow(false)
     val mealSaved: StateFlow<Boolean> = _mealSaved
+
+    private val _saveError = MutableStateFlow<String?>(null)
+    val saveError: StateFlow<String?> = _saveError
+
+    private val _scanRunningInBackground = MutableStateFlow(false)
+    val scanRunningInBackground: StateFlow<Boolean> = _scanRunningInBackground
 
     private val _readOnly = MutableStateFlow(false)
     val readOnly: StateFlow<Boolean> = _readOnly
@@ -74,7 +90,12 @@ class FoodAnalysisViewModel(
 
     fun getApiKey(): String = settingsRepository.getApiKey()
 
-    fun setApiKey(key: String) = settingsRepository.setApiKey(key)
+    fun getGeminiModel(): String = settingsRepository.getGeminiModel()
+
+    fun setGeminiSettings(key: String, model: String) {
+        settingsRepository.setApiKey(key)
+        settingsRepository.setGeminiModel(model)
+    }
 
     fun isQuotaExceeded(): Boolean =
         usageRepository.getDailyRequestCount() >= FREE_DAILY_LIMIT
@@ -96,6 +117,29 @@ class FoodAnalysisViewModel(
                 _uiState.value = AnalysisUiState.Error(
                     e.message ?: "Erreur inconnue lors de l'analyse"
                 )
+            }
+        }
+    }
+
+    fun startImageScan(context: Context, imageUri: Uri) {
+        viewModelScope.launch {
+            _scanRunningInBackground.value = true
+            _uiState.value = AnalysisUiState.Loading
+            try {
+                val imageData = readAndCompressImage(context, imageUri)
+                lastImageData = imageData
+                val language = Locale.getDefault().displayLanguage
+                val result = analyzeFoodUseCase(imageData, language)
+                usageRepository.recordRequest()
+                _uiState.value = AnalysisUiState.Success(result)
+                postScanFinishedNotification(context, result)
+            } catch (e: Exception) {
+                _uiState.value = AnalysisUiState.Error(
+                    e.message ?: "Erreur inconnue lors de l'analyse"
+                )
+                postScanFailedNotification(context)
+            } finally {
+                _scanRunningInBackground.value = false
             }
         }
     }
@@ -164,8 +208,8 @@ class FoodAnalysisViewModel(
                 }
                 _mealSaved.value = true
                 loadRecentEmojis()
-            } catch (_: Exception) {
-                // silently fail
+            } catch (e: Exception) {
+                _saveError.value = e.message ?: "Unable to save meal"
             }
         }
     }
@@ -216,8 +260,8 @@ class FoodAnalysisViewModel(
 
                 _mealSaved.value = true
                 loadRecentEmojis()
-            } catch (_: Exception) {
-                // silently fail
+            } catch (e: Exception) {
+                _saveError.value = e.message ?: "Unable to save meal"
             }
         }
     }
@@ -396,9 +440,15 @@ class FoodAnalysisViewModel(
         _mealSaved.value = false
     }
 
+    fun clearSaveError() {
+        _saveError.value = null
+    }
+
     fun resetState() {
         _uiState.value = AnalysisUiState.Idle
         _mealSaved.value = false
+        _saveError.value = null
+        _scanRunningInBackground.value = false
         _readOnly.value = false
         _isFavorite.value = false
         _quantity.value = 1
@@ -488,6 +538,47 @@ class FoodAnalysisViewModel(
             newWidth = (maxSize * ratio).toInt()
         }
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
+
+    private fun postScanFinishedNotification(context: Context, result: FoodAnalysis) {
+        if (!canPostNotifications(context)) return
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra("navigate_to", "result")
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            3001,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val notification = NotificationCompat.Builder(context, SnapCalApp.AI_INSIGHTS_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(context.getString(R.string.scan_notification_done_title))
+            .setContentText(context.getString(R.string.scan_notification_done_text, result.dishName, result.totalCalories))
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+        NotificationManagerCompat.from(context).notify(SnapCalApp.NOTIFICATION_ID_SCAN_RESULT, notification)
+    }
+
+    private fun postScanFailedNotification(context: Context) {
+        if (!canPostNotifications(context)) return
+        val notification = NotificationCompat.Builder(context, SnapCalApp.AI_INSIGHTS_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(context.getString(R.string.scan_notification_failed_title))
+            .setContentText(context.getString(R.string.scan_notification_failed_text))
+            .setAutoCancel(true)
+            .build()
+        NotificationManagerCompat.from(context).notify(SnapCalApp.NOTIFICATION_ID_SCAN_RESULT, notification)
+    }
+
+    private fun canPostNotifications(context: Context): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
     }
 
     companion object {

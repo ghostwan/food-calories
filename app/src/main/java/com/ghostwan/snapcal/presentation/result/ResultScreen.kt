@@ -57,12 +57,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -91,6 +93,7 @@ fun ResultScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val mealSaved by viewModel.mealSaved.collectAsState()
+    val saveError by viewModel.saveError.collectAsState()
     val readOnly by viewModel.readOnly.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
     val quantity by viewModel.quantity.collectAsState()
@@ -103,8 +106,19 @@ fun ResultScreen(
 
     // Only auto-navigate if no scanAnother option (i.e. for readOnly/editing mode)
     androidx.compose.runtime.LaunchedEffect(mealSaved) {
+        if (mealSaved) {
+            snackbarHostState.showSnackbar(context.getString(R.string.result_meal_saved))
+        }
         if (mealSaved && onScanAnother == null) {
+            delay(250)
             onMealSaved()
+        }
+    }
+
+    LaunchedEffect(saveError) {
+        saveError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearSaveError()
         }
     }
 
@@ -152,12 +166,30 @@ fun ResultScreen(
                     recentEmojis = recentEmojis,
                     onQuantityChange = { viewModel.updateQuantity(it) },
                     onSave = { viewModel.saveMeal(state.result) },
-                    onSplit = { meal2Indices -> viewModel.splitMeal(state.result, meal2Indices) },
-                    onCorrect = { feedback -> viewModel.correctAnalysis(state.result, feedback) },
-                    onEmojiChange = { emoji -> viewModel.updateEmoji(emoji) },
-                    onDishNameChange = { name -> viewModel.updateDishName(name) },
-                    onRemoveIngredient = { index -> viewModel.removeIngredient(index) },
-                    onUpdateIngredient = { index, qty, cal -> viewModel.updateIngredient(index, qty, cal) },
+                    onSplit = { meal2Indices ->
+                        viewModel.splitMeal(state.result, meal2Indices)
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.result_split_started)) }
+                    },
+                    onCorrect = { feedback ->
+                        viewModel.correctAnalysis(state.result, feedback)
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.result_correction_started)) }
+                    },
+                    onEmojiChange = { emoji ->
+                        viewModel.updateEmoji(emoji)
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.result_emoji_updated)) }
+                    },
+                    onDishNameChange = { name ->
+                        viewModel.updateDishName(name)
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.result_dish_name_updated)) }
+                    },
+                    onRemoveIngredient = { index ->
+                        viewModel.removeIngredient(index)
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.result_ingredient_removed)) }
+                    },
+                    onUpdateIngredient = { index, qty, cal ->
+                        viewModel.updateIngredient(index, qty, cal)
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.result_ingredient_updated)) }
+                    },
                     onAddToShoppingList = onAddToShoppingList?.let { addToList ->
                         { ingredient: Ingredient ->
                             addToList(ingredient)

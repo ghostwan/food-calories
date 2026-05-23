@@ -426,9 +426,25 @@ fun DashboardScreen(
                                 viewModel.enterSelectionMode(meal.id)
                             }
                         },
-                        onDelete = { viewModel.deleteMeal(meal.id) },
-                        onToggleFavorite = { viewModel.toggleFavorite(meal) },
-                        onMealTypeChange = { type -> viewModel.updateMealType(meal.id, type) }
+                        onDelete = {
+                            viewModel.deleteMeal(meal.id)
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.dashboard_meal_deleted)) }
+                        },
+                        onToggleFavorite = {
+                            viewModel.toggleFavorite(meal)
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    context.getString(
+                                        if (meal.isFavorite) R.string.dashboard_favorite_removed
+                                        else R.string.dashboard_favorite_added
+                                    )
+                                )
+                            }
+                        },
+                        onMealTypeChange = { type ->
+                            viewModel.updateMealType(meal.id, type)
+                            scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.dashboard_meal_type_updated)) }
+                        }
                     )
                 }
             }

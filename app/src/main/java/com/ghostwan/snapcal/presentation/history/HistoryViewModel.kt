@@ -220,6 +220,7 @@ class HistoryViewModel(
     fun generateWeeklyReport() {
         val apiKey = settingsRepository.getApiKey()
         if (apiKey.isBlank()) return
+        geminiApiService.model = settingsRepository.getGeminiModel()
 
         _reportLoading.value = true
         _weeklyReport.value = null

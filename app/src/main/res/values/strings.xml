@@ -27,6 +27,7 @@
     <string name="dialog_api_key_link">Get a free API key</string>
     <string name="dialog_button_save">Save</string>
     <string name="dialog_button_cancel">Cancel</string>
+    <string name="settings_saved">Settings saved</string>
 
     <!-- Result -->
     <string name="result_title">Results</string>
@@ -52,6 +53,12 @@
     <string name="result_correction_hint">Describe what\'s different (e.g. "this is pasta not rice")</string>
     <string name="result_correct">Correct with AI</string>
     <string name="result_edit_name_title">Edit dish name</string>
+    <string name="result_correction_started">Correction started…</string>
+    <string name="result_split_started">Splitting meal…</string>
+    <string name="result_emoji_updated">Emoji updated</string>
+    <string name="result_dish_name_updated">Dish name updated</string>
+    <string name="result_ingredient_removed">Ingredient removed</string>
+    <string name="result_ingredient_updated">Ingredient updated</string>
 
     <!-- Quota Warning -->
     <string name="quota_warning_title">Free quota exceeded</string>
@@ -100,6 +107,11 @@
     <string name="dashboard_check_in_weight_value">%.1f kg</string>
     <string name="dashboard_check_in_waist_value">Waist %.1f cm</string>
     <string name="dashboard_check_in_hips_value">Hips %.1f cm</string>
+    <string name="dashboard_meal_deleted">Meal deleted</string>
+    <string name="dashboard_favorite_added">Added to favorites</string>
+    <string name="dashboard_favorite_removed">Removed from favorites</string>
+    <string name="dashboard_favorite_quick_added">Favorite added to today</string>
+    <string name="dashboard_meal_type_updated">Meal category updated</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -210,7 +222,6 @@
     <string name="profile_daily_calorie_deficit">Daily calorie deficit</string>
 
     <!-- AI Model -->
-    <string name="profile_ai_model_title">AI Model</string>
     <string name="profile_ai_model_label">Gemini model</string>
 
     <!-- Shopping List -->
@@ -299,6 +310,14 @@
     <string name="dashboard_suggest_meal">What should I eat?</string>
     <string name="dashboard_suggest_loading">Thinking of meal ideas…</string>
     <string name="dashboard_suggest_empty">No suggestions available</string>
+
+    <!-- Scan Notifications -->
+    <string name="home_analysis_started">Analysis started…</string>
+    <string name="home_scan_background_started">Scan started. You can leave this screen; a notification will appear when it is ready.</string>
+    <string name="scan_notification_done_title">Scan complete</string>
+    <string name="scan_notification_done_text">%1$s estimated at %2$d kcal</string>
+    <string name="scan_notification_failed_title">Scan failed</string>
+    <string name="scan_notification_failed_text">Open SnapCal to try again.</string>
 
     <!-- Multi-scan -->
     <string name="result_scan_another">Scan another meal</string>

@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -34,7 +35,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,14 +46,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +76,7 @@ import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.ghostwan.snapcal.R
+import com.ghostwan.snapcal.data.remote.GeminiApiService
 import com.ghostwan.snapcal.domain.model.MealEntry
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel
 import com.ghostwan.snapcal.presentation.FoodAnalysisViewModel.Companion.FREE_DAILY_LIMIT
@@ -82,6 +92,7 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import java.io.File
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,8 +110,17 @@ fun HomeScreen(
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showQuotaWarning by remember { mutableStateOf(false) }
     var apiKey by remember { mutableStateOf(viewModel.getApiKey()) }
+    var geminiModel by remember { mutableStateOf(viewModel.getGeminiModel()) }
     val analysisEnabled = apiKey.isNotBlank()
     var pendingTextAnalysis by remember { mutableStateOf(false) }
+    val scanRunningInBackground by viewModel.scanRunningInBackground.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(scanRunningInBackground) {
+        if (!scanRunningInBackground) return@LaunchedEffect
+        snackbarHostState.showSnackbar(context.getString(R.string.home_scan_background_started))
+    }
 
     val imageFile = remember {
         File(File(context.cacheDir, "images").apply { mkdirs() }, "food_photo.jpg")
@@ -139,6 +159,16 @@ fun HomeScreen(
         }
     }
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     val speechLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -159,11 +189,13 @@ fun HomeScreen(
                 viewModel.resetState()
                 if (pendingTextAnalysis) {
                     viewModel.analyzeFoodFromText(foodDescription)
+                    scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.home_analysis_started)) }
                     pendingTextAnalysis = false
+                    onAnalysisStarted()
                 } else {
-                    viewModel.analyzeFood(context, photoUri!!)
+                    viewModel.startImageScan(context, photoUri!!)
+                    photoUri = null
                 }
-                onAnalysisStarted()
             },
             onDismiss = {
                 showQuotaWarning = false
@@ -175,16 +207,20 @@ fun HomeScreen(
     if (showApiKeyDialog) {
         ApiKeyDialog(
             currentKey = apiKey,
+            currentModel = geminiModel,
             onDismiss = { showApiKeyDialog = false },
-            onConfirm = { key ->
+            onConfirm = { key, model ->
                 apiKey = key
-                viewModel.setApiKey(key)
+                geminiModel = model
+                viewModel.setGeminiSettings(key, model)
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.settings_saved)) }
                 showApiKeyDialog = false
             }
         )
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
@@ -294,8 +330,8 @@ fun HomeScreen(
                                 showQuotaWarning = true
                             } else {
                                 viewModel.resetState()
-                                viewModel.analyzeFood(context, photoUri!!)
-                                onAnalysisStarted()
+                                viewModel.startImageScan(context, photoUri!!)
+                                photoUri = null
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -353,6 +389,7 @@ fun HomeScreen(
                             } else {
                                 viewModel.resetState()
                                 viewModel.analyzeFoodFromText(foodDescription)
+                                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.home_analysis_started)) }
                                 onAnalysisStarted()
                             }
                         },
@@ -392,6 +429,7 @@ fun HomeScreen(
                                 barcode.rawValue?.let { value ->
                                     viewModel.resetState()
                                     viewModel.analyzeFoodFromBarcode(value)
+                                    scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.home_barcode_searching)) }
                                     onAnalysisStarted()
                                 }
                             }
@@ -440,10 +478,12 @@ fun HomeScreen(
 @Composable
 private fun ApiKeyDialog(
     currentKey: String,
+    currentModel: String,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String, String) -> Unit
 ) {
     var key by remember { mutableStateOf(currentKey) }
+    var model by remember { mutableStateOf(currentModel) }
     val uriHandler = LocalUriHandler.current
 
     AlertDialog(
@@ -485,10 +525,15 @@ private fun ApiKeyDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                GeminiModelSelector(
+                    selected = model,
+                    onSelect = { model = it }
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(key) }) {
+            TextButton(onClick = { onConfirm(key, model) }) {
                 Text(stringResource(R.string.dialog_button_save))
             }
         },
@@ -498,6 +543,34 @@ private fun ApiKeyDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GeminiModelSelector(selected: String, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.profile_ai_model_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.fillMaxWidth().menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            GeminiApiService.AVAILABLE_MODELS.forEach { availableModel ->
+                DropdownMenuItem(
+                    text = { Text(availableModel) },
+                    onClick = {
+                        onSelect(availableModel)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
