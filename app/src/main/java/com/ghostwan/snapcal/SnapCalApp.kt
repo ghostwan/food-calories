@@ -173,5 +173,9 @@ class SnapCalApp : Application() {
         const val NOTIFICATION_ID_SUGGESTIONS = 2001
         const val NOTIFICATION_ID_WEEKLY_REPORT = 2002
         const val NOTIFICATION_ID_SCAN_RESULT = 2003
+        // Base used to derive a unique notification id per completed scan, so
+        // multiple scan results can coexist in the notification tray.
+        const val NOTIFICATION_ID_SCAN_RESULT_BASE = 100000
+        const val NOTIFICATION_ID_SCAN_FAILED = 2004
     }
 }

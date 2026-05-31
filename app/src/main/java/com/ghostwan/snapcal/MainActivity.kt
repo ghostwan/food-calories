@@ -15,14 +15,25 @@ class MainActivity : ComponentActivity() {
     private val _pendingRoute = MutableStateFlow<String?>(null)
     val pendingRoute: StateFlow<String?> = _pendingRoute
 
+    private val _pendingScanId = MutableStateFlow<String?>(null)
+    val pendingScanId: StateFlow<String?> = _pendingScanId
+
     fun consumePendingRoute() {
         _pendingRoute.value = null
+    }
+
+    fun consumePendingScanId() {
+        _pendingScanId.value = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val startRoute = intent?.getStringExtra("navigate_to") ?: "dashboard"
+        val initialScanId = intent?.getStringExtra("scan_id")
+        if (initialScanId != null) {
+            _pendingScanId.value = initialScanId
+        }
         setContent {
             SnapCalTheme {
                 SnapCalNavGraph(startRoute = startRoute)
@@ -33,7 +44,14 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val route = intent.getStringExtra("navigate_to")
-        if (route != null) {
+        val scanId = intent.getStringExtra("scan_id")
+        if (scanId != null) {
+            // When a notification carries a scan id, navigation is driven by
+            // pendingScanId (which both loads the cached result and routes to
+            // the result screen). Skip pendingRoute to avoid a redundant nav
+            // that would briefly show stale state.
+            _pendingScanId.value = scanId
+        } else if (route != null) {
             _pendingRoute.value = route
         }
     }

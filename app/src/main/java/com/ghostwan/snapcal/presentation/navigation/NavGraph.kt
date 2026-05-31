@@ -65,6 +65,7 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
     // Handle navigation from widgets when app is already open
     val activity = context as? MainActivity
     val pendingRoute = activity?.pendingRoute?.collectAsState()?.value
+    val pendingScanId = activity?.pendingScanId?.collectAsState()?.value
     LaunchedEffect(pendingRoute) {
         if (pendingRoute != null) {
             navController.navigate(pendingRoute) {
@@ -88,6 +89,18 @@ fun SnapCalNavGraph(startRoute: String = "dashboard") {
             mealRepository = app.mealRepository
         )
     )
+
+    // Load the specific scan result associated with a tapped notification
+    // before (or as) the result screen is displayed, so each notification
+    // opens its own scan rather than the most recent one.
+    LaunchedEffect(pendingScanId) {
+        val id = pendingScanId ?: return@LaunchedEffect
+        foodAnalysisViewModel.showScanFromCache(id)
+        navController.navigate("result") {
+            launchSingleTop = true
+        }
+        activity?.consumePendingScanId()
+    }
 
     val dashboardViewModel: DashboardViewModel = viewModel(
         factory = DashboardViewModel.provideFactory(

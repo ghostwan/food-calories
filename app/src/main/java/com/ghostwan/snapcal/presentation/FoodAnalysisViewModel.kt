@@ -542,13 +542,23 @@ class FoodAnalysisViewModel(
 
     private fun postScanFinishedNotification(context: Context, result: FoodAnalysis) {
         if (!canPostNotifications(context)) return
+        // Stash this specific scan in the in-memory cache so the notification
+        // can later open exactly this result, even if a newer scan has finished
+        // in the meantime.
+        val scanId = PendingScansCache.newId()
+        PendingScansCache.put(scanId, result)
+
         val intent = Intent(context, MainActivity::class.java).apply {
             putExtra("navigate_to", "result")
+            putExtra("scan_id", scanId)
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
+        // Unique request code per scan so PendingIntents don't collide /
+        // overwrite each other's extras.
+        val requestCode = scanId.hashCode()
         val pendingIntent = PendingIntent.getActivity(
             context,
-            3001,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -559,13 +569,16 @@ class FoodAnalysisViewModel(
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-        NotificationManagerCompat.from(context).notify(SnapCalApp.NOTIFICATION_ID_SCAN_RESULT, notification)
+        // Unique notification id per scan so notifications stack instead of
+        // replacing each other.
+        val notifId = SnapCalApp.NOTIFICATION_ID_SCAN_RESULT_BASE + (scanId.hashCode() and 0x0FFFFFFF)
+        NotificationManagerCompat.from(context).notify(notifId, notification)
     }
 
     private fun postScanFailedNotification(context: Context) {
         if (!canPostNotifications(context)) return
         val intent = Intent(context, MainActivity::class.java).apply {
-            putExtra("navigate_to", "result")
+            putExtra("navigate_to", "home")
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val pendingIntent = PendingIntent.getActivity(
@@ -581,7 +594,28 @@ class FoodAnalysisViewModel(
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
-        NotificationManagerCompat.from(context).notify(SnapCalApp.NOTIFICATION_ID_SCAN_RESULT, notification)
+        NotificationManagerCompat.from(context).notify(SnapCalApp.NOTIFICATION_ID_SCAN_FAILED, notification)
+    }
+
+    /**
+     * Loads a previously-completed background scan (stored in [PendingScansCache])
+     * into the ViewModel state, so the result screen can display exactly that
+     * scan when the user taps its notification.
+     */
+    fun showScanFromCache(scanId: String): Boolean {
+        val analysis = PendingScansCache.take(scanId) ?: return false
+        _uiState.value = AnalysisUiState.Success(analysis)
+        _mealSaved.value = false
+        _saveError.value = null
+        _scanRunningInBackground.value = false
+        _readOnly.value = false
+        _isFavorite.value = false
+        _quantity.value = 1
+        editingMealId = null
+        editingMealIds = null
+        editingMealDate = null
+        lastImageData = null
+        return true
     }
 
     private fun canPostNotifications(context: Context): Boolean {
